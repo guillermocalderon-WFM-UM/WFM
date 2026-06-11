@@ -197,6 +197,16 @@ st.markdown(f"""
         margin-bottom: 4px;
     }}
 
+    /* ── Encabezados de tablas ── */
+    div[data-testid="stDataFrame"] div[role="columnheader"] {{
+        background-color: {COLOR_PRIMARY} !important;
+        color: white !important;
+        font-weight: 700 !important;
+    }}
+    div[data-testid="stDataFrame"] div[role="columnheader"] span {{
+        color: white !important;
+    }}
+
     /* ── Divider ── */
     .divider {{
         border: none;
@@ -254,29 +264,30 @@ st.markdown(f"""
         margin-top: 3px;
     }}
 
-    /* ── Sidebar – section labels (mismo tamaño que labels de filtros) ── */
+    /* ── Sidebar – section labels ── */
     .sb-section-label {{
         font-family: 'Inter', sans-serif !important;
-        font-size: 13px;
+        font-size: 11px;
         font-weight: 600;
         color: rgba(255,255,255,0.55) !important;
         margin: 20px 0 6px 0;
         padding-bottom: 6px;
         border-bottom: 1px solid rgba(255,255,255,0.10);
         letter-spacing: 0.01em;
+        text-align: center;
     }}
 
     /* ── Sidebar – widget labels y valores ── */
     div[data-testid="stSidebarContent"] label,
     div[data-testid="stSidebarContent"] .stSelectbox label {{
         font-family: 'Inter', sans-serif !important;
-        font-size: 12px !important;
+        font-size: 11px !important;
         font-weight: 400 !important;
         color: rgba(255,255,255,0.72) !important;
     }}
     div[data-testid="stSidebarContent"] .stDateInput label {{
         font-family: 'Inter', sans-serif !important;
-        font-size: 12px !important;
+        font-size: 11px !important;
         font-weight: 500 !important;
         color: {COLOR_ACCENT} !important;
     }}
@@ -292,7 +303,7 @@ st.markdown(f"""
         border-radius: 8px !important;
         color: white !important;
         font-family: 'Inter', sans-serif !important;
-        font-size: 12px !important;
+        font-size: 11px !important;
     }}
 
     /* ── Sidebar – footer ── */
@@ -592,7 +603,6 @@ with c_bar:
     st.plotly_chart(fig_bar, use_container_width=True)
 
 with c_gauge:
-    st.markdown("**Tabla resumen por supervisor**")
     tabla_sup = sup_stats.sort_values("ADH", ascending=False)[
         ["Supervisor","ADH","Agentes","Ausentes","Tardes"]
     ].copy()
