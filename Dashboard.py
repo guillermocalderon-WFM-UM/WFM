@@ -76,6 +76,9 @@ with st.sidebar:
     supervisores = ["Todos"] + sorted(df["Supervisor"].dropna().unique().tolist())
     sup_sel = st.selectbox("Supervisor", supervisores)
 
+    expertos = ["Todos"] + sorted(df["Nombre"].dropna().unique().tolist())
+    exp_sel = st.selectbox("Experto", expertos)
+
     campanas = ["Todas"] + sorted(df["Campana"].dropna().unique().tolist())
     camp_sel = st.selectbox("Campaña", campanas)
 
@@ -97,19 +100,88 @@ with st.sidebar:
 # ─────────────────────────────────────────────
 st.markdown(f"""
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    * {{ font-family: 'Inter', sans-serif !important; }}
+
     .main {{ background-color: {COLOR_BG}; }}
-    .block-container {{ padding-top: 1.5rem; padding-bottom: 1rem; }}
+    .block-container {{ padding-top: 0.5rem; padding-bottom: 1rem; }}
+
+    /* ── Header banner ── */
+    .header-banner {{
+        background: linear-gradient(135deg, {COLOR_PRIMARY} 0%, {COLOR_ACCENT} 100%);
+        border-radius: 18px;
+        padding: 28px 36px;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }}
+    .header-title {{ font-size: 22px; font-weight: 800; color: white; margin: 0 0 6px 0; letter-spacing: -0.3px; }}
+    .header-sub   {{ font-size: 13px; color: rgba(255,255,255,0.75); margin: 0; }}
+    .header-badge {{
+        background: rgba(255,255,255,0.18);
+        border: 1px solid rgba(255,255,255,0.3);
+        border-radius: 20px;
+        padding: 5px 14px;
+        font-size: 12px;
+        font-weight: 600;
+        color: white;
+        display: inline-block;
+        margin-left: 8px;
+    }}
+
+    /* ── KPI cards ── */
     .kpi-card {{
         background: white;
-        border-radius: 12px;
-        padding: 18px 22px;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-        border-left: 4px solid {COLOR_PRIMARY};
+        border-radius: 16px;
+        padding: 20px 22px 16px;
+        box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+        position: relative;
+        overflow: hidden;
     }}
-    .kpi-label {{ font-size: 12px; color: #6B7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }}
-    .kpi-value {{ font-size: 28px; font-weight: 700; color: {COLOR_PRIMARY}; line-height: 1.2; }}
-    .kpi-sub   {{ font-size: 12px; color: #9CA3AF; margin-top: 2px; }}
-    .section-title {{ font-size: 16px; font-weight: 700; color: {COLOR_PRIMARY}; margin-bottom: 4px; }}
+    .kpi-card::after {{
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, {COLOR_PRIMARY}, {COLOR_ACCENT});
+        border-radius: 16px 16px 0 0;
+    }}
+    .kpi-label {{ font-size: 11px; color: #94A3B8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }}
+    .kpi-value {{ font-size: 30px; font-weight: 800; line-height: 1.15; margin: 6px 0 2px; }}
+    .kpi-sub   {{ font-size: 11px; color: #CBD5E1; margin-top: 2px; }}
+    .kpi-bar-wrap {{ background: #F1F5F9; border-radius: 99px; height: 5px; margin-top: 10px; overflow: hidden; }}
+    .kpi-bar-fill {{ height: 5px; border-radius: 99px; transition: width 0.6s ease; }}
+
+    /* ── Section cards ── */
+    .section-card {{
+        background: white;
+        border-radius: 14px;
+        padding: 16px 22px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+        border-left: 5px solid {COLOR_PRIMARY};
+        margin-bottom: 14px;
+    }}
+    .section-card-title {{ font-size: 15px; font-weight: 700; color: {COLOR_PRIMARY}; margin: 0 0 4px 0; }}
+    .section-card-desc  {{ font-size: 12px; color: #94A3B8; margin: 0; line-height: 1.6; }}
+
+    /* ── Chart wrapper ── */
+    .chart-wrap {{
+        background: white;
+        border-radius: 14px;
+        padding: 18px 18px 6px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+        margin-bottom: 4px;
+    }}
+
+    /* ── Divider ── */
+    .divider {{
+        border: none;
+        border-top: 1px solid #E2E8F0;
+        margin: 24px 0;
+    }}
+
+    /* ── Sidebar ── */
     div[data-testid="stSidebarContent"] {{ background: {COLOR_PRIMARY}; }}
     div[data-testid="stSidebarContent"] * {{ color: white !important; }}
     div[data-testid="stSidebarContent"] .stSelectbox label,
@@ -127,6 +199,8 @@ mask = (
 )
 if sup_sel != "Todos":
     mask &= df["Supervisor"] == sup_sel
+if exp_sel != "Todos":
+    mask &= df["Nombre"] == exp_sel
 if camp_sel != "Todas":
     mask &= df["Campana"] == camp_sel
 
@@ -142,11 +216,21 @@ else:
 # ─────────────────────────────────────────────
 # ENCABEZADO
 # ─────────────────────────────────────────────
-st.markdown(f"## 📊 Dashboard de Adherencia · Mayo 2026")
 rango = f"{fecha_ini.strftime('%d/%m/%Y')} – {fecha_fin.strftime('%d/%m/%Y')}"
-filtro_txt = f"{'Todos los supervisores' if sup_sel == 'Todos' else sup_sel}  ·  {'Todas las campañas' if camp_sel == 'Todas' else camp_sel}"
-st.caption(f"📅 {rango}   |   👤 {filtro_txt}")
-st.markdown("---")
+filtro_txt = f"{'Todos los supervisores' if sup_sel == 'Todos' else sup_sel} · {'Todos los expertos' if exp_sel == 'Todos' else exp_sel} · {'Todas las campañas' if camp_sel == 'Todas' else camp_sel}"
+st.markdown(f"""
+<div class='header-banner'>
+    <div>
+        <div class='header-title'>📊 Tablero de Seguimiento · Workforce Management</div>
+        <div class='header-sub'>📅 {rango} &nbsp;&nbsp;|&nbsp;&nbsp; 👤 {filtro_txt}</div>
+    </div>
+    <div>
+        <span class='header-badge'>Uniminuto</span>
+        <span class='header-badge'>Scala Learning</span>
+        <span class='header-badge'>WFM 2026</span>
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────
 # KPIs GLOBALES
@@ -165,36 +249,45 @@ pct_tiempo   = llegada_counts.get("Llegada a tiempo", 0) / total_prog_valid * 10
 
 adh_color = COLOR_SUCCESS if adh_global >= 0.90 else (COLOR_WARNING if adh_global >= 0.80 else COLOR_DANGER)
 
+def kpi_bar(pct, color, max_val=100):
+    fill = min(pct / max_val * 100, 100)
+    return f"<div class='kpi-bar-wrap'><div class='kpi-bar-fill' style='width:{fill:.0f}%;background:{color};'></div></div>"
+
 k1, k2, k3, k4, k5 = st.columns(5)
 with k1:
-    st.markdown(f"""<div class='kpi-card' style='border-color:{adh_color}'>
+    st.markdown(f"""<div class='kpi-card'>
         <div class='kpi-label'>Adherencia Global</div>
         <div class='kpi-value' style='color:{adh_color}'>{adh_global:.1%}</div>
-        <div class='kpi-sub'>ADH aplicada / Tiempo programado</div>
+        <div class='kpi-sub'>Meta: 90% &nbsp;·&nbsp; ADH / T. Programado</div>
+        {kpi_bar(adh_global * 100, adh_color, 100)}
     </div>""", unsafe_allow_html=True)
 with k2:
-    st.markdown(f"""<div class='kpi-card' style='border-color:{COLOR_PRIMARY}'>
-        <div class='kpi-label'>Agentes</div>
-        <div class='kpi-value'>{total_agentes}</div>
+    st.markdown(f"""<div class='kpi-card'>
+        <div class='kpi-label'>Expertos activos</div>
+        <div class='kpi-value' style='color:{COLOR_PRIMARY}'>{total_agentes}</div>
         <div class='kpi-sub'>{total_registros} registros con turno</div>
+        {kpi_bar(total_registros, COLOR_ACCENT, max(total_registros, 1))}
     </div>""", unsafe_allow_html=True)
 with k3:
-    st.markdown(f"""<div class='kpi-card' style='border-color:{COLOR_SUCCESS}'>
+    st.markdown(f"""<div class='kpi-card'>
         <div class='kpi-label'>Llegada a tiempo</div>
         <div class='kpi-value' style='color:{COLOR_SUCCESS}'>{pct_tiempo:.1f}%</div>
-        <div class='kpi-sub'>{llegada_counts.get("Llegada a tiempo",0)} registros</div>
+        <div class='kpi-sub'>{llegada_counts.get("Llegada a tiempo", 0)} registros</div>
+        {kpi_bar(pct_tiempo, COLOR_SUCCESS)}
     </div>""", unsafe_allow_html=True)
 with k4:
-    st.markdown(f"""<div class='kpi-card' style='border-color:{COLOR_WARNING}'>
+    st.markdown(f"""<div class='kpi-card'>
         <div class='kpi-label'>Llegadas tarde</div>
         <div class='kpi-value' style='color:{COLOR_WARNING}'>{pct_tarde:.1f}%</div>
-        <div class='kpi-sub'>{llegada_counts.get("Llegada tarde",0)} registros</div>
+        <div class='kpi-sub'>{llegada_counts.get("Llegada tarde", 0)} registros</div>
+        {kpi_bar(pct_tarde, COLOR_WARNING)}
     </div>""", unsafe_allow_html=True)
 with k5:
-    st.markdown(f"""<div class='kpi-card' style='border-color:{COLOR_DANGER}'>
+    st.markdown(f"""<div class='kpi-card'>
         <div class='kpi-label'>Ausentes</div>
         <div class='kpi-value' style='color:{COLOR_DANGER}'>{pct_ausentes:.1f}%</div>
-        <div class='kpi-sub'>{llegada_counts.get("Ausente",0)} registros</div>
+        <div class='kpi-sub'>{llegada_counts.get("Ausente", 0)} registros</div>
+        {kpi_bar(pct_ausentes, COLOR_DANGER)}
     </div>""", unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
@@ -202,7 +295,11 @@ st.markdown("<br>", unsafe_allow_html=True)
 # ─────────────────────────────────────────────
 # TENDENCIA + DISTRIBUCIÓN LLEGADAS
 # ─────────────────────────────────────────────
-st.markdown("<div class='section-title'>📈 Tendencia de Adherencia</div>", unsafe_allow_html=True)
+st.markdown("<hr class='divider'>", unsafe_allow_html=True)
+st.markdown("""<div class='section-card'>
+    <div class='section-card-title'>📈 Tendencia de Adherencia</div>
+    <div class='section-card-desc'>Evolución diaria de la adherencia promedio del equipo en el período seleccionado. Cada punto representa el porcentaje de tiempo en que los agentes estuvieron dentro de su turno programado. La línea punteada indica la meta mínima del 90%. El gráfico de dona desglosa la distribución de tipos de llegada: a tiempo, tarde, antes y ausente.</div>
+</div>""", unsafe_allow_html=True)
 
 tend = (
     dff_validos
@@ -262,8 +359,11 @@ with c2:
 # ─────────────────────────────────────────────
 # COMPARATIVO POR SUPERVISOR
 # ─────────────────────────────────────────────
-st.markdown("---")
-st.markdown("<div class='section-title'>👥 Comparativo por Supervisor</div>", unsafe_allow_html=True)
+st.markdown("<hr class='divider'>", unsafe_allow_html=True)
+st.markdown("""<div class='section-card'>
+    <div class='section-card-title'>👥 Comparativo por Supervisor</div>
+    <div class='section-card-desc'>Adherencia consolidada por equipo de trabajo. Las barras están ordenadas de menor a mayor cumplimiento y codificadas por color: verde ≥ 90%, amarillo ≥ 80%, rojo &lt; 80%. La tabla de la derecha resume el número de agentes, ausencias y tardanzas por supervisor en el período.</div>
+</div>""", unsafe_allow_html=True)
 
 sup_stats = (
     dff_validos.groupby("Supervisor")
@@ -323,8 +423,11 @@ with c_gauge:
 # ─────────────────────────────────────────────
 # GRÁFICAS POR SUPERVISOR (TENDENCIA)
 # ─────────────────────────────────────────────
-st.markdown("---")
-st.markdown("<div class='section-title'>📉 Tendencia por Supervisor</div>", unsafe_allow_html=True)
+st.markdown("<hr class='divider'>", unsafe_allow_html=True)
+st.markdown("""<div class='section-card'>
+    <div class='section-card-title'>📉 Tendencia por Supervisor</div>
+    <div class='section-card-desc'>Gráfico de líneas que compara la evolución de adherencia de cada supervisor a lo largo del período. Cada línea representa un equipo distinto, permitiendo identificar patrones, caídas puntuales o diferencias sostenidas. Usa el filtro de supervisor en la barra lateral para aislar un equipo específico.</div>
+</div>""", unsafe_allow_html=True)
 
 tend_sup = (
     dff_validos
@@ -363,8 +466,11 @@ st.plotly_chart(fig_sup, use_container_width=True)
 # ─────────────────────────────────────────────
 # DETALLE POR AGENTE
 # ─────────────────────────────────────────────
-st.markdown("---")
-st.markdown("<div class='section-title'>🔍 Detalle por Agente</div>", unsafe_allow_html=True)
+st.markdown("<hr class='divider'>", unsafe_allow_html=True)
+st.markdown("""<div class='section-card'>
+    <div class='section-card-title'>🔍 Detalle por Agente</div>
+    <div class='section-card-desc'>Análisis individual por experto y fecha, dividido en tres tablas: resumen de adherencia y novedades, horarios de planificación y excesos por actividad. Filtra por supervisor, experto o campaña desde la barra lateral para consultar la información de un agente específico.</div>
+</div>""", unsafe_allow_html=True)
 
 def seg_a_hhmmss(s):
     if pd.isna(s) or s <= 0:
@@ -385,7 +491,9 @@ def fmt_plan(v):
 
 # ── Tabla 1: Resumen General ──────────────────
 st.markdown("**📋 Resumen General**")
+st.caption("Tabla principal de seguimiento por experto. Muestra la adherencia individual de cada día, si el agente llegó tarde o estuvo ausente, el tiempo de retardo cuando aplica, el tiempo programado total, el tiempo fuera de adherencia y el tiempo efectivo dentro de adherencia (ADH Aplicada). Los tiempos se expresan en formato h:mm:ss.")
 t1 = dff.copy()
+t1["Fecha"]             = t1["Fecha"].dt.strftime("%d/%m/%Y")
 t1["Retardo"]           = t1["Validador Llegada"].apply(lambda x: "Sí" if x == "Llegada tarde" else "No")
 t1["Ausencia"]          = t1["Validador Llegada"].apply(lambda x: "Sí" if x == "Ausente" else "No")
 t1["Tiempo de retardo"] = t1.apply(lambda r: seg_a_hhmmss(r["tard_s"]) if r["Retardo"] == "Sí" else "-", axis=1)
@@ -405,6 +513,7 @@ st.dataframe(
 
 # ── Tabla 2: Planificación ────────────────────
 st.markdown("**📅 Planificación**")
+st.caption("Tabla de horarios programados para cada experto. Incluye los tiempos de inicio y fin del turno, descansos (break y lunch), sesiones de seguimiento, preturno y capacitación. Esta información refleja lo que fue planificado en el sistema WFM y permite contrastar con el comportamiento real registrado en la tabla de resumen.")
 plan_cols = ["Turno inicio", "Turno fin", "Break inicio", "Break fin",
              "Lunch inicio", "Lunch fin", "Ini Segui", "Fin Segui",
              "Ini Preturno", "Fin Preturno", "Capa inicio", "Capa fin"]
@@ -413,6 +522,7 @@ plan_disponibles = [c for c in plan_cols if c in dff.columns]
 t2 = dff.rename(columns={"Nombre": "Agente", "Campana": "Campaña"})[
     ["Fecha", "Agente", "Supervisor", "Campaña"] + plan_disponibles
 ].copy()
+t2["Fecha"] = t2["Fecha"].dt.strftime("%d/%m/%Y")
 for c in plan_disponibles:
     t2[c] = t2[c].apply(fmt_plan)
 
@@ -423,12 +533,14 @@ st.dataframe(
 
 # ── Tabla 3: Estados y Excesos ────────────────
 st.markdown("**⚠️ Estados y Excesos**")
+st.caption("Detalle de los tiempos excedidos por actividad para cada experto y fecha. Se registran excesos en almuerzo, descanso, seguimiento, toilette, entrenamiento, feedback y calidad. La columna 'Total excesos' suma todos los excesos del día en formato h:mm:ss. Valores altos en esta tabla son un indicador de impacto negativo en la adherencia.")
 exc_cols     = ["Exceso Almuerzo", "Exceso Descanso", "Exceso Seguimiento",
                 "Exceso Toilette", "Exceso Entrenamiento", "Exceso Feedback", "Exceso Calidad"]
 exc_min_cols = [c + "_min" for c in exc_cols]
 exc_min_disp = [c for c in exc_min_cols if c in dff.columns]
 
 t3 = dff.rename(columns={"Nombre": "Agente", "Campana": "Campaña"}).copy()
+t3["Fecha"] = t3["Fecha"].dt.strftime("%d/%m/%Y")
 exc_fmt_cols = []
 for orig, min_col in zip(exc_cols, exc_min_cols):
     if min_col in t3.columns:
