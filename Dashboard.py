@@ -116,28 +116,39 @@ st.markdown(f"""
 
     /* ── Header banner ── */
     .header-banner {{
-        background: linear-gradient(120deg, {COLOR_PRIMARY} 60%, {COLOR_ACCENT} 100%);
+        background: linear-gradient(120deg, {COLOR_PRIMARY} 55%, {COLOR_ACCENT} 100%);
         border-radius: 14px;
-        padding: 20px 28px;
+        padding: 22px 30px;
         margin-bottom: 20px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        gap: 16px;
+        gap: 20px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.18);
     }}
     .header-left  {{ flex: 1; min-width: 0; }}
-    .header-title {{ font-size: 17px; font-weight: 700; color: white; margin: 0 0 4px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
-    .header-sub   {{ font-size: 11px; color: rgba(255,255,255,0.70); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
-    .header-right {{ display: flex; gap: 8px; flex-shrink: 0; }}
+    .header-title {{
+        font-size: 18px; font-weight: 800; color: white; margin: 0 0 5px 0;
+        text-shadow: 0 1px 6px rgba(0,0,0,0.30);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }}
+    .header-sub   {{
+        font-size: 12px; color: rgba(255,255,255,0.82); margin: 0;
+        text-shadow: 0 1px 4px rgba(0,0,0,0.20);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }}
+    .header-right {{ display: flex; gap: 8px; flex-shrink: 0; align-items: center; }}
     .header-badge {{
-        background: rgba(255,255,255,0.15);
-        border: 1px solid rgba(255,255,255,0.25);
+        background: rgba(255,255,255,0.18);
+        border: 1px solid rgba(255,255,255,0.30);
         border-radius: 20px;
-        padding: 4px 12px;
+        padding: 5px 14px;
         font-size: 11px;
-        font-weight: 600;
+        font-weight: 700;
         color: white;
         white-space: nowrap;
+        text-shadow: none;
+        letter-spacing: 0.02em;
     }}
 
     /* ── KPI cards ── */
@@ -343,16 +354,16 @@ def kpi_bar(pct, color, max_val=100):
 k1, k2, k3, k4, k5 = st.columns(5)
 with k1:
     st.markdown(f"""<div class='kpi-card'>
-        <div class='kpi-label'>Adherencia Global</div>
+        <div class='kpi-label'>Adherencia</div>
         <div class='kpi-value' style='color:{adh_color}'>{adh_global:.1%}</div>
-        <div class='kpi-sub'>Meta: 90% &nbsp;·&nbsp; ADH / T. Programado</div>
+        <div class='kpi-sub'>Meta: 90%</div>
         {kpi_bar(adh_global * 100, adh_color, 100)}
     </div>""", unsafe_allow_html=True)
 with k2:
     st.markdown(f"""<div class='kpi-card'>
-        <div class='kpi-label'>Expertos activos</div>
+        <div class='kpi-label'>Expertos</div>
         <div class='kpi-value' style='color:{COLOR_PRIMARY}'>{total_agentes}</div>
-        <div class='kpi-sub'>{total_registros} registros con turno</div>
+        <div class='kpi-sub'>{total_registros} registros</div>
         {kpi_bar(total_registros, COLOR_ACCENT, max(total_registros, 1))}
     </div>""", unsafe_allow_html=True)
 with k3:
