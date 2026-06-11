@@ -54,6 +54,7 @@ df = cargar_datos("Consolidado_MAYO.xlsx")
 # SIDEBAR – FILTROS + COLORES
 # ─────────────────────────────────────────────
 with st.sidebar:
+    st.image("logo-scala-learning-transformacion-digital-universidades.webp", use_container_width=True)
     st.markdown("## 📊 WFM Dashboard")
     st.markdown("**Uniminuto · Scala Learning**")
     st.markdown("---")
