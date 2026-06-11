@@ -202,6 +202,12 @@ st.markdown(f"""
         margin: 24px 0;
     }}
 
+    /* ── Sidebar – logo centrado ── */
+    div[data-testid="stSidebarContent"] img {{
+        display: block;
+        margin: 0 auto;
+    }}
+
     /* ── Sidebar – fondo degradado difuminado ── */
     section[data-testid="stSidebar"] > div:first-child {{
         background:
@@ -701,9 +707,9 @@ def _color_siono(v):
 
 st.dataframe(
     t1_show.style
-        .applymap(lambda _: f"color:{COLOR_PRIMARY};font-weight:600", subset=["Agente"])
-        .applymap(_color_adh, subset=["Adherencia"])
-        .applymap(_color_siono, subset=["Retardo", "Ausencia"])
+        .map(lambda _: f"color:{COLOR_PRIMARY};font-weight:600", subset=["Agente"])
+        .map(_color_adh, subset=["Adherencia"])
+        .map(_color_siono, subset=["Retardo", "Ausencia"])
         .set_properties(**{"text-align": "center"})
         .set_properties(**{"text-align": "left"}, subset=["Agente", "Supervisor", "Campaña"]),
     use_container_width=True, hide_index=True, height=350
@@ -727,7 +733,7 @@ for c in plan_disponibles:
 st.dataframe(
     t2.sort_values(["Fecha", "Agente"]).reset_index(drop=True)
       .style
-      .applymap(lambda _: f"color:{COLOR_PRIMARY};font-weight:600", subset=["Agente"])
+      .map(lambda _: f"color:{COLOR_PRIMARY};font-weight:600", subset=["Agente"])
       .set_properties(**{"text-align": "center"})
       .set_properties(**{"text-align": "left"}, subset=["Agente", "Supervisor", "Campaña"]),
     use_container_width=True, hide_index=True, height=350
@@ -768,8 +774,8 @@ t3_show = t3[cols_t3].sort_values(["Fecha", "Agente"]).reset_index(drop=True)
 time_cols = [c for c in t3_show.columns if c not in ["Fecha","Agente","Supervisor","Campaña"]]
 st.dataframe(
     t3_show.style
-        .applymap(lambda _: f"color:{COLOR_PRIMARY};font-weight:600", subset=["Agente"])
-        .applymap(_color_exceso, subset=time_cols)
+        .map(lambda _: f"color:{COLOR_PRIMARY};font-weight:600", subset=["Agente"])
+        .map(_color_exceso, subset=time_cols)
         .set_properties(**{"text-align": "center"})
         .set_properties(**{"text-align": "left"}, subset=["Agente", "Supervisor", "Campaña"]),
     use_container_width=True, hide_index=True, height=350
