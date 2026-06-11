@@ -55,13 +55,17 @@ df = cargar_datos("Consolidado_MAYO.xlsx")
 # ─────────────────────────────────────────────
 with st.sidebar:
     st.image("logo-scala-learning-transformacion-digital-universidades.webp", use_container_width=True)
-    st.markdown("---")
-    st.markdown("<div style='text-align:center'><b>Worforce Management</b></div>", unsafe_allow_html=True)
-    st.markdown("<div style='text-align:center'><b>Uniminuto · Scala Learning</b></div>", unsafe_allow_html=True)
-    st.markdown("---")
 
-    st.markdown("### Período")
-    tipo_periodo = st.selectbox("Agrupar por", ["Día","Semana","Mes"], index=0)
+    st.markdown("""
+    <div class='sb-brand'>
+        <div class='sb-brand-title'>Workforce Management</div>
+        <div class='sb-brand-sub'>Uniminuto · Scala Learning</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("<div class='sb-section-label'>📅 Período</div>", unsafe_allow_html=True)
+    tipo_periodo = st.selectbox("Agrupar por", ["Día","Semana","Mes"], index=0, label_visibility="collapsed")
+    st.markdown("<div class='sb-input-hint'>Agrupar por</div>", unsafe_allow_html=True)
 
     fechas = sorted(df["Fecha"].dt.date.unique())
     col_f1, col_f2 = st.columns(2)
@@ -70,8 +74,7 @@ with st.sidebar:
     with col_f2:
         fecha_fin = st.date_input("Hasta", value=fechas[-1], min_value=fechas[0], max_value=fechas[-1])
 
-    st.markdown("---")
-    st.markdown("### Filtros")
+    st.markdown("<div class='sb-section-label'>🔎 Filtros</div>", unsafe_allow_html=True)
 
     supervisores = ["Todos"] + sorted(df["Supervisor"].dropna().unique().tolist())
     sup_sel = st.selectbox("Supervisor", supervisores)
@@ -82,8 +85,7 @@ with st.sidebar:
     campanas = ["Todas"] + sorted(df["Campana"].dropna().unique().tolist())
     camp_sel = st.selectbox("Campaña", campanas)
 
-    st.markdown("---")
-    st.markdown("### 🎨 Colores")
+    st.markdown("<div class='sb-section-label'>🎨 Colores</div>", unsafe_allow_html=True)
     with st.expander("Personalizar colores"):
         COLOR_PRIMARY = st.color_picker("Sidebar / Primario", "#28053F")
         COLOR_ACCENT  = st.color_picker("Acento (azul claro)", "#0EA5E9")
@@ -92,8 +94,14 @@ with st.sidebar:
         COLOR_DANGER  = st.color_picker("Peligro (rojo)",      "#EF4444")
         COLOR_BG      = st.color_picker("Fondo",               "#F0F4F8")
 
-    st.markdown("---")
-    st.caption("Adherencia = ADH aplicada / Tiempo programado · Excluye ausentes")
+    st.markdown("""
+    <div class='sb-footer'>
+        Desarrollado por el equipo de<br><b>Workforce Management</b><br><br>
+        Diseño, desarrollo e implementación a cargo de<br>
+        <b>Guillermo Steban Calderón Arrieta</b><br>
+        Analista WFM
+    </div>
+    """, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────
 # CSS DINÁMICO (usa los colores del sidebar)
@@ -108,50 +116,47 @@ st.markdown(f"""
 
     /* ── Header banner ── */
     .header-banner {{
-        background: linear-gradient(135deg, {COLOR_PRIMARY} 0%, {COLOR_ACCENT} 100%);
-        border-radius: 18px;
-        padding: 28px 36px;
+        background: linear-gradient(120deg, {COLOR_PRIMARY} 60%, {COLOR_ACCENT} 100%);
+        border-radius: 14px;
+        padding: 20px 28px;
         margin-bottom: 20px;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        gap: 16px;
     }}
-    .header-title {{ font-size: 22px; font-weight: 800; color: white; margin: 0 0 6px 0; letter-spacing: -0.3px; }}
-    .header-sub   {{ font-size: 13px; color: rgba(255,255,255,0.75); margin: 0; }}
+    .header-left  {{ flex: 1; min-width: 0; }}
+    .header-title {{ font-size: 17px; font-weight: 700; color: white; margin: 0 0 4px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
+    .header-sub   {{ font-size: 11px; color: rgba(255,255,255,0.70); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
+    .header-right {{ display: flex; gap: 8px; flex-shrink: 0; }}
     .header-badge {{
-        background: rgba(255,255,255,0.18);
-        border: 1px solid rgba(255,255,255,0.3);
+        background: rgba(255,255,255,0.15);
+        border: 1px solid rgba(255,255,255,0.25);
         border-radius: 20px;
-        padding: 5px 14px;
-        font-size: 12px;
+        padding: 4px 12px;
+        font-size: 11px;
         font-weight: 600;
         color: white;
-        display: inline-block;
-        margin-left: 8px;
+        white-space: nowrap;
     }}
 
     /* ── KPI cards ── */
     .kpi-card {{
         background: white;
-        border-radius: 16px;
-        padding: 20px 22px 16px;
-        box-shadow: 0 2px 16px rgba(0,0,0,0.06);
-        position: relative;
-        overflow: hidden;
+        border-radius: 14px;
+        padding: 18px 20px 14px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        border-left: 4px solid {COLOR_PRIMARY};
+        min-height: 130px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
     }}
-    .kpi-card::after {{
-        content: '';
-        position: absolute;
-        top: 0; left: 0; right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, {COLOR_PRIMARY}, {COLOR_ACCENT});
-        border-radius: 16px 16px 0 0;
-    }}
-    .kpi-label {{ font-size: 11px; color: #94A3B8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }}
-    .kpi-value {{ font-size: 30px; font-weight: 800; line-height: 1.15; margin: 6px 0 2px; }}
+    .kpi-label {{ font-size: 11px; color: #94A3B8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; }}
+    .kpi-value {{ font-size: 28px; font-weight: 800; line-height: 1.2; margin: 6px 0 2px; }}
     .kpi-sub   {{ font-size: 11px; color: #CBD5E1; margin-top: 2px; }}
     .kpi-bar-wrap {{ background: #F1F5F9; border-radius: 99px; height: 5px; margin-top: 10px; overflow: hidden; }}
-    .kpi-bar-fill {{ height: 5px; border-radius: 99px; transition: width 0.6s ease; }}
+    .kpi-bar-fill {{ height: 5px; border-radius: 99px; }}
 
     /* ── Section cards ── */
     .section-card {{
@@ -181,12 +186,94 @@ st.markdown(f"""
         margin: 24px 0;
     }}
 
-    /* ── Sidebar ── */
-    div[data-testid="stSidebarContent"] {{ background: {COLOR_PRIMARY}; }}
+    /* ── Sidebar – fondo degradado difuminado ── */
+    section[data-testid="stSidebar"] > div:first-child {{
+        background:
+            radial-gradient(ellipse at 20% 10%, rgba(255,255,255,0.10) 0%, transparent 55%),
+            radial-gradient(ellipse at 80% 80%, rgba(0,0,0,0.25) 0%, transparent 60%),
+            linear-gradient(175deg, rgba(255,255,255,0.06) 0%, rgba(0,0,0,0.08) 100%),
+            {COLOR_PRIMARY};
+        border-right: none;
+    }}
     div[data-testid="stSidebarContent"] * {{ color: white !important; }}
-    div[data-testid="stSidebarContent"] .stSelectbox label,
-    div[data-testid="stSidebarContent"] .stMultiSelect label {{ color: #CBD5E1 !important; font-size: 12px !important; }}
-    div[data-testid="stSidebarContent"] hr {{ border-color: rgba(255,255,255,0.15); }}
+    div[data-testid="stSidebarContent"] hr {{ border-color: rgba(255,255,255,0.12); }}
+
+    /* ── Dropdown options: texto oscuro sobre fondo blanco ── */
+    div[data-baseweb="popover"] *,
+    div[data-baseweb="menu"] *,
+    ul[role="listbox"] *,
+    li[role="option"],
+    li[role="option"] * {{ color: #1E293B !important; }}
+    li[role="option"]:hover,
+    li[role="option"][aria-selected="true"] {{ background: #F1F5F9 !important; }}
+
+    /* ── Valores seleccionados dentro del selectbox (sidebar) ── */
+    div[data-testid="stSidebarContent"] .stSelectbox [data-baseweb="select"] span,
+    div[data-testid="stSidebarContent"] .stSelectbox [data-baseweb="select"] div[class*="ValueContainer"] *,
+    div[data-testid="stSidebarContent"] .stSelectbox [data-baseweb="select"] input {{ color: white !important; }}
+
+    /* ── Inputs de fecha ── */
+    div[data-testid="stSidebarContent"] input[type="text"] {{ color: white !important; }}
+
+    /* ── Sidebar – brand block ── */
+    .sb-brand {{
+        text-align: center;
+        padding: 10px 4px 14px;
+        border-bottom: 1px solid rgba(255,255,255,0.12);
+        margin-bottom: 6px;
+    }}
+    .sb-brand-title {{ font-size: 13px; font-weight: 700; color: white !important; letter-spacing: 0.02em; }}
+    .sb-brand-sub   {{ font-size: 11px; color: rgba(255,255,255,0.55) !important; margin-top: 2px; }}
+
+    /* ── Sidebar – section labels ── */
+    .sb-section-label {{
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.10em;
+        color: rgba(255,255,255,0.45) !important;
+        margin: 18px 0 8px 2px;
+        padding-bottom: 5px;
+        border-bottom: 1px solid rgba(255,255,255,0.10);
+    }}
+    .sb-input-hint {{
+        font-size: 10px;
+        color: rgba(255,255,255,0.35) !important;
+        margin: -10px 0 6px 2px;
+    }}
+
+    /* ── Sidebar – widgets ── */
+    div[data-testid="stSidebarContent"] .stSelectbox > div > div,
+    div[data-testid="stSidebarContent"] .stSelectbox > label + div > div {{
+        background: rgba(255,255,255,0.08) !important;
+        border: 1px solid rgba(255,255,255,0.18) !important;
+        border-radius: 8px !important;
+    }}
+    div[data-testid="stSidebarContent"] .stSelectbox label {{
+        font-size: 11px !important;
+        color: rgba(255,255,255,0.60) !important;
+    }}
+    div[data-testid="stSidebarContent"] .stDateInput > div > div > input {{
+        background: rgba(255,255,255,0.08) !important;
+        border: 1px solid rgba(255,255,255,0.18) !important;
+        border-radius: 8px !important;
+        color: white !important;
+    }}
+    div[data-testid="stSidebarContent"] .stDateInput label {{
+        font-size: 11px !important;
+        color: rgba(255,255,255,0.60) !important;
+    }}
+
+    /* ── Sidebar – footer ── */
+    .sb-footer {{
+        font-size: 10px;
+        color: rgba(255,255,255,0.35) !important;
+        text-align: center;
+        line-height: 1.6;
+        padding: 14px 4px 4px;
+        border-top: 1px solid rgba(255,255,255,0.10);
+        margin-top: 12px;
+    }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -220,14 +307,14 @@ rango = f"{fecha_ini.strftime('%d/%m/%Y')} – {fecha_fin.strftime('%d/%m/%Y')}"
 filtro_txt = f"{'Todos los supervisores' if sup_sel == 'Todos' else sup_sel} · {'Todos los expertos' if exp_sel == 'Todos' else exp_sel} · {'Todas las campañas' if camp_sel == 'Todas' else camp_sel}"
 st.markdown(f"""
 <div class='header-banner'>
-    <div>
-        <div class='header-title'>📊 Tablero de Seguimiento · Workforce Management</div>
-        <div class='header-sub'>📅 {rango} &nbsp;&nbsp;|&nbsp;&nbsp; 👤 {filtro_txt}</div>
+    <div class='header-left'>
+        <div class='header-title'>📊 Tablero WFM · Seguimiento de Adherencia</div>
+        <div class='header-sub'>📅 {rango} &nbsp;|&nbsp; 👤 {filtro_txt}</div>
     </div>
-    <div>
+    <div class='header-right'>
         <span class='header-badge'>Uniminuto</span>
         <span class='header-badge'>Scala Learning</span>
-        <span class='header-badge'>WFM 2026</span>
+        <span class='header-badge'>2026</span>
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -298,7 +385,7 @@ st.markdown("<br>", unsafe_allow_html=True)
 st.markdown("<hr class='divider'>", unsafe_allow_html=True)
 st.markdown("""<div class='section-card'>
     <div class='section-card-title'>📈 Tendencia de Adherencia</div>
-    <div class='section-card-desc'>Evolución diaria de la adherencia promedio del equipo en el período seleccionado. Cada punto representa el porcentaje de tiempo en que los agentes estuvieron dentro de su turno programado. La línea punteada indica la meta mínima del 90%. El gráfico de dona desglosa la distribución de tipos de llegada: a tiempo, tarde, antes y ausente.</div>
+    <div class='section-card-desc'>Evolución diaria de la adherencia del equipo y distribución de tipos de llegada en el período.</div>
 </div>""", unsafe_allow_html=True)
 
 tend = (
@@ -362,7 +449,7 @@ with c2:
 st.markdown("<hr class='divider'>", unsafe_allow_html=True)
 st.markdown("""<div class='section-card'>
     <div class='section-card-title'>👥 Comparativo por Supervisor</div>
-    <div class='section-card-desc'>Adherencia consolidada por equipo de trabajo. Las barras están ordenadas de menor a mayor cumplimiento y codificadas por color: verde ≥ 90%, amarillo ≥ 80%, rojo &lt; 80%. La tabla de la derecha resume el número de agentes, ausencias y tardanzas por supervisor en el período.</div>
+    <div class='section-card-desc'>Adherencia consolidada por equipo: verde ≥ 90%, amarillo ≥ 80%, rojo &lt; 80%.</div>
 </div>""", unsafe_allow_html=True)
 
 sup_stats = (
@@ -426,7 +513,7 @@ with c_gauge:
 st.markdown("<hr class='divider'>", unsafe_allow_html=True)
 st.markdown("""<div class='section-card'>
     <div class='section-card-title'>📉 Tendencia por Supervisor</div>
-    <div class='section-card-desc'>Gráfico de líneas que compara la evolución de adherencia de cada supervisor a lo largo del período. Cada línea representa un equipo distinto, permitiendo identificar patrones, caídas puntuales o diferencias sostenidas. Usa el filtro de supervisor en la barra lateral para aislar un equipo específico.</div>
+    <div class='section-card-desc'>Comparación de la evolución de adherencia de cada supervisor a lo largo del período.</div>
 </div>""", unsafe_allow_html=True)
 
 tend_sup = (
@@ -469,7 +556,7 @@ st.plotly_chart(fig_sup, use_container_width=True)
 st.markdown("<hr class='divider'>", unsafe_allow_html=True)
 st.markdown("""<div class='section-card'>
     <div class='section-card-title'>🔍 Detalle por Agente</div>
-    <div class='section-card-desc'>Análisis individual por experto y fecha, dividido en tres tablas: resumen de adherencia y novedades, horarios de planificación y excesos por actividad. Filtra por supervisor, experto o campaña desde la barra lateral para consultar la información de un agente específico.</div>
+    <div class='section-card-desc'>Adherencia, planificación y excesos por experto y fecha. Filtra por agente desde la barra lateral.</div>
 </div>""", unsafe_allow_html=True)
 
 def seg_a_hhmmss(s):
@@ -491,7 +578,7 @@ def fmt_plan(v):
 
 # ── Tabla 1: Resumen General ──────────────────
 st.markdown("**📋 Resumen General**")
-st.caption("Tabla principal de seguimiento por experto. Muestra la adherencia individual de cada día, si el agente llegó tarde o estuvo ausente, el tiempo de retardo cuando aplica, el tiempo programado total, el tiempo fuera de adherencia y el tiempo efectivo dentro de adherencia (ADH Aplicada). Los tiempos se expresan en formato h:mm:ss.")
+st.caption("Seguimiento diario por experto: adherencia, retardos, ausencias y tiempos en formato h:mm:ss.")
 t1 = dff.copy()
 t1["Fecha"]             = t1["Fecha"].dt.strftime("%d/%m/%Y")
 t1["Retardo"]           = t1["Validador Llegada"].apply(lambda x: "Sí" if x == "Llegada tarde" else "No")
@@ -513,7 +600,7 @@ st.dataframe(
 
 # ── Tabla 2: Planificación ────────────────────
 st.markdown("**📅 Planificación**")
-st.caption("Tabla de horarios programados para cada experto. Incluye los tiempos de inicio y fin del turno, descansos (break y lunch), sesiones de seguimiento, preturno y capacitación. Esta información refleja lo que fue planificado en el sistema WFM y permite contrastar con el comportamiento real registrado en la tabla de resumen.")
+st.caption("Horarios planificados por experto: turnos, breaks, lunch, seguimiento y capacitación.")
 plan_cols = ["Turno inicio", "Turno fin", "Break inicio", "Break fin",
              "Lunch inicio", "Lunch fin", "Ini Segui", "Fin Segui",
              "Ini Preturno", "Fin Preturno", "Capa inicio", "Capa fin"]
@@ -533,7 +620,7 @@ st.dataframe(
 
 # ── Tabla 3: Estados y Excesos ────────────────
 st.markdown("**⚠️ Estados y Excesos**")
-st.caption("Detalle de los tiempos excedidos por actividad para cada experto y fecha. Se registran excesos en almuerzo, descanso, seguimiento, toilette, entrenamiento, feedback y calidad. La columna 'Total excesos' suma todos los excesos del día en formato h:mm:ss. Valores altos en esta tabla son un indicador de impacto negativo en la adherencia.")
+st.caption("Tiempos excedidos por actividad y día. La columna Total excesos consolida todos los excesos en h:mm:ss.")
 exc_cols     = ["Exceso Almuerzo", "Exceso Descanso", "Exceso Seguimiento",
                 "Exceso Toilette", "Exceso Entrenamiento", "Exceso Feedback", "Exceso Calidad"]
 exc_min_cols = [c + "_min" for c in exc_cols]
