@@ -55,7 +55,7 @@ df = cargar_datos("Consolidado_MAYO.xlsx")
 # ─────────────────────────────────────────────
 with st.sidebar:
     st.image("logo-scala-learning-transformacion-digital-universidades.webp", use_container_width=True)
-    t.markdown("---")
+    st.markdown("---")
     st.markdown("<div style='text-align:center'><b>Worforce Management</b></div>", unsafe_allow_html=True)
     st.markdown("<div style='text-align:center'><b>Uniminuto · Scala Learning</b></div>", unsafe_allow_html=True)
     st.markdown("---")
