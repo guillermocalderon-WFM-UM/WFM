@@ -117,10 +117,6 @@ st.markdown(f"""
     .main {{ background-color: {COLOR_BG}; }}
     .block-container {{ padding-top: 2rem; padding-bottom: 1rem; }}
 
-    /* ── Ocultar botón collapse del sidebar ── */
-    div[data-testid="stSidebarCollapseButton"],
-    button[data-testid="baseButton-headerNoPadding"] {{ display: none !important; }}
-
     /* ── Header banner ── */
     .header-banner {{
         background:
@@ -279,13 +275,18 @@ st.markdown(f"""
 
     /* ── Sidebar – widget labels y valores ── */
     div[data-testid="stSidebarContent"] label,
-    div[data-testid="stSidebarContent"] .stSelectbox label {{
+    div[data-testid="stSidebarContent"] .stSelectbox label,
+    div[data-testid="stSidebarContent"] [data-testid="stWidgetLabel"],
+    div[data-testid="stSidebarContent"] [data-testid="stWidgetLabel"] p,
+    div[data-testid="stSidebarContent"] [data-testid="stWidgetLabel"] span {{
         font-family: 'Inter', sans-serif !important;
         font-size: 11px !important;
         font-weight: 400 !important;
         color: rgba(255,255,255,0.72) !important;
     }}
-    div[data-testid="stSidebarContent"] .stDateInput label {{
+    div[data-testid="stSidebarContent"] .stDateInput label,
+    div[data-testid="stSidebarContent"] .stDateInput [data-testid="stWidgetLabel"],
+    div[data-testid="stSidebarContent"] .stDateInput [data-testid="stWidgetLabel"] p {{
         font-family: 'Inter', sans-serif !important;
         font-size: 11px !important;
         font-weight: 500 !important;
