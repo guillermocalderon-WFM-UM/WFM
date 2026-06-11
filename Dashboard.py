@@ -55,8 +55,9 @@ df = cargar_datos("Consolidado_MAYO.xlsx")
 # ─────────────────────────────────────────────
 with st.sidebar:
     st.image("logo-scala-learning-transformacion-digital-universidades.webp", use_container_width=True)
-    st.markdown("## 📊 WFM Dashboard")
-    st.markdown("**Uniminuto · Scala Learning**")
+    t.markdown("---")
+    st.markdown("<div style='text-align:center'><b>Worforce Management</b></div>", unsafe_allow_html=True)
+    st.markdown("<div style='text-align:center'><b>Uniminuto · Scala Learning</b></div>", unsafe_allow_html=True)
     st.markdown("---")
 
     st.markdown("### Período")
@@ -81,7 +82,7 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("### 🎨 Colores")
     with st.expander("Personalizar colores"):
-        COLOR_PRIMARY = st.color_picker("Sidebar / Primario", "#226B1B")
+        COLOR_PRIMARY = st.color_picker("Sidebar / Primario", "#28053F")
         COLOR_ACCENT  = st.color_picker("Acento (azul claro)", "#0EA5E9")
         COLOR_SUCCESS = st.color_picker("Éxito (verde)",       "#10B981")
         COLOR_WARNING = st.color_picker("Alerta (amarillo)",   "#F59E0B")
@@ -216,7 +217,7 @@ with c1:
     fig_tend.add_trace(go.Scatter(
         x=tend["_periodo"], y=tend["ADH"],
         mode="lines+markers",
-        line=dict(color=COLOR_ACCENT, width=2.5),
+        line=dict(color=COLOR_ACCENT, width=1.25, shape="spline"),
         marker=dict(size=7, color=COLOR_PRIMARY),
         fill="tozeroy",
         fillcolor="rgba(14,165,233,0.08)",
@@ -343,7 +344,7 @@ for sup in sup_lista:
         x=sub["_periodo"], y=sub["ADH"],
         name=nombre_corto,
         mode="lines+markers",
-        line=dict(color=colores_sup[sup], width=1.8),
+        line=dict(color=colores_sup[sup], width=1.25, shape="spline"),
         marker=dict(size=5),
         hovertemplate=f"<b>{nombre_corto}</b><br>%{{x}}: %{{y:.1%}}<extra></extra>"
     ))
@@ -365,37 +366,83 @@ st.plotly_chart(fig_sup, use_container_width=True)
 st.markdown("---")
 st.markdown("<div class='section-title'>🔍 Detalle por Agente</div>", unsafe_allow_html=True)
 
-excesos_min = [c for c in dff.columns if c.endswith("_min")]
-agente_stats = (
-    dff_validos.groupby(["Nombre","Supervisor","Campana"])
-    .agg(
-        ADH=("ADH_pct", "mean"),
-        Dias=("Fecha", "nunique"),
-        **{e.replace("_min",""): (e, lambda x: round(x.sum(), 1)) for e in excesos_min}
-    )
-    .reset_index()
-    .sort_values("ADH", ascending=False)
-)
-agente_stats["ADH"] = agente_stats["ADH"].apply(lambda x: f"{x:.1%}" if pd.notna(x) else "-")
+def seg_a_hhmmss(s):
+    if pd.isna(s) or s <= 0:
+        return "-"
+    s = int(s)
+    h, r = divmod(s, 3600)
+    m, sec = divmod(r, 60)
+    return f"{h}:{m:02d}:{sec:02d}"
 
-tard_ag = dff[dff["Validador Llegada"] == "Llegada tarde"].groupby("Nombre").size().reset_index(name="Tardanzas")
-agente_stats = agente_stats.merge(tard_ag, on="Nombre", how="left")
-agente_stats["Tardanzas"] = agente_stats["Tardanzas"].fillna(0).astype(int)
+def fmt_plan(v):
+    if pd.isna(v):
+        return "-"
+    s = str(v).strip()
+    # si es timedelta de pandas, convertir a h:mm:ss
+    if hasattr(v, "total_seconds"):
+        return seg_a_hhmmss(v.total_seconds())
+    return s
 
-exceso_cols = [c.replace("_min","") for c in excesos_min]
-cols_mostrar = ["Nombre","Supervisor","Campana","ADH","Dias","Tardanzas"] + exceso_cols
+# ── Tabla 1: Resumen General ──────────────────
+st.markdown("**📋 Resumen General**")
+t1 = dff.copy()
+t1["Retardo"]           = t1["Validador Llegada"].apply(lambda x: "Sí" if x == "Llegada tarde" else "No")
+t1["Ausencia"]          = t1["Validador Llegada"].apply(lambda x: "Sí" if x == "Ausente" else "No")
+t1["Tiempo de retardo"] = t1.apply(lambda r: seg_a_hhmmss(r["tard_s"]) if r["Retardo"] == "Sí" else "-", axis=1)
+t1["T. Programado"]     = t1["prog_s"].apply(seg_a_hhmmss)
+t1["Fuera de ADH"]      = (t1["prog_s"] - t1["adh_s"]).clip(lower=0).apply(seg_a_hhmmss)
+t1["ADH Aplicada"]      = t1["adh_s"].apply(seg_a_hhmmss)
+t1["Adherencia"]        = t1["ADH_pct"].apply(lambda x: f"{x:.1%}" if pd.notna(x) else "-")
 
 st.dataframe(
-    agente_stats[cols_mostrar].rename(columns={
-        "Nombre": "Agente", "Dias": "Días", "Campana": "Campaña",
-        "Exceso Almuerzo": "Ex.Almuerzo", "Exceso Descanso": "Ex.Descanso",
-        "Exceso Seguimiento": "Ex.Seguim.", "Exceso Toilette": "Ex.Toilette",
-        "Exceso Entrenamiento": "Ex.Entrena.", "Exceso Feedback": "Ex.Feedback",
-        "Exceso Calidad": "Ex.Calidad"
-    }),
-    use_container_width=True,
-    hide_index=True,
-    height=420
+    t1.rename(columns={"Nombre": "Agente", "Campana": "Campaña"})[
+        ["Fecha", "Agente", "Supervisor", "Campaña", "Adherencia",
+         "Retardo", "Tiempo de retardo", "Ausencia",
+         "T. Programado", "Fuera de ADH", "ADH Aplicada"]
+    ].sort_values(["Fecha", "Agente"]).reset_index(drop=True),
+    use_container_width=True, hide_index=True, height=350
 )
 
-st.caption(f"📋 {len(agente_stats)} agentes · Excesos en minutos acumulados del período · Adherencia promedio de días trabajados")
+# ── Tabla 2: Planificación ────────────────────
+st.markdown("**📅 Planificación**")
+plan_cols = ["Turno inicio", "Turno fin", "Break inicio", "Break fin",
+             "Lunch inicio", "Lunch fin", "Ini Segui", "Fin Segui",
+             "Ini Preturno", "Fin Preturno", "Capa inicio", "Capa fin"]
+plan_disponibles = [c for c in plan_cols if c in dff.columns]
+
+t2 = dff.rename(columns={"Nombre": "Agente", "Campana": "Campaña"})[
+    ["Fecha", "Agente", "Supervisor", "Campaña"] + plan_disponibles
+].copy()
+for c in plan_disponibles:
+    t2[c] = t2[c].apply(fmt_plan)
+
+st.dataframe(
+    t2.sort_values(["Fecha", "Agente"]).reset_index(drop=True),
+    use_container_width=True, hide_index=True, height=350
+)
+
+# ── Tabla 3: Estados y Excesos ────────────────
+st.markdown("**⚠️ Estados y Excesos**")
+exc_cols     = ["Exceso Almuerzo", "Exceso Descanso", "Exceso Seguimiento",
+                "Exceso Toilette", "Exceso Entrenamiento", "Exceso Feedback", "Exceso Calidad"]
+exc_min_cols = [c + "_min" for c in exc_cols]
+exc_min_disp = [c for c in exc_min_cols if c in dff.columns]
+
+t3 = dff.rename(columns={"Nombre": "Agente", "Campana": "Campaña"}).copy()
+exc_fmt_cols = []
+for orig, min_col in zip(exc_cols, exc_min_cols):
+    if min_col in t3.columns:
+        t3[orig] = (t3[min_col] * 60).apply(seg_a_hhmmss)
+        exc_fmt_cols.append(orig)
+
+if exc_min_disp:
+    total_s = t3[exc_min_disp].sum(axis=1) * 60
+    t3["Total excesos"] = total_s.apply(seg_a_hhmmss)
+
+cols_t3 = ["Fecha", "Agente", "Supervisor", "Campaña"] + exc_fmt_cols + (["Total excesos"] if exc_min_disp else [])
+st.dataframe(
+    t3[cols_t3].sort_values(["Fecha", "Agente"]).reset_index(drop=True),
+    use_container_width=True, hide_index=True, height=350
+)
+
+st.caption(f"📋 {dff['Nombre'].nunique()} agentes · {len(dff)} registros en el período seleccionado")
