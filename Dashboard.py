@@ -107,7 +107,7 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────
-# CSS DINÁMICO (usa los colores del sidebar)
+# CSS
 # ─────────────────────────────────────────────
 st.markdown(f"""
 <style>
@@ -206,25 +206,149 @@ st.markdown(f"""
     .kpi-bar-wrap {{ background: #F1F5F9; border-radius: 99px; height: 5px; margin-top: 12px; overflow: hidden; }}
     .kpi-bar-fill {{ height: 5px; border-radius: 99px; }}
 
-    /* ── Section cards ── */
-    .section-card {{
+    /* ── Section header cards ── */
+    .sec-header {{
         background: white;
-        border-radius: 14px;
-        padding: 16px 22px;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.05);
-        border-left: 5px solid {COLOR_PRIMARY};
-        margin-bottom: 14px;
+        border-radius: 16px;
+        padding: 18px 24px 16px;
+        margin: 24px 0 18px;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        border: 1px solid rgba(0,0,0,0.04);
     }}
-    .section-card-title {{ font-size: 15px; font-weight: 700; color: {COLOR_PRIMARY}; margin: 0 0 4px 0; }}
-    .section-card-desc  {{ font-size: 12px; color: #94A3B8; margin: 0; line-height: 1.6; }}
-
-    /* ── Chart wrapper ── */
-    .chart-wrap {{
-        background: white;
+    .sec-header::before {{
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 4px;
+        background: var(--sc, {COLOR_PRIMARY});
+        border-radius: 16px 16px 0 0;
+    }}
+    .sec-header::after {{
+        content: '';
+        position: absolute;
+        right: -24px; top: -24px;
+        width: 110px; height: 110px;
+        background: var(--sc, {COLOR_PRIMARY});
+        opacity: 0.05;
+        border-radius: 50%;
+    }}
+    .sec-icon {{
+        width: 52px; height: 52px;
         border-radius: 14px;
-        padding: 18px 18px 6px;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.05);
-        margin-bottom: 4px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 26px;
+        flex-shrink: 0;
+    }}
+    .sec-text {{ flex: 1; min-width: 0; }}
+    .sec-title {{
+        font-size: 17px; font-weight: 800;
+        color: #1E293B;
+        margin: 0 0 5px 0;
+        letter-spacing: -0.4px;
+    }}
+    .sec-desc {{
+        font-size: 12px; color: #94A3B8;
+        margin: 0; line-height: 1.6;
+    }}
+    .sec-tag {{
+        font-size: 10px; font-weight: 700;
+        color: white;
+        background: var(--sc, {COLOR_PRIMARY});
+        padding: 5px 14px;
+        border-radius: 99px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        flex-shrink: 0;
+        align-self: flex-start;
+    }}
+
+    /* ── Chart mini-headers ── */
+    .chart-hdr {{
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 2px 4px 10px;
+        border-bottom: 2px solid #F1F5F9;
+        margin-bottom: 6px;
+    }}
+    .ch-icon {{ font-size: 20px; line-height: 1; flex-shrink: 0; }}
+    .ch-texts {{ flex: 1; min-width: 0; }}
+    .ch-title {{
+        font-size: 13px; font-weight: 700;
+        color: #334155; margin: 0 0 2px;
+    }}
+    .ch-sub {{ font-size: 11px; color: #94A3B8; margin: 0; }}
+    .ch-tag {{
+        margin-left: auto;
+        font-size: 10px; font-weight: 700;
+        color: var(--cc, {COLOR_PRIMARY});
+        background: #F1F5F9;
+        padding: 3px 10px; border-radius: 99px;
+        letter-spacing: 0.05em;
+        flex-shrink: 0;
+        text-transform: uppercase;
+    }}
+
+    /* ── Table section headers ── */
+    .tbl-hdr {{
+        padding: 14px 20px;
+        border-radius: 14px;
+        display: flex; align-items: center; gap: 12px;
+        margin-bottom: 6px;
+        box-shadow: 0 4px 18px rgba(0,0,0,0.15);
+        position: relative;
+        overflow: hidden;
+    }}
+    .tbl-hdr::before {{
+        content: '';
+        position: absolute;
+        left: -10px; top: -10px;
+        width: 60px; height: 60px;
+        background: rgba(255,255,255,0.08);
+        border-radius: 50%;
+    }}
+    .tbl-hdr::after {{
+        content: '';
+        position: absolute;
+        right: -20px; bottom: -20px;
+        width: 80px; height: 80px;
+        background: rgba(255,255,255,0.10);
+        border-radius: 50%;
+    }}
+    .tbl-hdr-icon {{ font-size: 24px; flex-shrink: 0; position: relative; z-index: 1; }}
+    .tbl-hdr-body {{ flex: 1; position: relative; z-index: 1; }}
+    .tbl-hdr-title {{
+        font-size: 14px; font-weight: 800;
+        color: white; margin: 0 0 2px;
+        letter-spacing: -0.2px;
+    }}
+    .tbl-hdr-desc {{
+        font-size: 11px; color: rgba(255,255,255,0.72); margin: 0;
+    }}
+    .tbl-hdr-badge {{
+        font-size: 10px; font-weight: 700;
+        color: white;
+        background: rgba(255,255,255,0.20);
+        border: 1px solid rgba(255,255,255,0.35);
+        padding: 4px 12px; border-radius: 99px;
+        flex-shrink: 0;
+        white-space: nowrap;
+        position: relative; z-index: 1;
+    }}
+
+    /* ── Plotly chart: card styling ── */
+    div[data-testid="stPlotlyChart"] {{
+        background: white !important;
+        border-radius: 14px !important;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.07) !important;
+        border: 1px solid rgba(0,0,0,0.04) !important;
+        overflow: hidden !important;
+        padding: 4px !important;
     }}
 
     /* ── Encabezados de tablas ── */
@@ -235,13 +359,6 @@ st.markdown(f"""
     }}
     div[data-testid="stDataFrame"] div[role="columnheader"] span {{
         color: white !important;
-    }}
-
-    /* ── Divider ── */
-    .divider {{
-        border: none;
-        border-top: 1px solid #E2E8F0;
-        margin: 24px 0;
     }}
 
     /* ── Sidebar – fondo degradado difuminado ── */
@@ -465,16 +582,19 @@ with k5:
         {kpi_bar(pct_ausentes, COLOR_DANGER)}
     </div>""", unsafe_allow_html=True)
 
-st.markdown("<br>", unsafe_allow_html=True)
-
 # ─────────────────────────────────────────────
 # TENDENCIA + DISTRIBUCIÓN LLEGADAS
 # ─────────────────────────────────────────────
-st.markdown("<hr class='divider'>", unsafe_allow_html=True)
-st.markdown("""<div class='section-card'>
-    <div class='section-card-title'>📈 Tendencia de Adherencia</div>
-    <div class='section-card-desc'>Evolución diaria de la adherencia del equipo y distribución de tipos de llegada en el período.</div>
-</div>""", unsafe_allow_html=True)
+st.markdown(f"""
+<div class='sec-header' style='--sc:{COLOR_ACCENT}'>
+    <div class='sec-icon' style='background:rgba(14,165,233,0.12)'>📈</div>
+    <div class='sec-text'>
+        <div class='sec-title'>Tendencia de Adherencia</div>
+        <div class='sec-desc'>Evolución de la adherencia del equipo y distribución de tipos de llegada en el período.</div>
+    </div>
+    <span class='sec-tag'>Análisis</span>
+</div>
+""", unsafe_allow_html=True)
 
 tend = (
     dff_validos
@@ -485,6 +605,14 @@ tend = (
 
 c1, c2 = st.columns([3, 2])
 with c1:
+    st.markdown(f"""<div class='chart-hdr' style='--cc:{COLOR_ACCENT}'>
+        <span class='ch-icon'>📈</span>
+        <div class='ch-texts'>
+            <div class='ch-title'>Evolución de Adherencia</div>
+            <div class='ch-sub'>Por período seleccionado · Meta 90%</div>
+        </div>
+        <span class='ch-tag'>Tendencia</span>
+    </div>""", unsafe_allow_html=True)
     fig_tend = go.Figure()
     fig_tend.add_trace(go.Scatter(
         x=tend["_periodo"], y=tend["ADH"],
@@ -515,6 +643,14 @@ with c1:
     st.plotly_chart(fig_tend, use_container_width=True)
 
 with c2:
+    st.markdown(f"""<div class='chart-hdr' style='--cc:{COLOR_SUCCESS}'>
+        <span class='ch-icon'>🍩</span>
+        <div class='ch-texts'>
+            <div class='ch-title'>Distribución de Llegadas</div>
+            <div class='ch-sub'>Puntualidad en el período seleccionado</div>
+        </div>
+        <span class='ch-tag'>Donut</span>
+    </div>""", unsafe_allow_html=True)
     llegadas_plot = dff["Validador Llegada"].value_counts().reset_index()
     llegadas_plot.columns = ["Estado","Cantidad"]
     llegadas_plot = llegadas_plot[llegadas_plot["Estado"] != "No programado"]
@@ -565,11 +701,16 @@ with c2:
 # ─────────────────────────────────────────────
 # COMPARATIVO POR SUPERVISOR
 # ─────────────────────────────────────────────
-st.markdown("<hr class='divider'>", unsafe_allow_html=True)
-st.markdown("""<div class='section-card'>
-    <div class='section-card-title'>👥 Comparativo por Supervisor</div>
-    <div class='section-card-desc'>Adherencia consolidada por equipo: verde ≥ 90%, amarillo ≥ 80%, rojo &lt; 80%.</div>
-</div>""", unsafe_allow_html=True)
+st.markdown(f"""
+<div class='sec-header' style='--sc:{COLOR_PRIMARY}'>
+    <div class='sec-icon' style='background:rgba(40,5,63,0.10)'>👥</div>
+    <div class='sec-text'>
+        <div class='sec-title'>Comparativo por Supervisor</div>
+        <div class='sec-desc'>Adherencia consolidada por equipo: verde ≥ 90%, amarillo ≥ 80%, rojo &lt; 80%.</div>
+    </div>
+    <span class='sec-tag'>Equipos</span>
+</div>
+""", unsafe_allow_html=True)
 
 sup_stats = (
     dff_validos.groupby("Supervisor")
@@ -591,6 +732,14 @@ sup_stats["Tardes"]   = sup_stats["Tardes"].fillna(0).astype(int)
 c_bar, c_gauge = st.columns([3, 2])
 
 with c_bar:
+    st.markdown(f"""<div class='chart-hdr' style='--cc:{COLOR_PRIMARY}'>
+        <span class='ch-icon'>📊</span>
+        <div class='ch-texts'>
+            <div class='ch-title'>Adherencia por Supervisor</div>
+            <div class='ch-sub'>Ordenado de menor a mayor · Zona verde = meta cumplida</div>
+        </div>
+        <span class='ch-tag'>Barras</span>
+    </div>""", unsafe_allow_html=True)
     sup_stats["Color"] = sup_stats["ADH"].apply(
         lambda x: COLOR_SUCCESS if x >= 0.90 else (COLOR_WARNING if x >= 0.80 else COLOR_DANGER)
     )
@@ -600,14 +749,12 @@ with c_bar:
 
     fig_bar = go.Figure()
 
-    # Zona verde (zona de cumplimiento de meta)
     fig_bar.add_vrect(
         x0=0.90, x1=1.02,
         fillcolor="rgba(16,185,129,0.06)",
         layer="below", line_width=0
     )
 
-    # Barras de fondo (track gris)
     fig_bar.add_trace(go.Bar(
         x=[1.0] * n_sup, y=sup_short["Supervisor"],
         orientation="h",
@@ -615,7 +762,6 @@ with c_bar:
         showlegend=False, hoverinfo="skip", width=0.55
     ))
 
-    # Barras reales con valor dentro
     fig_bar.add_trace(go.Bar(
         x=sup_stats["ADH"], y=sup_short["Supervisor"],
         orientation="h",
@@ -648,6 +794,14 @@ with c_bar:
     st.plotly_chart(fig_bar, use_container_width=True)
 
 with c_gauge:
+    st.markdown("""<div class='tbl-hdr' style='background:linear-gradient(135deg,#28053F 0%,#0EA5E9 100%)'>
+        <span class='tbl-hdr-icon'>🏆</span>
+        <div class='tbl-hdr-body'>
+            <div class='tbl-hdr-title'>Ranking Supervisores</div>
+            <div class='tbl-hdr-desc'>Adherencia, agentes, ausencias y tardanzas</div>
+        </div>
+        <span class='tbl-hdr-badge'>Resumen</span>
+    </div>""", unsafe_allow_html=True)
     tabla_sup = sup_stats.sort_values("ADH", ascending=False)[
         ["Supervisor","ADH","Agentes","Ausentes","Tardes"]
     ].copy()
@@ -659,11 +813,16 @@ with c_gauge:
 # ─────────────────────────────────────────────
 # GRÁFICAS POR SUPERVISOR (TENDENCIA)
 # ─────────────────────────────────────────────
-st.markdown("<hr class='divider'>", unsafe_allow_html=True)
-st.markdown("""<div class='section-card'>
-    <div class='section-card-title'>📉 Tendencia por Supervisor</div>
-    <div class='section-card-desc'>Comparación de la evolución de adherencia de cada supervisor a lo largo del período.</div>
-</div>""", unsafe_allow_html=True)
+st.markdown("""
+<div class='sec-header' style='--sc:#8B5CF6'>
+    <div class='sec-icon' style='background:rgba(139,92,246,0.12)'>📉</div>
+    <div class='sec-text'>
+        <div class='sec-title'>Tendencia por Supervisor</div>
+        <div class='sec-desc'>Comparación de la evolución de adherencia de cada supervisor a lo largo del período.</div>
+    </div>
+    <span class='sec-tag' style='background:#8B5CF6'>Evolución</span>
+</div>
+""", unsafe_allow_html=True)
 
 tend_sup = (
     dff_validos
@@ -674,6 +833,15 @@ tend_sup = (
 
 sup_lista = sorted(tend_sup["Supervisor"].unique())
 colores_sup = {s: SUPERVISOR_COLORS[i % len(SUPERVISOR_COLORS)] for i, s in enumerate(sup_lista)}
+
+st.markdown("""<div class='chart-hdr' style='--cc:#8B5CF6'>
+    <span class='ch-icon'>📉</span>
+    <div class='ch-texts'>
+        <div class='ch-title'>Adherencia por Supervisor en el Tiempo</div>
+        <div class='ch-sub'>Cada línea representa un supervisor · Meta 90%</div>
+    </div>
+    <span class='ch-tag' style='color:#8B5CF6'>Multi-línea</span>
+</div>""", unsafe_allow_html=True)
 
 fig_sup = go.Figure()
 for sup in sup_lista:
@@ -702,11 +870,16 @@ st.plotly_chart(fig_sup, use_container_width=True)
 # ─────────────────────────────────────────────
 # DETALLE POR AGENTE
 # ─────────────────────────────────────────────
-st.markdown("<hr class='divider'>", unsafe_allow_html=True)
-st.markdown("""<div class='section-card'>
-    <div class='section-card-title'>🔍 Detalle por Agente</div>
-    <div class='section-card-desc'>Adherencia, planificación y excesos por experto y fecha. Filtra por agente desde la barra lateral.</div>
-</div>""", unsafe_allow_html=True)
+st.markdown(f"""
+<div class='sec-header' style='--sc:{COLOR_SUCCESS}'>
+    <div class='sec-icon' style='background:rgba(16,185,129,0.12)'>🔍</div>
+    <div class='sec-text'>
+        <div class='sec-title'>Detalle por Agente</div>
+        <div class='sec-desc'>Adherencia, planificación y excesos por experto. Filtra por agente desde la barra lateral.</div>
+    </div>
+    <span class='sec-tag' style='background:{COLOR_SUCCESS}'>Tablas</span>
+</div>
+""", unsafe_allow_html=True)
 
 def seg_a_hhmmss(s):
     if pd.isna(s) or s <= 0:
@@ -720,14 +893,20 @@ def fmt_plan(v):
     if pd.isna(v):
         return "-"
     s = str(v).strip()
-    # si es timedelta de pandas, convertir a h:mm:ss
     if hasattr(v, "total_seconds"):
         return seg_a_hhmmss(v.total_seconds())
     return s
 
 # ── Tabla 1: Resumen General ──────────────────
-st.markdown("**📋 Resumen General**")
-st.caption("Seguimiento diario por experto: adherencia, retardos, ausencias y tiempos en formato h:mm:ss.")
+st.markdown(f"""<div class='tbl-hdr' style='background:linear-gradient(135deg,{COLOR_SUCCESS} 0%,#059669 100%)'>
+    <span class='tbl-hdr-icon'>📋</span>
+    <div class='tbl-hdr-body'>
+        <div class='tbl-hdr-title'>Resumen General</div>
+        <div class='tbl-hdr-desc'>Adherencia, retardos, ausencias y tiempos por experto y fecha</div>
+    </div>
+    <span class='tbl-hdr-badge'>{dff["Nombre"].nunique()} expertos · {len(dff)} registros</span>
+</div>""", unsafe_allow_html=True)
+
 t1 = dff.copy()
 t1["Fecha"]             = t1["Fecha"].dt.strftime("%d/%m/%Y")
 t1["Retardo"]           = t1["Validador Llegada"].apply(lambda x: "Sí" if x == "Llegada tarde" else "No")
@@ -765,8 +944,15 @@ st.dataframe(
 )
 
 # ── Tabla 2: Planificación ────────────────────
-st.markdown("**📅 Planificación**")
-st.caption("Horarios planificados por experto: turnos, breaks, lunch, seguimiento y capacitación.")
+st.markdown(f"""<div class='tbl-hdr' style='background:linear-gradient(135deg,{COLOR_ACCENT} 0%,#0284C7 100%);margin-top:20px'>
+    <span class='tbl-hdr-icon'>📅</span>
+    <div class='tbl-hdr-body'>
+        <div class='tbl-hdr-title'>Planificación</div>
+        <div class='tbl-hdr-desc'>Turnos, breaks, lunch, seguimiento y capacitación por experto</div>
+    </div>
+    <span class='tbl-hdr-badge'>Horarios</span>
+</div>""", unsafe_allow_html=True)
+
 plan_cols = ["Turno inicio", "Turno fin", "Break inicio", "Break fin",
              "Lunch inicio", "Lunch fin", "Ini Segui", "Fin Segui",
              "Ini Preturno", "Fin Preturno", "Capa inicio", "Capa fin"]
@@ -785,8 +971,15 @@ st.dataframe(
 )
 
 # ── Tabla 3: Estados y Excesos ────────────────
-st.markdown("**⚠️ Estados y Excesos**")
-st.caption("Tiempos excedidos por actividad y día. La columna Total excesos consolida todos los excesos en h:mm:ss.")
+st.markdown(f"""<div class='tbl-hdr' style='background:linear-gradient(135deg,{COLOR_DANGER} 0%,#DC2626 100%);margin-top:20px'>
+    <span class='tbl-hdr-icon'>⚠️</span>
+    <div class='tbl-hdr-body'>
+        <div class='tbl-hdr-title'>Estados y Excesos</div>
+        <div class='tbl-hdr-desc'>Tiempos excedidos por actividad · Total excesos consolidado en h:mm:ss</div>
+    </div>
+    <span class='tbl-hdr-badge'>Excesos</span>
+</div>""", unsafe_allow_html=True)
+
 exc_cols     = ["Exceso Almuerzo", "Exceso Descanso", "Exceso Seguimiento",
                 "Exceso Toilette", "Exceso Entrenamiento", "Exceso Feedback", "Exceso Calidad"]
 exc_min_cols = [c + "_min" for c in exc_cols]
