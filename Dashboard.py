@@ -128,10 +128,15 @@ with st.sidebar:
 # ─────────────────────────────────────────────
 st.markdown(f"""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
     * {{ font-family: 'Inter', sans-serif !important; }}
 
-    .main {{ background-color: {COLOR_BG}; }}
+    /* ── Fondo con patrón de puntos ── */
+    .main {{
+        background-color: {COLOR_BG};
+        background-image: radial-gradient(circle, #C8D6E3 1px, transparent 1px);
+        background-size: 28px 28px;
+    }}
     .block-container {{ padding-top: 2rem; padding-bottom: 1rem; }}
 
     /* ── Sidebar collapse/expand button: ícono transparente ── */
@@ -151,7 +156,12 @@ st.markdown(f"""
     /* ── Header banner ── */
     .header-banner {{
         background:
-            radial-gradient(ellipse at 15% 50%, rgba(255,255,255,0.12) 0%, transparent 55%),
+            repeating-linear-gradient(
+                -45deg,
+                rgba(255,255,255,0) 0px, rgba(255,255,255,0) 12px,
+                rgba(255,255,255,0.025) 12px, rgba(255,255,255,0.025) 13px
+            ),
+            radial-gradient(ellipse at 15% 50%, rgba(255,255,255,0.14) 0%, transparent 55%),
             radial-gradient(ellipse at 85% 80%, rgba(0,0,0,0.20) 0%, transparent 55%),
             linear-gradient(120deg, {COLOR_PRIMARY} 0%, #0EA5E9 100%);
         border-radius: 16px;
@@ -179,11 +189,8 @@ st.markdown(f"""
         border: 1px solid rgba(255,255,255,0.32);
         border-radius: 20px;
         padding: 7px 18px;
-        font-size: 12px;
-        font-weight: 700;
-        color: white;
-        white-space: nowrap;
-        letter-spacing: 0.02em;
+        font-size: 12px; font-weight: 700; color: white;
+        white-space: nowrap; letter-spacing: 0.02em;
     }}
 
     /* ── KPI cards ── */
@@ -199,6 +206,12 @@ st.markdown(f"""
         flex-direction: column;
         justify-content: space-between;
         border: 1px solid rgba(0,0,0,0.04);
+        transition: transform 0.22s ease, box-shadow 0.22s ease;
+        cursor: default;
+    }}
+    .kpi-card:hover {{
+        transform: translateY(-5px);
+        box-shadow: 0 14px 44px rgba(0,0,0,0.15);
     }}
     .kpi-card::before {{
         content: '';
@@ -217,10 +230,19 @@ st.markdown(f"""
         opacity: 0.08;
         border-radius: 50%;
     }}
-    .kpi-label {{ font-size: 10px; color: #94A3B8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; }}
-    .kpi-value {{ font-size: 36px; font-weight: 900; line-height: 1.1; margin: 10px 0 4px; }}
-    .kpi-sub   {{ font-size: 11px; color: #CBD5E1; }}
-    .kpi-bar-wrap {{ background: #F1F5F9; border-radius: 99px; height: 5px; margin-top: 12px; overflow: hidden; }}
+    .kpi-bg-icon {{
+        position: absolute;
+        bottom: 14px; right: 18px;
+        font-size: 44px;
+        opacity: 0.09;
+        line-height: 1;
+        pointer-events: none;
+        z-index: 0;
+    }}
+    .kpi-label {{ font-size: 10px; color: #94A3B8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; position: relative; z-index: 1; }}
+    .kpi-value {{ font-size: 36px; font-weight: 900; line-height: 1.1; margin: 10px 0 4px; position: relative; z-index: 1; }}
+    .kpi-sub   {{ font-size: 11px; color: #CBD5E1; position: relative; z-index: 1; }}
+    .kpi-bar-wrap {{ background: #F1F5F9; border-radius: 99px; height: 5px; margin-top: 12px; overflow: hidden; position: relative; z-index: 1; }}
     .kpi-bar-fill {{ height: 5px; border-radius: 99px; }}
 
     /* ── Section header cards ── */
@@ -254,34 +276,58 @@ st.markdown(f"""
         opacity: 0.05;
         border-radius: 50%;
     }}
+    /* Lavado de color desde la izquierda */
+    .sec-wash {{
+        position: absolute;
+        left: 0; top: 0; bottom: 0;
+        width: 220px;
+        background: linear-gradient(90deg, var(--sc, {COLOR_PRIMARY}), transparent);
+        opacity: 0.07;
+        pointer-events: none;
+        z-index: 0;
+    }}
     .sec-icon {{
         width: 52px; height: 52px;
         border-radius: 14px;
         display: flex; align-items: center; justify-content: center;
         font-size: 26px;
         flex-shrink: 0;
+        position: relative; z-index: 1;
     }}
-    .sec-text {{ flex: 1; min-width: 0; }}
+    .sec-text {{ flex: 1; min-width: 0; position: relative; z-index: 1; }}
     .sec-title {{
         font-size: 17px; font-weight: 800;
-        color: #1E293B;
-        margin: 0 0 5px 0;
+        color: #1E293B; margin: 0 0 5px 0;
         letter-spacing: -0.4px;
     }}
-    .sec-desc {{
-        font-size: 12px; color: #94A3B8;
-        margin: 0; line-height: 1.6;
+    .sec-desc {{ font-size: 12px; color: #94A3B8; margin: 0; line-height: 1.6; }}
+    /* Mini-métrica derecha */
+    .sec-meta {{
+        text-align: center;
+        flex-shrink: 0;
+        padding: 8px 18px;
+        background: #F8FAFC;
+        border-radius: 12px;
+        border: 1px solid #E2E8F0;
+        position: relative; z-index: 1;
+    }}
+    .sec-meta-val {{
+        font-size: 22px; font-weight: 900;
+        line-height: 1.1; margin-bottom: 2px;
+    }}
+    .sec-meta-lab {{
+        font-size: 9px; font-weight: 700;
+        color: #94A3B8;
+        text-transform: uppercase; letter-spacing: 0.08em;
     }}
     .sec-tag {{
         font-size: 10px; font-weight: 700;
         color: white;
         background: var(--sc, {COLOR_PRIMARY});
-        padding: 5px 14px;
-        border-radius: 99px;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        flex-shrink: 0;
-        align-self: flex-start;
+        padding: 5px 14px; border-radius: 99px;
+        letter-spacing: 0.06em; text-transform: uppercase;
+        flex-shrink: 0; align-self: flex-start;
+        position: relative; z-index: 1;
     }}
 
     /* ── Chart mini-headers ── */
@@ -289,25 +335,24 @@ st.markdown(f"""
         display: flex;
         align-items: center;
         gap: 10px;
-        padding: 2px 4px 10px;
-        border-bottom: 2px solid #F1F5F9;
-        margin-bottom: 6px;
+        padding: 10px 14px;
+        background: #F8FAFC;
+        border-radius: 10px;
+        border-left: 4px solid var(--cc, {COLOR_ACCENT});
+        margin-bottom: 10px;
     }}
-    .ch-icon {{ font-size: 20px; line-height: 1; flex-shrink: 0; }}
+    .ch-icon {{ font-size: 18px; line-height: 1; flex-shrink: 0; }}
     .ch-texts {{ flex: 1; min-width: 0; }}
-    .ch-title {{
-        font-size: 13px; font-weight: 700;
-        color: #334155; margin: 0 0 2px;
-    }}
-    .ch-sub {{ font-size: 11px; color: #94A3B8; margin: 0; }}
+    .ch-title {{ font-size: 12px; font-weight: 700; color: #334155; margin: 0 0 1px; }}
+    .ch-sub {{ font-size: 10px; color: #94A3B8; margin: 0; }}
     .ch-tag {{
         margin-left: auto;
-        font-size: 10px; font-weight: 700;
-        color: var(--cc, {COLOR_PRIMARY});
-        background: #F1F5F9;
-        padding: 3px 10px; border-radius: 99px;
-        letter-spacing: 0.05em;
-        flex-shrink: 0;
+        font-size: 9px; font-weight: 700;
+        color: var(--cc, {COLOR_ACCENT});
+        background: white;
+        border: 1px solid #E2E8F0;
+        padding: 2px 8px; border-radius: 99px;
+        letter-spacing: 0.05em; flex-shrink: 0;
         text-transform: uppercase;
     }}
 
@@ -318,8 +363,7 @@ st.markdown(f"""
         display: flex; align-items: center; gap: 12px;
         margin-bottom: 6px;
         box-shadow: 0 4px 18px rgba(0,0,0,0.15);
-        position: relative;
-        overflow: hidden;
+        position: relative; overflow: hidden;
     }}
     .tbl-hdr::before {{
         content: '';
@@ -339,22 +383,14 @@ st.markdown(f"""
     }}
     .tbl-hdr-icon {{ font-size: 24px; flex-shrink: 0; position: relative; z-index: 1; }}
     .tbl-hdr-body {{ flex: 1; position: relative; z-index: 1; }}
-    .tbl-hdr-title {{
-        font-size: 14px; font-weight: 800;
-        color: white; margin: 0 0 2px;
-        letter-spacing: -0.2px;
-    }}
-    .tbl-hdr-desc {{
-        font-size: 11px; color: rgba(255,255,255,0.72); margin: 0;
-    }}
+    .tbl-hdr-title {{ font-size: 14px; font-weight: 800; color: white; margin: 0 0 2px; letter-spacing: -0.2px; }}
+    .tbl-hdr-desc {{ font-size: 11px; color: rgba(255,255,255,0.72); margin: 0; }}
     .tbl-hdr-badge {{
-        font-size: 10px; font-weight: 700;
-        color: white;
+        font-size: 10px; font-weight: 700; color: white;
         background: rgba(255,255,255,0.20);
         border: 1px solid rgba(255,255,255,0.35);
         padding: 4px 12px; border-radius: 99px;
-        flex-shrink: 0;
-        white-space: nowrap;
+        flex-shrink: 0; white-space: nowrap;
         position: relative; z-index: 1;
     }}
 
@@ -371,8 +407,7 @@ st.markdown(f"""
     /* ── Encabezados de tablas ── */
     div[data-testid="stDataFrame"] div[role="columnheader"] {{
         background-color: {COLOR_PRIMARY} !important;
-        color: white !important;
-        font-weight: 700 !important;
+        color: white !important; font-weight: 700 !important;
     }}
     div[data-testid="stDataFrame"] div[role="columnheader"] span {{
         color: white !important;
@@ -390,25 +425,26 @@ st.markdown(f"""
     div[data-testid="stSidebarContent"] * {{ color: white !important; }}
     div[data-testid="stSidebarContent"] hr {{
         border-color: rgba(255,255,255,0.12);
-        margin-top: 4px !important;
-        margin-bottom: 4px !important;
+        margin-top: 4px !important; margin-bottom: 4px !important;
     }}
 
-    /* ── Dropdown options: texto oscuro sobre fondo blanco ── */
-    div[data-baseweb="popover"] *,
-    div[data-baseweb="menu"] *,
-    ul[role="listbox"] *,
-    li[role="option"],
-    li[role="option"] * {{ color: #1E293B !important; }}
+    /* ── Logo glow ── */
+    div[data-testid="stSidebarContent"] [data-testid="stImage"] img {{
+        filter: drop-shadow(0 6px 22px rgba(14,165,233,0.40));
+    }}
+
+    /* ── Dropdown options: texto oscuro ── */
+    div[data-baseweb="popover"] *, div[data-baseweb="menu"] *,
+    ul[role="listbox"] *, li[role="option"], li[role="option"] * {{
+        color: #1E293B !important;
+    }}
     li[role="option"]:hover,
     li[role="option"][aria-selected="true"] {{ background: #F1F5F9 !important; }}
 
-    /* ── Valores seleccionados dentro del selectbox (sidebar) ── */
+    /* ── Sidebar – selectbox valor seleccionado ── */
     div[data-testid="stSidebarContent"] .stSelectbox [data-baseweb="select"] span,
     div[data-testid="stSidebarContent"] .stSelectbox [data-baseweb="select"] div[class*="ValueContainer"] *,
     div[data-testid="stSidebarContent"] .stSelectbox [data-baseweb="select"] input {{ color: white !important; }}
-
-    /* ── Inputs de fecha ── */
     div[data-testid="stSidebarContent"] input[type="text"] {{ color: white !important; }}
 
     /* ── Sidebar – brand card v2 ── */
@@ -419,23 +455,25 @@ st.markdown(f"""
         overflow: hidden;
         margin: 10px 0 16px;
     }}
+    @keyframes gradientFlow {{
+        0%   {{ background-position: 0% 50%;   }}
+        50%  {{ background-position: 100% 50%; }}
+        100% {{ background-position: 0% 50%;   }}
+    }}
     .sb-bv2-gradient {{
         height: 4px;
-        background: linear-gradient(90deg, #0EA5E9 0%, #10B981 50%, #F59E0B 100%);
+        background: linear-gradient(90deg, #0EA5E9, #10B981, #F59E0B, #8B5CF6, #EF4444, #0EA5E9);
+        background-size: 300% 100%;
+        animation: gradientFlow 7s ease-in-out infinite;
     }}
-    .sb-bv2-inner {{
-        padding: 14px 16px 16px;
-        text-align: center;
-    }}
+    .sb-bv2-inner {{ padding: 14px 16px 16px; text-align: center; }}
     .sb-bv2-title {{
         font-size: 15px !important; font-weight: 800 !important;
-        color: white !important; letter-spacing: -0.3px !important;
-        margin-bottom: 4px;
+        color: white !important; letter-spacing: -0.3px !important; margin-bottom: 4px;
     }}
     .sb-bv2-sub {{
         font-size: 12px !important;
-        color: rgba(255,255,255,0.55) !important;
-        margin-bottom: 12px;
+        color: rgba(255,255,255,0.55) !important; margin-bottom: 12px;
     }}
     .sb-bv2-tags {{ display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }}
     .sb-bv2-tag {{
@@ -444,93 +482,32 @@ st.markdown(f"""
         background: rgba(255,255,255,0.12);
         border: 1px solid rgba(255,255,255,0.22);
         padding: 3px 10px; border-radius: 99px;
-        letter-spacing: 0.06em !important;
-        text-transform: uppercase;
+        letter-spacing: 0.06em !important; text-transform: uppercase;
     }}
 
     /* ── Sidebar – section headers ── */
-    .sb-sec-hdr {{
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin: 18px 0 8px;
-    }}
-    .sb-sec-dot {{
-        width: 8px; height: 8px;
-        border-radius: 50%;
-        flex-shrink: 0;
-        display: inline-block;
-    }}
+    .sb-sec-hdr {{ display: flex; align-items: center; gap: 8px; margin: 18px 0 8px; }}
+    .sb-sec-dot {{ width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; display: inline-block; }}
     .sb-sec-label {{
         font-size: 10px !important; font-weight: 700 !important;
         color: rgba(255,255,255,0.55) !important;
-        letter-spacing: 0.10em !important;
-        text-transform: uppercase;
-        white-space: nowrap;
+        letter-spacing: 0.10em !important; text-transform: uppercase; white-space: nowrap;
     }}
-    .sb-sec-line {{
-        flex: 1;
-        height: 1px;
-        background: rgba(255,255,255,0.10);
-        display: block;
-    }}
+    .sb-sec-line {{ flex: 1; height: 1px; background: rgba(255,255,255,0.10); display: block; }}
 
-    /* ── Sidebar – footer card v2 ── */
-    .sb-footer-v2 {{
-        background: rgba(255,255,255,0.05);
-        border-radius: 12px;
-        border: 1px solid rgba(255,255,255,0.08);
-        padding: 14px;
-        text-align: center;
-        margin-top: 20px;
-        position: relative;
-        overflow: hidden;
-    }}
-    .sb-footer-v2::before {{
-        content: '';
-        position: absolute;
-        top: 0; left: 0; right: 0;
-        height: 3px;
-        background: linear-gradient(90deg, #0EA5E9, #8B5CF6, #10B981);
-    }}
-    .sb-fv2-text {{
-        font-size: 10px !important;
-        color: rgba(255,255,255,0.42) !important;
-        line-height: 1.7;
-        margin-bottom: 10px;
-    }}
-    .sb-fv2-divider {{
-        height: 1px;
-        background: rgba(255,255,255,0.08);
-        margin: 8px 0;
-    }}
-    .sb-fv2-name {{
-        font-size: 11px !important; font-weight: 700 !important;
-        color: rgba(255,255,255,0.72) !important;
-        margin-bottom: 3px;
-    }}
-    .sb-fv2-role {{
-        font-size: 10px !important;
-        color: rgba(255,255,255,0.35) !important;
-    }}
-
-    /* ── Sidebar – widget labels y valores ── */
+    /* ── Sidebar – widget labels ── */
     div[data-testid="stSidebarContent"] label,
     div[data-testid="stSidebarContent"] .stSelectbox label,
     div[data-testid="stSidebarContent"] [data-testid="stWidgetLabel"],
     div[data-testid="stSidebarContent"] [data-testid="stWidgetLabel"] p,
     div[data-testid="stSidebarContent"] [data-testid="stWidgetLabel"] span {{
-        font-family: 'Inter', sans-serif !important;
-        font-size: 11px !important;
-        font-weight: 400 !important;
+        font-size: 11px !important; font-weight: 400 !important;
         color: rgba(255,255,255,0.72) !important;
     }}
     div[data-testid="stSidebarContent"] .stDateInput label,
     div[data-testid="stSidebarContent"] .stDateInput [data-testid="stWidgetLabel"],
     div[data-testid="stSidebarContent"] .stDateInput [data-testid="stWidgetLabel"] p {{
-        font-family: 'Inter', sans-serif !important;
-        font-size: 11px !important;
-        font-weight: 500 !important;
+        font-size: 11px !important; font-weight: 500 !important;
         color: {COLOR_ACCENT} !important;
     }}
     div[data-testid="stSidebarContent"] .stSelectbox > div > div,
@@ -542,12 +519,27 @@ st.markdown(f"""
     div[data-testid="stSidebarContent"] .stDateInput > div > div > input {{
         background: rgba(255,255,255,0.08) !important;
         border: 1px solid rgba(255,255,255,0.18) !important;
-        border-radius: 8px !important;
-        color: white !important;
-        font-family: 'Inter', sans-serif !important;
+        border-radius: 8px !important; color: white !important;
         font-size: 11px !important;
     }}
 
+    /* ── Sidebar – footer card v2 ── */
+    .sb-footer-v2 {{
+        background: rgba(255,255,255,0.05);
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.08);
+        padding: 14px; text-align: center;
+        margin-top: 20px; position: relative; overflow: hidden;
+    }}
+    .sb-footer-v2::before {{
+        content: '';
+        position: absolute; top: 0; left: 0; right: 0; height: 3px;
+        background: linear-gradient(90deg, #0EA5E9, #8B5CF6, #10B981);
+    }}
+    .sb-fv2-text {{ font-size: 10px !important; color: rgba(255,255,255,0.42) !important; line-height: 1.7; margin-bottom: 10px; }}
+    .sb-fv2-divider {{ height: 1px; background: rgba(255,255,255,0.08); margin: 8px 0; }}
+    .sb-fv2-name {{ font-size: 11px !important; font-weight: 700 !important; color: rgba(255,255,255,0.72) !important; margin-bottom: 3px; }}
+    .sb-fv2-role {{ font-size: 10px !important; color: rgba(255,255,255,0.35) !important; }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -575,10 +567,31 @@ else:
     dff["_periodo"] = dff["Mes"]
 
 # ─────────────────────────────────────────────
+# MÉTRICAS GLOBALES
+# ─────────────────────────────────────────────
+dff_validos = dff[(dff["prog_s"] > 0) & (dff["Validador Llegada"] != "Ausente")]
+total_agentes   = dff["Nombre"].nunique()
+total_registros = len(dff_validos)
+n_supervisores  = dff_validos["Supervisor"].nunique()
+
+adh_global = dff_validos["adh_s"].sum() / dff_validos["prog_s"].sum() if dff_validos["prog_s"].sum() > 0 else 0
+
+llegada_counts = dff["Validador Llegada"].value_counts()
+total_prog_valid = (llegada_counts.get("Llegada a tiempo", 0) + llegada_counts.get("Llegada tarde", 0)
+                   + llegada_counts.get("Llegada antes", 0) + llegada_counts.get("Ausente", 0))
+pct_ausentes = llegada_counts.get("Ausente", 0) / total_prog_valid * 100 if total_prog_valid > 0 else 0
+pct_tarde    = llegada_counts.get("Llegada tarde", 0) / total_prog_valid * 100 if total_prog_valid > 0 else 0
+pct_tiempo   = llegada_counts.get("Llegada a tiempo", 0) / total_prog_valid * 100 if total_prog_valid > 0 else 0
+
+adh_color = COLOR_SUCCESS if adh_global >= 0.90 else (COLOR_WARNING if adh_global >= 0.80 else COLOR_DANGER)
+
+# ─────────────────────────────────────────────
 # ENCABEZADO
 # ─────────────────────────────────────────────
 rango = f"{fecha_ini.strftime('%d/%m/%Y')} – {fecha_fin.strftime('%d/%m/%Y')}"
-filtro_txt = f"{'Todos los supervisores' if sup_sel == 'Todos' else sup_sel} · {'Todos los expertos' if exp_sel == 'Todos' else exp_sel} · {'Todas las campañas' if camp_sel == 'Todas' else camp_sel}"
+filtro_txt = (f"{'Todos los supervisores' if sup_sel == 'Todos' else sup_sel} · "
+              f"{'Todos los expertos' if exp_sel == 'Todos' else exp_sel} · "
+              f"{'Todas las campañas' if camp_sel == 'Todas' else camp_sel}")
 st.markdown(f"""
 <div class='header-banner'>
     <div class='header-left'>
@@ -596,20 +609,6 @@ st.markdown(f"""
 # ─────────────────────────────────────────────
 # KPIs GLOBALES
 # ─────────────────────────────────────────────
-dff_validos = dff[(dff["prog_s"] > 0) & (dff["Validador Llegada"] != "Ausente")]
-total_agentes   = dff["Nombre"].nunique()
-total_registros = len(dff_validos)
-
-adh_global = dff_validos["adh_s"].sum() / dff_validos["prog_s"].sum() if dff_validos["prog_s"].sum() > 0 else 0
-
-llegada_counts = dff["Validador Llegada"].value_counts()
-total_prog_valid = llegada_counts.get("Llegada a tiempo", 0) + llegada_counts.get("Llegada tarde", 0) + llegada_counts.get("Llegada antes", 0) + llegada_counts.get("Ausente", 0)
-pct_ausentes = llegada_counts.get("Ausente", 0) / total_prog_valid * 100 if total_prog_valid > 0 else 0
-pct_tarde    = llegada_counts.get("Llegada tarde", 0) / total_prog_valid * 100 if total_prog_valid > 0 else 0
-pct_tiempo   = llegada_counts.get("Llegada a tiempo", 0) / total_prog_valid * 100 if total_prog_valid > 0 else 0
-
-adh_color = COLOR_SUCCESS if adh_global >= 0.90 else (COLOR_WARNING if adh_global >= 0.80 else COLOR_DANGER)
-
 def kpi_bar(pct, color, max_val=100):
     fill = min(pct / max_val * 100, 100)
     return f"<div class='kpi-bar-wrap'><div class='kpi-bar-fill' style='width:{fill:.0f}%;background:{color};'></div></div>"
@@ -617,6 +616,7 @@ def kpi_bar(pct, color, max_val=100):
 k1, k2, k3, k4, k5 = st.columns(5)
 with k1:
     st.markdown(f"""<div class='kpi-card' style='--kc:{adh_color}'>
+        <div class='kpi-bg-icon'>🎯</div>
         <div>
             <div class='kpi-label'>Adherencia</div>
             <div class='kpi-value' style='color:{adh_color}'>{adh_global:.1%}</div>
@@ -626,6 +626,7 @@ with k1:
     </div>""", unsafe_allow_html=True)
 with k2:
     st.markdown(f"""<div class='kpi-card' style='--kc:{COLOR_ACCENT}'>
+        <div class='kpi-bg-icon'>👥</div>
         <div>
             <div class='kpi-label'>Expertos</div>
             <div class='kpi-value' style='color:{COLOR_PRIMARY}'>{total_agentes}</div>
@@ -635,6 +636,7 @@ with k2:
     </div>""", unsafe_allow_html=True)
 with k3:
     st.markdown(f"""<div class='kpi-card' style='--kc:{COLOR_SUCCESS}'>
+        <div class='kpi-bg-icon'>✅</div>
         <div>
             <div class='kpi-label'>Llegada a tiempo</div>
             <div class='kpi-value' style='color:{COLOR_SUCCESS}'>{pct_tiempo:.1f}%</div>
@@ -644,6 +646,7 @@ with k3:
     </div>""", unsafe_allow_html=True)
 with k4:
     st.markdown(f"""<div class='kpi-card' style='--kc:{COLOR_WARNING}'>
+        <div class='kpi-bg-icon'>⏰</div>
         <div>
             <div class='kpi-label'>Llegadas tarde</div>
             <div class='kpi-value' style='color:{COLOR_WARNING}'>{pct_tarde:.1f}%</div>
@@ -653,6 +656,7 @@ with k4:
     </div>""", unsafe_allow_html=True)
 with k5:
     st.markdown(f"""<div class='kpi-card' style='--kc:{COLOR_DANGER}'>
+        <div class='kpi-bg-icon'>🚨</div>
         <div>
             <div class='kpi-label'>Ausentes</div>
             <div class='kpi-value' style='color:{COLOR_DANGER}'>{pct_ausentes:.1f}%</div>
@@ -666,10 +670,15 @@ with k5:
 # ─────────────────────────────────────────────
 st.markdown(f"""
 <div class='sec-header' style='--sc:{COLOR_ACCENT}'>
-    <div class='sec-icon' style='background:rgba(14,165,233,0.12)'>📈</div>
+    <div class='sec-wash'></div>
+    <div class='sec-icon' style='background:linear-gradient(135deg,rgba(14,165,233,0.20),rgba(14,165,233,0.06))'>📈</div>
     <div class='sec-text'>
         <div class='sec-title'>Tendencia de Adherencia</div>
         <div class='sec-desc'>Evolución de la adherencia del equipo y distribución de tipos de llegada en el período.</div>
+    </div>
+    <div class='sec-meta'>
+        <div class='sec-meta-val' style='color:{adh_color}'>{adh_global:.1%}</div>
+        <div class='sec-meta-lab'>Adherencia global</div>
     </div>
     <span class='sec-tag'>Análisis</span>
 </div>
@@ -711,11 +720,7 @@ with c1:
     fig_tend.update_layout(
         height=320, margin=dict(l=0, r=10, t=24, b=0),
         paper_bgcolor="white", plot_bgcolor="white",
-        yaxis=dict(
-            tickformat=".0%", gridcolor="#F1F5F9",
-            range=[0.10, 1.05], dtick=0.05,
-            tickfont=dict(size=10)
-        ),
+        yaxis=dict(tickformat=".0%", gridcolor="#F1F5F9", range=[0.10, 1.05], dtick=0.05, tickfont=dict(size=10)),
         xaxis=dict(gridcolor="#F1F5F9", tickfont=dict(size=10)),
         font=dict(family="Inter", size=11)
     )
@@ -746,33 +751,23 @@ with c2:
     pull = [0.06 if i == max_idx else 0 for i in range(len(lp_values))]
 
     fig_pie = go.Figure(go.Pie(
-        labels=lp_labels,
-        values=lp_values,
-        hole=0.62,
+        labels=lp_labels, values=lp_values, hole=0.62,
         marker=dict(colors=lp_colors, line=dict(color="white", width=3)),
-        pull=pull,
-        textinfo="percent",
-        textposition="inside",
+        pull=pull, textinfo="percent", textposition="inside",
         textfont=dict(size=12, color="white", family="Inter"),
         hovertemplate="<b>%{label}</b><br>%{value} registros · %{percent}<extra></extra>",
         sort=False
     ))
     fig_pie.add_annotation(
-        text=f"<b>{pct_tiempo:.1f}%</b><br>a tiempo",
-        x=0.5, y=0.5,
+        text=f"<b>{pct_tiempo:.1f}%</b><br>a tiempo", x=0.5, y=0.5,
         font=dict(size=15, color=COLOR_SUCCESS, family="Inter"),
         showarrow=False, align="center"
     )
     fig_pie.update_layout(
         height=320, margin=dict(l=0, r=0, t=24, b=0),
-        paper_bgcolor="white",
-        showlegend=True,
-        legend=dict(
-            orientation="v", yanchor="middle", y=0.5,
-            xanchor="left", x=1.0,
-            font=dict(size=10, family="Inter"),
-            itemsizing="constant"
-        ),
+        paper_bgcolor="white", showlegend=True,
+        legend=dict(orientation="v", yanchor="middle", y=0.5, xanchor="left", x=1.0,
+                    font=dict(size=10, family="Inter"), itemsizing="constant"),
         font=dict(family="Inter", size=11)
     )
     st.plotly_chart(fig_pie, use_container_width=True)
@@ -782,10 +777,15 @@ with c2:
 # ─────────────────────────────────────────────
 st.markdown(f"""
 <div class='sec-header' style='--sc:{COLOR_PRIMARY}'>
-    <div class='sec-icon' style='background:rgba(40,5,63,0.10)'>👥</div>
+    <div class='sec-wash'></div>
+    <div class='sec-icon' style='background:linear-gradient(135deg,rgba(40,5,63,0.20),rgba(40,5,63,0.06))'>👥</div>
     <div class='sec-text'>
         <div class='sec-title'>Comparativo por Supervisor</div>
         <div class='sec-desc'>Adherencia consolidada por equipo: verde ≥ 90%, amarillo ≥ 80%, rojo &lt; 80%.</div>
+    </div>
+    <div class='sec-meta'>
+        <div class='sec-meta-val' style='color:{COLOR_PRIMARY}'>{n_supervisores}</div>
+        <div class='sec-meta-lab'>Supervisores</div>
     </div>
     <span class='sec-tag'>Equipos</span>
 </div>
@@ -802,7 +802,7 @@ sup_stats = (
     .sort_values("ADH", ascending=True)
 )
 
-aus_sup = dff[dff["Validador Llegada"] == "Ausente"].groupby("Supervisor").size().reset_index(name="Ausentes")
+aus_sup   = dff[dff["Validador Llegada"] == "Ausente"].groupby("Supervisor").size().reset_index(name="Ausentes")
 tarde_sup = dff[dff["Validador Llegada"] == "Llegada tarde"].groupby("Supervisor").size().reset_index(name="Tardes")
 sup_stats = sup_stats.merge(aus_sup, on="Supervisor", how="left").merge(tarde_sup, on="Supervisor", how="left")
 sup_stats["Ausentes"] = sup_stats["Ausentes"].fillna(0).astype(int)
@@ -815,7 +815,7 @@ with c_bar:
         <span class='ch-icon'>📊</span>
         <div class='ch-texts'>
             <div class='ch-title'>Adherencia por Supervisor</div>
-            <div class='ch-sub'>Ordenado de menor a mayor · Zona verde = meta cumplida</div>
+            <div class='ch-sub'>Menor a mayor · Zona verde = meta cumplida</div>
         </div>
         <span class='ch-tag'>Barras</span>
     </div>""", unsafe_allow_html=True)
@@ -827,23 +827,14 @@ with c_bar:
     n_sup = len(sup_stats)
 
     fig_bar = go.Figure()
-
-    fig_bar.add_vrect(
-        x0=0.90, x1=1.02,
-        fillcolor="rgba(16,185,129,0.06)",
-        layer="below", line_width=0
-    )
-
+    fig_bar.add_vrect(x0=0.90, x1=1.02, fillcolor="rgba(16,185,129,0.06)", layer="below", line_width=0)
     fig_bar.add_trace(go.Bar(
-        x=[1.0] * n_sup, y=sup_short["Supervisor"],
-        orientation="h",
+        x=[1.0] * n_sup, y=sup_short["Supervisor"], orientation="h",
         marker=dict(color="rgba(226,232,240,0.9)", line=dict(width=0)),
         showlegend=False, hoverinfo="skip", width=0.55
     ))
-
     fig_bar.add_trace(go.Bar(
-        x=sup_stats["ADH"], y=sup_short["Supervisor"],
-        orientation="h",
+        x=sup_stats["ADH"], y=sup_short["Supervisor"], orientation="h",
         marker=dict(color=sup_stats["Color"], line=dict(width=0)),
         text=sup_stats["ADH"].apply(lambda x: f"  {x:.1%}"),
         textposition="inside",
@@ -851,24 +842,18 @@ with c_bar:
         hovertemplate="<b>%{y}</b><br>Adherencia: %{x:.1%}<extra></extra>",
         width=0.55
     ))
-
     fig_bar.add_vline(x=0.90, line_dash="dot", line_color=COLOR_PRIMARY, line_width=1.5,
                       annotation_text="Meta 90%",
                       annotation_font=dict(size=10, color=COLOR_PRIMARY),
                       annotation_position="top left")
     fig_bar.update_layout(
-        barmode="overlay",
-        height=400,
+        barmode="overlay", height=400,
         margin=dict(l=0, r=20, t=20, b=0),
         paper_bgcolor="white", plot_bgcolor="white",
-        xaxis=dict(
-            tickformat=".0%", range=[0, 1.02],
-            gridcolor="#F1F5F9", showgrid=True,
-            tickfont=dict(size=10, family="Inter")
-        ),
+        xaxis=dict(tickformat=".0%", range=[0, 1.02], gridcolor="#F1F5F9",
+                   showgrid=True, tickfont=dict(size=10, family="Inter")),
         yaxis=dict(gridcolor="rgba(0,0,0,0)", tickfont=dict(size=11, family="Inter")),
-        showlegend=False,
-        font=dict(family="Inter", size=11)
+        showlegend=False, font=dict(family="Inter", size=11)
     )
     st.plotly_chart(fig_bar, use_container_width=True)
 
@@ -892,12 +877,17 @@ with c_gauge:
 # ─────────────────────────────────────────────
 # GRÁFICAS POR SUPERVISOR (TENDENCIA)
 # ─────────────────────────────────────────────
-st.markdown("""
+st.markdown(f"""
 <div class='sec-header' style='--sc:#8B5CF6'>
-    <div class='sec-icon' style='background:rgba(139,92,246,0.12)'>📉</div>
+    <div class='sec-wash'></div>
+    <div class='sec-icon' style='background:linear-gradient(135deg,rgba(139,92,246,0.20),rgba(139,92,246,0.06))'>📉</div>
     <div class='sec-text'>
         <div class='sec-title'>Tendencia por Supervisor</div>
         <div class='sec-desc'>Comparación de la evolución de adherencia de cada supervisor a lo largo del período.</div>
+    </div>
+    <div class='sec-meta'>
+        <div class='sec-meta-val' style='color:#8B5CF6'>{n_supervisores}</div>
+        <div class='sec-meta-lab'>Equipos</div>
     </div>
     <span class='sec-tag' style='background:#8B5CF6'>Evolución</span>
 </div>
@@ -942,7 +932,7 @@ fig_sup.update_layout(
     yaxis=dict(tickformat=".0%", gridcolor="#F3F4F6", range=[0, 1.2]),
     xaxis=dict(gridcolor="#F3F4F6"),
     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0, font=dict(size=10)),
-    font=dict(family="sans-serif", size=11)
+    font=dict(family="Inter", size=11)
 )
 st.plotly_chart(fig_sup, use_container_width=True)
 
@@ -951,10 +941,15 @@ st.plotly_chart(fig_sup, use_container_width=True)
 # ─────────────────────────────────────────────
 st.markdown(f"""
 <div class='sec-header' style='--sc:{COLOR_SUCCESS}'>
-    <div class='sec-icon' style='background:rgba(16,185,129,0.12)'>🔍</div>
+    <div class='sec-wash'></div>
+    <div class='sec-icon' style='background:linear-gradient(135deg,rgba(16,185,129,0.20),rgba(16,185,129,0.06))'>🔍</div>
     <div class='sec-text'>
         <div class='sec-title'>Detalle por Agente</div>
         <div class='sec-desc'>Adherencia, planificación y excesos por experto. Filtra por agente desde la barra lateral.</div>
+    </div>
+    <div class='sec-meta'>
+        <div class='sec-meta-val' style='color:{COLOR_SUCCESS}'>{total_agentes}</div>
+        <div class='sec-meta-lab'>Expertos</div>
     </div>
     <span class='sec-tag' style='background:{COLOR_SUCCESS}'>Tablas</span>
 </div>
@@ -1077,11 +1072,7 @@ if exc_min_disp:
     t3["Total excesos"] = total_s.apply(seg_a_hhmmss)
 
 cols_t3 = ["Fecha", "Agente", "Supervisor", "Campaña"] + exc_fmt_cols + (["Total excesos"] if exc_min_disp else [])
-
 t3_show = t3[cols_t3].sort_values(["Fecha", "Agente"]).reset_index(drop=True)
-st.dataframe(
-    t3_show,
-    use_container_width=True, hide_index=True, height=350
-)
+st.dataframe(t3_show, use_container_width=True, hide_index=True, height=350)
 
 st.caption(f"📋 {dff['Nombre'].nunique()} agentes · {len(dff)} registros en el período seleccionado")
