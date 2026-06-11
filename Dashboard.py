@@ -64,7 +64,9 @@ COLOR_BG      = "#F0F4F8"
 # SIDEBAR – FILTROS
 # ─────────────────────────────────────────────
 with st.sidebar:
-    st.image("logo-scala-learning-transformacion-digital-universidades.webp", width=185)
+    _, _c, _ = st.columns([1, 4, 1])
+    with _c:
+        st.image("logo-scala-learning-transformacion-digital-universidades.webp", use_container_width=True)
     st.markdown("---")
 
     st.markdown("""
@@ -200,12 +202,6 @@ st.markdown(f"""
         border: none;
         border-top: 1px solid #E2E8F0;
         margin: 24px 0;
-    }}
-
-    /* ── Sidebar – logo centrado ── */
-    div[data-testid="stSidebarContent"] img {{
-        display: block;
-        margin: 0 auto;
     }}
 
     /* ── Sidebar – fondo degradado difuminado ── */
@@ -685,38 +681,31 @@ t1["Tiempo de retardo"] = t1.apply(lambda r: seg_a_hhmmss(r["tard_s"]) if r["Ret
 t1["T. Programado"]     = t1["prog_s"].apply(seg_a_hhmmss)
 t1["Fuera de ADH"]      = (t1["prog_s"] - t1["adh_s"]).clip(lower=0).apply(seg_a_hhmmss)
 t1["ADH Aplicada"]      = t1["adh_s"].apply(seg_a_hhmmss)
-t1["Adherencia"]        = t1["ADH_pct"].apply(lambda x: f"{x:.1%}" if pd.notna(x) else "-")
+t1["Adherencia %"]      = t1["ADH_pct"].fillna(0) * 100
 
 t1_show = (
     t1.rename(columns={"Nombre": "Agente", "Campana": "Campaña"})[
-        ["Fecha", "Agente", "Supervisor", "Campaña", "Adherencia",
+        ["Fecha", "Agente", "Supervisor", "Campaña", "Adherencia %",
          "Retardo", "Tiempo de retardo", "Ausencia",
          "T. Programado", "Fuera de ADH", "ADH Aplicada"]
     ].sort_values(["Fecha", "Agente"]).reset_index(drop=True)
 )
-def _col_bg(col):
-    if col.name == "Agente":
-        return [f'background-color:#EFF6FF;color:{COLOR_PRIMARY};font-weight:600;text-align:center'] * len(col)
-    elif col.name == "Supervisor":
-        return ['background-color:#FEFCE8;color:#713F12;font-weight:600;text-align:center'] * len(col)
-    return ['text-align:center'] * len(col)
-
-def _color_adh(v):
-    try:
-        p = float(v.strip("%")) / 100
-        if p >= 0.90: return f"color:{COLOR_SUCCESS};font-weight:600;text-align:center"
-        elif p >= 0.80: return f"color:{COLOR_WARNING};font-weight:600;text-align:center"
-        else: return f"color:{COLOR_DANGER};font-weight:600;text-align:center"
-    except: return "text-align:center"
-def _color_siono(v):
-    if v == "Sí": return f"color:{COLOR_DANGER};font-weight:600;text-align:center"
-    return "color:#94A3B8;text-align:center"
-
 st.dataframe(
-    t1_show.style
-        .apply(_col_bg, axis=0)
-        .map(_color_adh, subset=["Adherencia"])
-        .map(_color_siono, subset=["Retardo", "Ausencia"]),
+    t1_show,
+    column_config={
+        "Adherencia %": st.column_config.ProgressColumn(
+            "Adherencia %", format="%.1f%%", min_value=0, max_value=100
+        ),
+        "Agente":            st.column_config.TextColumn("Agente"),
+        "Supervisor":        st.column_config.TextColumn("Supervisor"),
+        "Campaña":           st.column_config.TextColumn("Campaña"),
+        "Retardo":           st.column_config.TextColumn("Retardo"),
+        "Ausencia":          st.column_config.TextColumn("Ausencia"),
+        "Tiempo de retardo": st.column_config.TextColumn("T. Retardo"),
+        "T. Programado":     st.column_config.TextColumn("T. Programado"),
+        "Fuera de ADH":      st.column_config.TextColumn("Fuera ADH"),
+        "ADH Aplicada":      st.column_config.TextColumn("ADH Aplicada"),
+    },
     use_container_width=True, hide_index=True, height=350
 )
 
@@ -736,9 +725,7 @@ for c in plan_disponibles:
     t2[c] = t2[c].apply(fmt_plan)
 
 st.dataframe(
-    t2.sort_values(["Fecha", "Agente"]).reset_index(drop=True)
-      .style
-      .apply(_col_bg, axis=0),
+    t2.sort_values(["Fecha", "Agente"]).reset_index(drop=True),
     use_container_width=True, hide_index=True, height=350
 )
 
@@ -763,22 +750,10 @@ if exc_min_disp:
     t3["Total excesos"] = total_s.apply(seg_a_hhmmss)
 
 cols_t3 = ["Fecha", "Agente", "Supervisor", "Campaña"] + exc_fmt_cols + (["Total excesos"] if exc_min_disp else [])
-def _color_exceso(v):
-    if v == "-": return "color:#CBD5E1"
-    try:
-        parts = v.split(":")
-        total_s = int(parts[0])*3600 + int(parts[1])*60 + int(parts[2])
-        if total_s > 600: return f"color:{COLOR_DANGER};font-weight:600"
-        elif total_s > 300: return f"color:{COLOR_WARNING};font-weight:600"
-    except: pass
-    return ""
 
 t3_show = t3[cols_t3].sort_values(["Fecha", "Agente"]).reset_index(drop=True)
-time_cols = [c for c in t3_show.columns if c not in ["Fecha","Agente","Supervisor","Campaña"]]
 st.dataframe(
-    t3_show.style
-        .apply(_col_bg, axis=0)
-        .map(_color_exceso, subset=time_cols),
+    t3_show,
     use_container_width=True, hide_index=True, height=350
 )
 
