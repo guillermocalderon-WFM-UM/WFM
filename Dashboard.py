@@ -64,7 +64,7 @@ COLOR_BG      = "#F0F4F8"
 # SIDEBAR – FILTROS
 # ─────────────────────────────────────────────
 with st.sidebar:
-    _, _c, _ = st.columns([1, 4, 1])
+    _, _c, _ = st.columns([1, 9, 1])
     with _c:
         st.image("logo-scala-learning-transformacion-digital-universidades.webp", use_container_width=True)
     st.markdown("---")
