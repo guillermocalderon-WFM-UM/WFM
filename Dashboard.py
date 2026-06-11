@@ -64,7 +64,7 @@ COLOR_BG      = "#F0F4F8"
 # SIDEBAR – FILTROS
 # ─────────────────────────────────────────────
 with st.sidebar:
-    st.image("logo-scala-learning-transformacion-digital-universidades.webp", use_container_width=True)
+    st.image("logo-scala-learning-transformacion-digital-universidades.webp", width=185)
     st.markdown("---")
 
     st.markdown("""
@@ -212,7 +212,11 @@ st.markdown(f"""
         border-right: none;
     }}
     div[data-testid="stSidebarContent"] * {{ color: white !important; }}
-    div[data-testid="stSidebarContent"] hr {{ border-color: rgba(255,255,255,0.12); }}
+    div[data-testid="stSidebarContent"] hr {{
+        border-color: rgba(255,255,255,0.12);
+        margin-top: 4px !important;
+        margin-bottom: 4px !important;
+    }}
 
     /* ── Dropdown options: texto oscuro sobre fondo blanco ── */
     div[data-baseweb="popover"] *,
@@ -262,12 +266,17 @@ st.markdown(f"""
 
     /* ── Sidebar – widget labels y valores ── */
     div[data-testid="stSidebarContent"] label,
-    div[data-testid="stSidebarContent"] .stSelectbox label,
+    div[data-testid="stSidebarContent"] .stSelectbox label {{
+        font-family: 'Inter', sans-serif !important;
+        font-size: 12px !important;
+        font-weight: 400 !important;
+        color: rgba(255,255,255,0.72) !important;
+    }}
     div[data-testid="stSidebarContent"] .stDateInput label {{
         font-family: 'Inter', sans-serif !important;
-        font-size: 13px !important;
-        font-weight: 400 !important;
-        color: rgba(255,255,255,0.75) !important;
+        font-size: 12px !important;
+        font-weight: 500 !important;
+        color: {COLOR_ACCENT} !important;
     }}
     div[data-testid="stSidebarContent"] .stSelectbox > div > div,
     div[data-testid="stSidebarContent"] .stSelectbox > label + div > div {{
@@ -281,7 +290,7 @@ st.markdown(f"""
         border-radius: 8px !important;
         color: white !important;
         font-family: 'Inter', sans-serif !important;
-        font-size: 13px !important;
+        font-size: 12px !important;
     }}
 
     /* ── Sidebar – footer ── */
@@ -471,7 +480,7 @@ with c2:
         pull=pull,
         textinfo="percent",
         textposition="inside",
-        textfont=dict(size=13, color="white", family="Inter"),
+        textfont=dict(size=12, color="white", family="Inter"),
         hovertemplate="<b>%{label}</b><br>%{value} registros · %{percent}<extra></extra>",
         sort=False
     ))
@@ -529,23 +538,54 @@ with c_bar:
     )
     sup_short = sup_stats.copy()
     sup_short["Supervisor"] = sup_short["Supervisor"].apply(lambda n: " ".join(n.split()[:2]))
+    n_sup = len(sup_stats)
 
-    fig_bar = go.Figure(go.Bar(
+    fig_bar = go.Figure()
+
+    # Zona verde (zona de cumplimiento de meta)
+    fig_bar.add_vrect(
+        x0=0.90, x1=1.02,
+        fillcolor="rgba(16,185,129,0.06)",
+        layer="below", line_width=0
+    )
+
+    # Barras de fondo (track gris)
+    fig_bar.add_trace(go.Bar(
+        x=[1.0] * n_sup, y=sup_short["Supervisor"],
+        orientation="h",
+        marker=dict(color="rgba(226,232,240,0.9)", line=dict(width=0)),
+        showlegend=False, hoverinfo="skip", width=0.55
+    ))
+
+    # Barras reales con valor dentro
+    fig_bar.add_trace(go.Bar(
         x=sup_stats["ADH"], y=sup_short["Supervisor"],
         orientation="h",
-        marker_color=sup_stats["Color"],
-        text=sup_stats["ADH"].apply(lambda x: f"{x:.1%}"),
-        textposition="outside",
-        hovertemplate="<b>%{y}</b><br>Adherencia: %{x:.1%}<extra></extra>"
+        marker=dict(color=sup_stats["Color"], line=dict(width=0)),
+        text=sup_stats["ADH"].apply(lambda x: f"  {x:.1%}"),
+        textposition="inside",
+        textfont=dict(size=11, color="white", family="Inter"),
+        hovertemplate="<b>%{y}</b><br>Adherencia: %{x:.1%}<extra></extra>",
+        width=0.55
     ))
-    fig_bar.add_vline(x=0.90, line_dash="dot", line_color=COLOR_PRIMARY,
-                      annotation_text="Meta 90%")
+
+    fig_bar.add_vline(x=0.90, line_dash="dot", line_color=COLOR_PRIMARY, line_width=1.5,
+                      annotation_text="Meta 90%",
+                      annotation_font=dict(size=10, color=COLOR_PRIMARY),
+                      annotation_position="top left")
     fig_bar.update_layout(
-        height=380, margin=dict(l=0,r=60,t=10,b=0),
+        barmode="overlay",
+        height=max(320, n_sup * 36 + 40),
+        margin=dict(l=0, r=20, t=20, b=0),
         paper_bgcolor="white", plot_bgcolor="white",
-        xaxis=dict(tickformat=".0%", range=[0, 1.15], gridcolor="#F3F4F6"),
-        yaxis=dict(gridcolor="#F3F4F6"),
-        font=dict(family="sans-serif", size=11)
+        xaxis=dict(
+            tickformat=".0%", range=[0, 1.02],
+            gridcolor="#F1F5F9", showgrid=True,
+            tickfont=dict(size=10, family="Inter")
+        ),
+        yaxis=dict(gridcolor="rgba(0,0,0,0)", tickfont=dict(size=11, family="Inter")),
+        showlegend=False,
+        font=dict(family="Inter", size=11)
     )
     st.plotly_chart(fig_bar, use_container_width=True)
 
@@ -641,12 +681,31 @@ t1["Fuera de ADH"]      = (t1["prog_s"] - t1["adh_s"]).clip(lower=0).apply(seg_a
 t1["ADH Aplicada"]      = t1["adh_s"].apply(seg_a_hhmmss)
 t1["Adherencia"]        = t1["ADH_pct"].apply(lambda x: f"{x:.1%}" if pd.notna(x) else "-")
 
-st.dataframe(
+t1_show = (
     t1.rename(columns={"Nombre": "Agente", "Campana": "Campaña"})[
         ["Fecha", "Agente", "Supervisor", "Campaña", "Adherencia",
          "Retardo", "Tiempo de retardo", "Ausencia",
          "T. Programado", "Fuera de ADH", "ADH Aplicada"]
-    ].sort_values(["Fecha", "Agente"]).reset_index(drop=True),
+    ].sort_values(["Fecha", "Agente"]).reset_index(drop=True)
+)
+def _color_adh(v):
+    try:
+        p = float(v.strip("%")) / 100
+        if p >= 0.90: return f"color:{COLOR_SUCCESS};font-weight:600"
+        elif p >= 0.80: return f"color:{COLOR_WARNING};font-weight:600"
+        else: return f"color:{COLOR_DANGER};font-weight:600"
+    except: return ""
+def _color_siono(v):
+    if v == "Sí": return f"color:{COLOR_DANGER};font-weight:600"
+    return "color:#94A3B8"
+
+st.dataframe(
+    t1_show.style
+        .applymap(lambda _: f"color:{COLOR_PRIMARY};font-weight:600", subset=["Agente"])
+        .applymap(_color_adh, subset=["Adherencia"])
+        .applymap(_color_siono, subset=["Retardo", "Ausencia"])
+        .set_properties(**{"text-align": "center"})
+        .set_properties(**{"text-align": "left"}, subset=["Agente", "Supervisor", "Campaña"]),
     use_container_width=True, hide_index=True, height=350
 )
 
@@ -666,7 +725,11 @@ for c in plan_disponibles:
     t2[c] = t2[c].apply(fmt_plan)
 
 st.dataframe(
-    t2.sort_values(["Fecha", "Agente"]).reset_index(drop=True),
+    t2.sort_values(["Fecha", "Agente"]).reset_index(drop=True)
+      .style
+      .applymap(lambda _: f"color:{COLOR_PRIMARY};font-weight:600", subset=["Agente"])
+      .set_properties(**{"text-align": "center"})
+      .set_properties(**{"text-align": "left"}, subset=["Agente", "Supervisor", "Campaña"]),
     use_container_width=True, hide_index=True, height=350
 )
 
@@ -691,8 +754,24 @@ if exc_min_disp:
     t3["Total excesos"] = total_s.apply(seg_a_hhmmss)
 
 cols_t3 = ["Fecha", "Agente", "Supervisor", "Campaña"] + exc_fmt_cols + (["Total excesos"] if exc_min_disp else [])
+def _color_exceso(v):
+    if v == "-": return "color:#CBD5E1"
+    try:
+        parts = v.split(":")
+        total_s = int(parts[0])*3600 + int(parts[1])*60 + int(parts[2])
+        if total_s > 600: return f"color:{COLOR_DANGER};font-weight:600"
+        elif total_s > 300: return f"color:{COLOR_WARNING};font-weight:600"
+    except: pass
+    return ""
+
+t3_show = t3[cols_t3].sort_values(["Fecha", "Agente"]).reset_index(drop=True)
+time_cols = [c for c in t3_show.columns if c not in ["Fecha","Agente","Supervisor","Campaña"]]
 st.dataframe(
-    t3[cols_t3].sort_values(["Fecha", "Agente"]).reset_index(drop=True),
+    t3_show.style
+        .applymap(lambda _: f"color:{COLOR_PRIMARY};font-weight:600", subset=["Agente"])
+        .applymap(_color_exceso, subset=time_cols)
+        .set_properties(**{"text-align": "center"})
+        .set_properties(**{"text-align": "left"}, subset=["Agente", "Supervisor", "Campaña"]),
     use_container_width=True, hide_index=True, height=350
 )
 
