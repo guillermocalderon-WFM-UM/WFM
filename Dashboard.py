@@ -117,13 +117,16 @@ st.markdown(f"""
     .main {{ background-color: {COLOR_BG}; }}
     .block-container {{ padding-top: 2rem; padding-bottom: 1rem; }}
 
-    /* ── Sidebar collapse button: ícono transparente ── */
+    /* ── Sidebar collapse/expand button: ícono transparente ── */
     div[data-testid="stSidebarCollapseButton"] button span,
-    button[data-testid="baseButton-headerNoPadding"] span {{
+    button[data-testid="baseButton-headerNoPadding"] span,
+    div[data-testid="collapsedControl"] button span,
+    div[data-testid="collapsedControl"] span {{
         color: transparent !important;
     }}
     div[data-testid="stSidebarCollapseButton"] button,
-    button[data-testid="baseButton-headerNoPadding"] {{
+    button[data-testid="baseButton-headerNoPadding"],
+    div[data-testid="collapsedControl"] button {{
         background: transparent !important;
         border: none !important;
     }}
@@ -169,19 +172,38 @@ st.markdown(f"""
     /* ── KPI cards ── */
     .kpi-card {{
         background: white;
-        border-radius: 14px;
-        padding: 18px 20px 14px;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-        border-left: 4px solid {COLOR_PRIMARY};
-        min-height: 130px;
+        border-radius: 18px;
+        padding: 22px 22px 18px;
+        box-shadow: 0 6px 28px rgba(0,0,0,0.10);
+        position: relative;
+        overflow: hidden;
+        min-height: 148px;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
+        border: 1px solid rgba(0,0,0,0.04);
     }}
-    .kpi-label {{ font-size: 11px; color: #94A3B8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; }}
-    .kpi-value {{ font-size: 28px; font-weight: 800; line-height: 1.2; margin: 6px 0 2px; }}
-    .kpi-sub   {{ font-size: 11px; color: #CBD5E1; margin-top: 2px; }}
-    .kpi-bar-wrap {{ background: #F1F5F9; border-radius: 99px; height: 5px; margin-top: 10px; overflow: hidden; }}
+    .kpi-card::before {{
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 5px;
+        background: var(--kc, {COLOR_PRIMARY});
+        border-radius: 18px 18px 0 0;
+    }}
+    .kpi-card::after {{
+        content: '';
+        position: absolute;
+        top: -28px; right: -28px;
+        width: 90px; height: 90px;
+        background: var(--kc, {COLOR_PRIMARY});
+        opacity: 0.08;
+        border-radius: 50%;
+    }}
+    .kpi-label {{ font-size: 10px; color: #94A3B8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; }}
+    .kpi-value {{ font-size: 36px; font-weight: 900; line-height: 1.1; margin: 10px 0 4px; }}
+    .kpi-sub   {{ font-size: 11px; color: #CBD5E1; }}
+    .kpi-bar-wrap {{ background: #F1F5F9; border-radius: 99px; height: 5px; margin-top: 12px; overflow: hidden; }}
     .kpi-bar-fill {{ height: 5px; border-radius: 99px; }}
 
     /* ── Section cards ── */
@@ -398,38 +420,48 @@ def kpi_bar(pct, color, max_val=100):
 
 k1, k2, k3, k4, k5 = st.columns(5)
 with k1:
-    st.markdown(f"""<div class='kpi-card'>
-        <div class='kpi-label'>Adherencia</div>
-        <div class='kpi-value' style='color:{adh_color}'>{adh_global:.1%}</div>
-        <div class='kpi-sub'>Meta: 90%</div>
+    st.markdown(f"""<div class='kpi-card' style='--kc:{adh_color}'>
+        <div>
+            <div class='kpi-label'>Adherencia</div>
+            <div class='kpi-value' style='color:{adh_color}'>{adh_global:.1%}</div>
+            <div class='kpi-sub'>Meta: 90%</div>
+        </div>
         {kpi_bar(adh_global * 100, adh_color, 100)}
     </div>""", unsafe_allow_html=True)
 with k2:
-    st.markdown(f"""<div class='kpi-card'>
-        <div class='kpi-label'>Expertos</div>
-        <div class='kpi-value' style='color:{COLOR_PRIMARY}'>{total_agentes}</div>
-        <div class='kpi-sub'>{total_registros} registros</div>
+    st.markdown(f"""<div class='kpi-card' style='--kc:{COLOR_ACCENT}'>
+        <div>
+            <div class='kpi-label'>Expertos</div>
+            <div class='kpi-value' style='color:{COLOR_PRIMARY}'>{total_agentes}</div>
+            <div class='kpi-sub'>{total_registros} registros</div>
+        </div>
         {kpi_bar(total_registros, COLOR_ACCENT, max(total_registros, 1))}
     </div>""", unsafe_allow_html=True)
 with k3:
-    st.markdown(f"""<div class='kpi-card'>
-        <div class='kpi-label'>Llegada a tiempo</div>
-        <div class='kpi-value' style='color:{COLOR_SUCCESS}'>{pct_tiempo:.1f}%</div>
-        <div class='kpi-sub'>{llegada_counts.get("Llegada a tiempo", 0)} registros</div>
+    st.markdown(f"""<div class='kpi-card' style='--kc:{COLOR_SUCCESS}'>
+        <div>
+            <div class='kpi-label'>Llegada a tiempo</div>
+            <div class='kpi-value' style='color:{COLOR_SUCCESS}'>{pct_tiempo:.1f}%</div>
+            <div class='kpi-sub'>{llegada_counts.get("Llegada a tiempo", 0)} registros</div>
+        </div>
         {kpi_bar(pct_tiempo, COLOR_SUCCESS)}
     </div>""", unsafe_allow_html=True)
 with k4:
-    st.markdown(f"""<div class='kpi-card'>
-        <div class='kpi-label'>Llegadas tarde</div>
-        <div class='kpi-value' style='color:{COLOR_WARNING}'>{pct_tarde:.1f}%</div>
-        <div class='kpi-sub'>{llegada_counts.get("Llegada tarde", 0)} registros</div>
+    st.markdown(f"""<div class='kpi-card' style='--kc:{COLOR_WARNING}'>
+        <div>
+            <div class='kpi-label'>Llegadas tarde</div>
+            <div class='kpi-value' style='color:{COLOR_WARNING}'>{pct_tarde:.1f}%</div>
+            <div class='kpi-sub'>{llegada_counts.get("Llegada tarde", 0)} registros</div>
+        </div>
         {kpi_bar(pct_tarde, COLOR_WARNING)}
     </div>""", unsafe_allow_html=True)
 with k5:
-    st.markdown(f"""<div class='kpi-card'>
-        <div class='kpi-label'>Ausentes</div>
-        <div class='kpi-value' style='color:{COLOR_DANGER}'>{pct_ausentes:.1f}%</div>
-        <div class='kpi-sub'>{llegada_counts.get("Ausente", 0)} registros</div>
+    st.markdown(f"""<div class='kpi-card' style='--kc:{COLOR_DANGER}'>
+        <div>
+            <div class='kpi-label'>Ausentes</div>
+            <div class='kpi-value' style='color:{COLOR_DANGER}'>{pct_ausentes:.1f}%</div>
+            <div class='kpi-sub'>{llegada_counts.get("Ausente", 0)} registros</div>
+        </div>
         {kpi_bar(pct_ausentes, COLOR_DANGER)}
     </div>""", unsafe_allow_html=True)
 
