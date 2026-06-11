@@ -117,38 +117,50 @@ st.markdown(f"""
     .main {{ background-color: {COLOR_BG}; }}
     .block-container {{ padding-top: 2rem; padding-bottom: 1rem; }}
 
+    /* ── Sidebar collapse button: ícono transparente ── */
+    div[data-testid="stSidebarCollapseButton"] button span,
+    button[data-testid="baseButton-headerNoPadding"] span {{
+        color: transparent !important;
+    }}
+    div[data-testid="stSidebarCollapseButton"] button,
+    button[data-testid="baseButton-headerNoPadding"] {{
+        background: transparent !important;
+        border: none !important;
+    }}
+
     /* ── Header banner ── */
     .header-banner {{
         background:
-            radial-gradient(ellipse at 15% 50%, rgba(255,255,255,0.10) 0%, transparent 55%),
+            radial-gradient(ellipse at 15% 50%, rgba(255,255,255,0.12) 0%, transparent 55%),
             radial-gradient(ellipse at 85% 80%, rgba(0,0,0,0.20) 0%, transparent 55%),
             linear-gradient(120deg, {COLOR_PRIMARY} 0%, #0EA5E9 100%);
-        border-radius: 14px;
-        padding: 22px 30px;
-        margin-bottom: 20px;
+        border-radius: 16px;
+        padding: 30px 40px;
+        margin-bottom: 22px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        gap: 20px;
-        box-shadow: 0 4px 20px rgba(40,5,63,0.25);
+        gap: 24px;
+        box-shadow: 0 6px 28px rgba(40,5,63,0.30);
     }}
     .header-left  {{ flex: 1; min-width: 0; }}
     .header-title {{
-        font-size: 17px; font-weight: 700; color: white; margin: 0 0 5px 0;
+        font-size: 22px; font-weight: 800; color: white; margin: 0 0 7px 0;
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        letter-spacing: -0.3px;
     }}
     .header-sub   {{
-        font-size: 12px; color: rgba(255,255,255,0.78); margin: 0;
+        font-size: 13px; color: rgba(255,255,255,0.80); margin: 0;
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }}
-    .header-right {{ display: flex; gap: 8px; flex-shrink: 0; align-items: center; }}
+    .header-right {{ display: flex; gap: 10px; flex-shrink: 0; align-items: center; }}
     .header-badge {{
-        background: rgba(255,255,255,0.15);
-        border: 1px solid rgba(255,255,255,0.30);
+        background: rgba(255,255,255,0.16);
+        border: 1px solid rgba(255,255,255,0.32);
         border-radius: 20px;
-        padding: 5px 14px;
-        font-size: 11px;
-        font-weight: 600;
+        padding: 7px 18px;
+        font-size: 12px;
+        font-weight: 700;
         color: white;
         white-space: nowrap;
         letter-spacing: 0.02em;
