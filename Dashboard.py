@@ -65,6 +65,7 @@ COLOR_BG      = "#F0F4F8"
 # ─────────────────────────────────────────────
 with st.sidebar:
     st.image("logo-scala-learning-transformacion-digital-universidades.webp", use_container_width=True)
+    st.markdown("---")
 
     st.markdown("""
     <div class='sb-brand'>
@@ -120,29 +121,32 @@ st.markdown(f"""
 
     /* ── Header banner ── */
     .header-banner {{
-        background: white;
+        background:
+            radial-gradient(ellipse at 15% 50%, rgba(255,255,255,0.10) 0%, transparent 55%),
+            radial-gradient(ellipse at 85% 80%, rgba(0,0,0,0.20) 0%, transparent 55%),
+            linear-gradient(120deg, {COLOR_PRIMARY} 0%, #0EA5E9 100%);
         border-radius: 14px;
-        padding: 20px 28px;
+        padding: 22px 30px;
         margin-bottom: 20px;
         display: flex;
         justify-content: space-between;
         align-items: center;
         gap: 20px;
-        box-shadow: 0 2px 14px rgba(0,0,0,0.08);
-        border-top: 4px solid {COLOR_PRIMARY};
+        box-shadow: 0 4px 20px rgba(40,5,63,0.25);
     }}
     .header-left  {{ flex: 1; min-width: 0; }}
     .header-title {{
-        font-size: 17px; font-weight: 700; color: {COLOR_PRIMARY}; margin: 0 0 4px 0;
+        font-size: 17px; font-weight: 700; color: white; margin: 0 0 5px 0;
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }}
     .header-sub   {{
-        font-size: 12px; color: #64748B; margin: 0;
+        font-size: 12px; color: rgba(255,255,255,0.78); margin: 0;
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }}
     .header-right {{ display: flex; gap: 8px; flex-shrink: 0; align-items: center; }}
     .header-badge {{
-        background: {COLOR_PRIMARY};
+        background: rgba(255,255,255,0.15);
+        border: 1px solid rgba(255,255,255,0.30);
         border-radius: 20px;
         padding: 5px 14px;
         font-size: 11px;
