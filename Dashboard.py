@@ -581,7 +581,7 @@ with c_bar:
                       annotation_position="top left")
     fig_bar.update_layout(
         barmode="overlay",
-        height=max(320, n_sup * 36 + 40),
+        height=400,
         margin=dict(l=0, r=20, t=20, b=0),
         paper_bgcolor="white", plot_bgcolor="white",
         xaxis=dict(
@@ -603,7 +603,7 @@ with c_gauge:
     tabla_sup["ADH"] = tabla_sup["ADH"].apply(lambda x: f"{x:.1%}")
     tabla_sup["Supervisor"] = tabla_sup["Supervisor"].apply(lambda n: " ".join(n.split()[:2]))
     tabla_sup.columns = ["Supervisor","ADH%","Agentes","Ausentes","Tardes"]
-    st.dataframe(tabla_sup, use_container_width=True, hide_index=True, height=360)
+    st.dataframe(tabla_sup, use_container_width=True, hide_index=True, height=400)
 
 # ─────────────────────────────────────────────
 # GRÁFICAS POR SUPERVISOR (TENDENCIA)
@@ -694,24 +694,29 @@ t1_show = (
          "T. Programado", "Fuera de ADH", "ADH Aplicada"]
     ].sort_values(["Fecha", "Agente"]).reset_index(drop=True)
 )
+def _col_bg(col):
+    if col.name == "Agente":
+        return [f'background-color:#EFF6FF;color:{COLOR_PRIMARY};font-weight:600;text-align:center'] * len(col)
+    elif col.name == "Supervisor":
+        return ['background-color:#FEFCE8;color:#713F12;font-weight:600;text-align:center'] * len(col)
+    return ['text-align:center'] * len(col)
+
 def _color_adh(v):
     try:
         p = float(v.strip("%")) / 100
-        if p >= 0.90: return f"color:{COLOR_SUCCESS};font-weight:600"
-        elif p >= 0.80: return f"color:{COLOR_WARNING};font-weight:600"
-        else: return f"color:{COLOR_DANGER};font-weight:600"
-    except: return ""
+        if p >= 0.90: return f"color:{COLOR_SUCCESS};font-weight:600;text-align:center"
+        elif p >= 0.80: return f"color:{COLOR_WARNING};font-weight:600;text-align:center"
+        else: return f"color:{COLOR_DANGER};font-weight:600;text-align:center"
+    except: return "text-align:center"
 def _color_siono(v):
-    if v == "Sí": return f"color:{COLOR_DANGER};font-weight:600"
-    return "color:#94A3B8"
+    if v == "Sí": return f"color:{COLOR_DANGER};font-weight:600;text-align:center"
+    return "color:#94A3B8;text-align:center"
 
 st.dataframe(
     t1_show.style
-        .map(lambda _: f"color:{COLOR_PRIMARY};font-weight:600", subset=["Agente"])
+        .apply(_col_bg, axis=0)
         .map(_color_adh, subset=["Adherencia"])
-        .map(_color_siono, subset=["Retardo", "Ausencia"])
-        .set_properties(**{"text-align": "center"})
-        .set_properties(**{"text-align": "left"}, subset=["Agente", "Supervisor", "Campaña"]),
+        .map(_color_siono, subset=["Retardo", "Ausencia"]),
     use_container_width=True, hide_index=True, height=350
 )
 
@@ -733,9 +738,7 @@ for c in plan_disponibles:
 st.dataframe(
     t2.sort_values(["Fecha", "Agente"]).reset_index(drop=True)
       .style
-      .map(lambda _: f"color:{COLOR_PRIMARY};font-weight:600", subset=["Agente"])
-      .set_properties(**{"text-align": "center"})
-      .set_properties(**{"text-align": "left"}, subset=["Agente", "Supervisor", "Campaña"]),
+      .apply(_col_bg, axis=0),
     use_container_width=True, hide_index=True, height=350
 )
 
@@ -774,10 +777,8 @@ t3_show = t3[cols_t3].sort_values(["Fecha", "Agente"]).reset_index(drop=True)
 time_cols = [c for c in t3_show.columns if c not in ["Fecha","Agente","Supervisor","Campaña"]]
 st.dataframe(
     t3_show.style
-        .map(lambda _: f"color:{COLOR_PRIMARY};font-weight:600", subset=["Agente"])
-        .map(_color_exceso, subset=time_cols)
-        .set_properties(**{"text-align": "center"})
-        .set_properties(**{"text-align": "left"}, subset=["Agente", "Supervisor", "Campaña"]),
+        .apply(_col_bg, axis=0)
+        .map(_color_exceso, subset=time_cols),
     use_container_width=True, hide_index=True, height=350
 )
 
