@@ -67,16 +67,27 @@ with st.sidebar:
     _, _c, _ = st.columns([1, 9, 1])
     with _c:
         st.image("logo-scala-learning-transformacion-digital-universidades.webp", use_container_width=True)
-    st.markdown("---")
 
     st.markdown("""
-    <div class='sb-brand'>
-        <div class='sb-brand-title'>Workforce Management</div>
-        <div class='sb-brand-sub'>Uniminuto · Scala Learning</div>
+    <div class='sb-brand-v2'>
+        <div class='sb-bv2-gradient'></div>
+        <div class='sb-bv2-inner'>
+            <div class='sb-bv2-title'>Workforce Management</div>
+            <div class='sb-bv2-sub'>Uniminuto · Scala Learning</div>
+            <div class='sb-bv2-tags'>
+                <span class='sb-bv2-tag'>2026</span>
+                <span class='sb-bv2-tag'>Dashboard</span>
+                <span class='sb-bv2-tag'>WFM</span>
+            </div>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("<div class='sb-section-label'>Período</div>", unsafe_allow_html=True)
+    st.markdown("""<div class='sb-sec-hdr'>
+        <span class='sb-sec-dot' style='background:#0EA5E9'></span>
+        <span class='sb-sec-label'>Período</span>
+        <span class='sb-sec-line'></span>
+    </div>""", unsafe_allow_html=True)
     tipo_periodo = st.selectbox("Agrupar por", ["Día","Semana","Mes"], index=0)
 
     fechas = sorted(df["Fecha"].dt.date.unique())
@@ -86,7 +97,11 @@ with st.sidebar:
     with col_f2:
         fecha_fin = st.date_input("Hasta", value=fechas[-1], min_value=fechas[0], max_value=fechas[-1])
 
-    st.markdown("<div class='sb-section-label'>Filtros</div>", unsafe_allow_html=True)
+    st.markdown("""<div class='sb-sec-hdr'>
+        <span class='sb-sec-dot' style='background:#10B981'></span>
+        <span class='sb-sec-label'>Filtros</span>
+        <span class='sb-sec-line'></span>
+    </div>""", unsafe_allow_html=True)
 
     supervisores = ["Todos"] + sorted(df["Supervisor"].dropna().unique().tolist())
     sup_sel = st.selectbox("Supervisor", supervisores)
@@ -98,11 +113,13 @@ with st.sidebar:
     camp_sel = st.selectbox("Campaña", campanas)
 
     st.markdown("""
-    <div class='sb-footer'>
-        Desarrollado por el equipo de<br><b>Workforce Management</b><br><br>
-        Diseño, desarrollo e implementación a cargo de<br>
-        <b>Guillermo Steban Calderón Arrieta</b><br>
-        Analista WFM
+    <div class='sb-footer-v2'>
+        <div class='sb-fv2-text'>
+            Desarrollado por el equipo de<br><b>Workforce Management</b>
+        </div>
+        <div class='sb-fv2-divider'></div>
+        <div class='sb-fv2-name'>Guillermo Steban Calderón Arrieta</div>
+        <div class='sb-fv2-role'>Analista WFM · Scala Learning</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -394,34 +411,107 @@ st.markdown(f"""
     /* ── Inputs de fecha ── */
     div[data-testid="stSidebarContent"] input[type="text"] {{ color: white !important; }}
 
-    /* ── Sidebar – brand block ── */
-    .sb-brand {{
+    /* ── Sidebar – brand card v2 ── */
+    .sb-brand-v2 {{
+        background: rgba(255,255,255,0.07);
+        border-radius: 14px;
+        border: 1px solid rgba(255,255,255,0.12);
+        overflow: hidden;
+        margin: 10px 0 16px;
+    }}
+    .sb-bv2-gradient {{
+        height: 4px;
+        background: linear-gradient(90deg, #0EA5E9 0%, #10B981 50%, #F59E0B 100%);
+    }}
+    .sb-bv2-inner {{
+        padding: 14px 16px 16px;
         text-align: center;
-        padding: 4px 4px 16px;
-        border-bottom: 1px solid rgba(255,255,255,0.12);
-        margin-bottom: 8px;
     }}
-    .sb-brand-title {{
-        font-family: 'Inter', sans-serif !important;
-        font-size: 14px; font-weight: 700; color: white !important;
+    .sb-bv2-title {{
+        font-size: 15px !important; font-weight: 800 !important;
+        color: white !important; letter-spacing: -0.3px !important;
+        margin-bottom: 4px;
     }}
-    .sb-brand-sub {{
-        font-family: 'Inter', sans-serif !important;
-        font-size: 13px; font-weight: 400; color: rgba(255,255,255,0.65) !important;
-        margin-top: 3px;
+    .sb-bv2-sub {{
+        font-size: 12px !important;
+        color: rgba(255,255,255,0.55) !important;
+        margin-bottom: 12px;
+    }}
+    .sb-bv2-tags {{ display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }}
+    .sb-bv2-tag {{
+        font-size: 9px !important; font-weight: 700 !important;
+        color: rgba(255,255,255,0.80) !important;
+        background: rgba(255,255,255,0.12);
+        border: 1px solid rgba(255,255,255,0.22);
+        padding: 3px 10px; border-radius: 99px;
+        letter-spacing: 0.06em !important;
+        text-transform: uppercase;
     }}
 
-    /* ── Sidebar – section labels ── */
-    .sb-section-label {{
-        font-family: 'Inter', sans-serif !important;
-        font-size: 11px;
-        font-weight: 600;
+    /* ── Sidebar – section headers ── */
+    .sb-sec-hdr {{
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 18px 0 8px;
+    }}
+    .sb-sec-dot {{
+        width: 8px; height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        display: inline-block;
+    }}
+    .sb-sec-label {{
+        font-size: 10px !important; font-weight: 700 !important;
         color: rgba(255,255,255,0.55) !important;
-        margin: 20px 0 6px 0;
-        padding-bottom: 6px;
-        border-bottom: 1px solid rgba(255,255,255,0.10);
-        letter-spacing: 0.01em;
+        letter-spacing: 0.10em !important;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }}
+    .sb-sec-line {{
+        flex: 1;
+        height: 1px;
+        background: rgba(255,255,255,0.10);
+        display: block;
+    }}
+
+    /* ── Sidebar – footer card v2 ── */
+    .sb-footer-v2 {{
+        background: rgba(255,255,255,0.05);
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.08);
+        padding: 14px;
         text-align: center;
+        margin-top: 20px;
+        position: relative;
+        overflow: hidden;
+    }}
+    .sb-footer-v2::before {{
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #0EA5E9, #8B5CF6, #10B981);
+    }}
+    .sb-fv2-text {{
+        font-size: 10px !important;
+        color: rgba(255,255,255,0.42) !important;
+        line-height: 1.7;
+        margin-bottom: 10px;
+    }}
+    .sb-fv2-divider {{
+        height: 1px;
+        background: rgba(255,255,255,0.08);
+        margin: 8px 0;
+    }}
+    .sb-fv2-name {{
+        font-size: 11px !important; font-weight: 700 !important;
+        color: rgba(255,255,255,0.72) !important;
+        margin-bottom: 3px;
+    }}
+    .sb-fv2-role {{
+        font-size: 10px !important;
+        color: rgba(255,255,255,0.35) !important;
     }}
 
     /* ── Sidebar – widget labels y valores ── */
@@ -458,17 +548,6 @@ st.markdown(f"""
         font-size: 11px !important;
     }}
 
-    /* ── Sidebar – footer ── */
-    .sb-footer {{
-        font-family: 'Inter', sans-serif !important;
-        font-size: 11px;
-        color: rgba(255,255,255,0.40) !important;
-        text-align: center;
-        line-height: 1.7;
-        padding: 16px 4px 6px;
-        border-top: 1px solid rgba(255,255,255,0.10);
-        margin-top: 16px;
-    }}
 </style>
 """, unsafe_allow_html=True)
 
