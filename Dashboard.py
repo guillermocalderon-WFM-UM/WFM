@@ -48,7 +48,7 @@ def cargar_datos(path):
 
     return df
 
-df = cargar_datos("data/Consolidado_MAYO.xlsx")
+df = cargar_datos("Consolidado_MAYO.xlsx")
 
 # ─────────────────────────────────────────────
 # SIDEBAR – FILTROS + COLORES
