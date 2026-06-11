@@ -234,7 +234,7 @@ st.markdown(f"""
     /* ── Sidebar – brand block ── */
     .sb-brand {{
         text-align: center;
-        padding: 12px 4px 16px;
+        padding: 4px 4px 16px;
         border-bottom: 1px solid rgba(255,255,255,0.12);
         margin-bottom: 8px;
     }}
@@ -329,7 +329,7 @@ filtro_txt = f"{'Todos los supervisores' if sup_sel == 'Todos' else sup_sel} · 
 st.markdown(f"""
 <div class='header-banner'>
     <div class='header-left'>
-        <div class='header-title'>📊 Tablero WFM · Seguimiento de Adherencia</div>
+        <div class='header-title'>TABLERO DE SEGUIMIENTO WORKFORCE MANAGEMENT · UNIMINUTO 2026</div>
         <div class='header-sub'>📅 {rango} &nbsp;|&nbsp; 👤 {filtro_txt}</div>
     </div>
     <div class='header-right'>
@@ -416,26 +416,34 @@ tend = (
     .reset_index(name="ADH")
 )
 
-c1, c2 = st.columns([2, 1])
+c1, c2 = st.columns([3, 2])
 with c1:
     fig_tend = go.Figure()
     fig_tend.add_trace(go.Scatter(
         x=tend["_periodo"], y=tend["ADH"],
-        mode="lines+markers",
+        mode="lines+markers+text",
         line=dict(color=COLOR_ACCENT, width=1.25, shape="spline"),
         marker=dict(size=7, color=COLOR_PRIMARY),
+        text=tend["ADH"].apply(lambda x: f"{x:.0%}"),
+        textposition="top center",
+        textfont=dict(size=9, color=COLOR_PRIMARY, family="Inter"),
         fill="tozeroy",
-        fillcolor="rgba(14,165,233,0.08)",
+        fillcolor="rgba(14,165,233,0.07)",
         hovertemplate="%{x}<br><b>%{y:.1%}</b><extra></extra>"
     ))
     fig_tend.add_hline(y=0.90, line_dash="dot", line_color=COLOR_SUCCESS,
-                       annotation_text="Meta 90%", annotation_position="top right")
+                       annotation_text="Meta 90%", annotation_position="top right",
+                       annotation_font=dict(color=COLOR_SUCCESS, size=11))
     fig_tend.update_layout(
-        height=280, margin=dict(l=0,r=0,t=10,b=0),
+        height=320, margin=dict(l=0, r=10, t=24, b=0),
         paper_bgcolor="white", plot_bgcolor="white",
-        yaxis=dict(tickformat=".0%", gridcolor="#F3F4F6", range=[0, 1.1]),
-        xaxis=dict(gridcolor="#F3F4F6"),
-        font=dict(family="sans-serif", size=11)
+        yaxis=dict(
+            tickformat=".0%", gridcolor="#F1F5F9",
+            range=[0.10, 1.05], dtick=0.05,
+            tickfont=dict(size=10)
+        ),
+        xaxis=dict(gridcolor="#F1F5F9", tickfont=dict(size=10)),
+        font=dict(family="Inter", size=11)
     )
     st.plotly_chart(fig_tend, use_container_width=True)
 
@@ -449,18 +457,41 @@ with c2:
         "Llegada tarde":    COLOR_WARNING,
         "Ausente":          COLOR_DANGER
     }
-    fig_pie = px.pie(
-        llegadas_plot, values="Cantidad", names="Estado",
-        color="Estado", color_discrete_map=color_map,
-        hole=0.55
+    lp_labels = llegadas_plot["Estado"].tolist()
+    lp_values = llegadas_plot["Cantidad"].tolist()
+    lp_colors = [color_map.get(l, "#94A3B8") for l in lp_labels]
+    max_idx = lp_values.index(max(lp_values)) if lp_values else 0
+    pull = [0.06 if i == max_idx else 0 for i in range(len(lp_values))]
+
+    fig_pie = go.Figure(go.Pie(
+        labels=lp_labels,
+        values=lp_values,
+        hole=0.62,
+        marker=dict(colors=lp_colors, line=dict(color="white", width=3)),
+        pull=pull,
+        textinfo="percent",
+        textposition="inside",
+        textfont=dict(size=13, color="white", family="Inter"),
+        hovertemplate="<b>%{label}</b><br>%{value} registros · %{percent}<extra></extra>",
+        sort=False
+    ))
+    fig_pie.add_annotation(
+        text=f"<b>{pct_tiempo:.1f}%</b><br>a tiempo",
+        x=0.5, y=0.5,
+        font=dict(size=15, color=COLOR_SUCCESS, family="Inter"),
+        showarrow=False, align="center"
     )
-    fig_pie.update_traces(textposition="outside", textinfo="percent+label",
-                          hovertemplate="%{label}<br><b>%{value}</b> registros<extra></extra>")
     fig_pie.update_layout(
-        height=280, margin=dict(l=0,r=0,t=10,b=0),
+        height=320, margin=dict(l=0, r=0, t=24, b=0),
         paper_bgcolor="white",
-        showlegend=False,
-        font=dict(family="sans-serif", size=10)
+        showlegend=True,
+        legend=dict(
+            orientation="v", yanchor="middle", y=0.5,
+            xanchor="left", x=1.0,
+            font=dict(size=10, family="Inter"),
+            itemsizing="constant"
+        ),
+        font=dict(family="Inter", size=11)
     )
     st.plotly_chart(fig_pie, use_container_width=True)
 
