@@ -51,7 +51,17 @@ def cargar_datos(path):
 df = cargar_datos("Consolidado_MAYO.xlsx")
 
 # ─────────────────────────────────────────────
-# SIDEBAR – FILTROS + COLORES
+# COLORES (fijos)
+# ─────────────────────────────────────────────
+COLOR_PRIMARY = "#28053F"
+COLOR_ACCENT  = "#0EA5E9"
+COLOR_SUCCESS = "#10B981"
+COLOR_WARNING = "#F59E0B"
+COLOR_DANGER  = "#EF4444"
+COLOR_BG      = "#F0F4F8"
+
+# ─────────────────────────────────────────────
+# SIDEBAR – FILTROS
 # ─────────────────────────────────────────────
 with st.sidebar:
     st.image("logo-scala-learning-transformacion-digital-universidades.webp", use_container_width=True)
@@ -63,9 +73,8 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("<div class='sb-section-label'>📅 Período</div>", unsafe_allow_html=True)
-    tipo_periodo = st.selectbox("Agrupar por", ["Día","Semana","Mes"], index=0, label_visibility="collapsed")
-    st.markdown("<div class='sb-input-hint'>Agrupar por</div>", unsafe_allow_html=True)
+    st.markdown("<div class='sb-section-label'>Período</div>", unsafe_allow_html=True)
+    tipo_periodo = st.selectbox("Agrupar por", ["Día","Semana","Mes"], index=0)
 
     fechas = sorted(df["Fecha"].dt.date.unique())
     col_f1, col_f2 = st.columns(2)
@@ -74,7 +83,7 @@ with st.sidebar:
     with col_f2:
         fecha_fin = st.date_input("Hasta", value=fechas[-1], min_value=fechas[0], max_value=fechas[-1])
 
-    st.markdown("<div class='sb-section-label'>🔎 Filtros</div>", unsafe_allow_html=True)
+    st.markdown("<div class='sb-section-label'>Filtros</div>", unsafe_allow_html=True)
 
     supervisores = ["Todos"] + sorted(df["Supervisor"].dropna().unique().tolist())
     sup_sel = st.selectbox("Supervisor", supervisores)
@@ -84,15 +93,6 @@ with st.sidebar:
 
     campanas = ["Todas"] + sorted(df["Campana"].dropna().unique().tolist())
     camp_sel = st.selectbox("Campaña", campanas)
-
-    st.markdown("<div class='sb-section-label'>🎨 Colores</div>", unsafe_allow_html=True)
-    with st.expander("Personalizar colores"):
-        COLOR_PRIMARY = st.color_picker("Sidebar / Primario", "#28053F")
-        COLOR_ACCENT  = st.color_picker("Acento (azul claro)", "#0EA5E9")
-        COLOR_SUCCESS = st.color_picker("Éxito (verde)",       "#10B981")
-        COLOR_WARNING = st.color_picker("Alerta (amarillo)",   "#F59E0B")
-        COLOR_DANGER  = st.color_picker("Peligro (rojo)",      "#EF4444")
-        COLOR_BG      = st.color_picker("Fondo",               "#F0F4F8")
 
     st.markdown("""
     <div class='sb-footer'>
@@ -112,42 +112,43 @@ st.markdown(f"""
     * {{ font-family: 'Inter', sans-serif !important; }}
 
     .main {{ background-color: {COLOR_BG}; }}
-    .block-container {{ padding-top: 0.5rem; padding-bottom: 1rem; }}
+    .block-container {{ padding-top: 2rem; padding-bottom: 1rem; }}
+
+    /* ── Ocultar botón collapse del sidebar ── */
+    div[data-testid="stSidebarCollapseButton"],
+    button[data-testid="baseButton-headerNoPadding"] {{ display: none !important; }}
 
     /* ── Header banner ── */
     .header-banner {{
-        background: linear-gradient(120deg, {COLOR_PRIMARY} 55%, {COLOR_ACCENT} 100%);
+        background: white;
         border-radius: 14px;
-        padding: 22px 30px;
+        padding: 20px 28px;
         margin-bottom: 20px;
         display: flex;
         justify-content: space-between;
         align-items: center;
         gap: 20px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+        box-shadow: 0 2px 14px rgba(0,0,0,0.08);
+        border-top: 4px solid {COLOR_PRIMARY};
     }}
     .header-left  {{ flex: 1; min-width: 0; }}
     .header-title {{
-        font-size: 18px; font-weight: 800; color: white; margin: 0 0 5px 0;
-        text-shadow: 0 1px 6px rgba(0,0,0,0.30);
+        font-size: 17px; font-weight: 700; color: {COLOR_PRIMARY}; margin: 0 0 4px 0;
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }}
     .header-sub   {{
-        font-size: 12px; color: rgba(255,255,255,0.82); margin: 0;
-        text-shadow: 0 1px 4px rgba(0,0,0,0.20);
+        font-size: 12px; color: #64748B; margin: 0;
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }}
     .header-right {{ display: flex; gap: 8px; flex-shrink: 0; align-items: center; }}
     .header-badge {{
-        background: rgba(255,255,255,0.18);
-        border: 1px solid rgba(255,255,255,0.30);
+        background: {COLOR_PRIMARY};
         border-radius: 20px;
         padding: 5px 14px;
         font-size: 11px;
-        font-weight: 700;
+        font-weight: 600;
         color: white;
         white-space: nowrap;
-        text-shadow: none;
         letter-spacing: 0.02em;
     }}
 
@@ -229,61 +230,66 @@ st.markdown(f"""
     /* ── Sidebar – brand block ── */
     .sb-brand {{
         text-align: center;
-        padding: 10px 4px 14px;
+        padding: 12px 4px 16px;
         border-bottom: 1px solid rgba(255,255,255,0.12);
-        margin-bottom: 6px;
+        margin-bottom: 8px;
     }}
-    .sb-brand-title {{ font-size: 13px; font-weight: 700; color: white !important; letter-spacing: 0.02em; }}
-    .sb-brand-sub   {{ font-size: 11px; color: rgba(255,255,255,0.55) !important; margin-top: 2px; }}
+    .sb-brand-title {{
+        font-family: 'Inter', sans-serif !important;
+        font-size: 14px; font-weight: 700; color: white !important;
+    }}
+    .sb-brand-sub {{
+        font-family: 'Inter', sans-serif !important;
+        font-size: 13px; font-weight: 400; color: rgba(255,255,255,0.65) !important;
+        margin-top: 3px;
+    }}
 
-    /* ── Sidebar – section labels ── */
+    /* ── Sidebar – section labels (mismo tamaño que labels de filtros) ── */
     .sb-section-label {{
-        font-size: 10px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.10em;
-        color: rgba(255,255,255,0.45) !important;
-        margin: 18px 0 8px 2px;
-        padding-bottom: 5px;
+        font-family: 'Inter', sans-serif !important;
+        font-size: 13px;
+        font-weight: 600;
+        color: rgba(255,255,255,0.55) !important;
+        margin: 20px 0 6px 0;
+        padding-bottom: 6px;
         border-bottom: 1px solid rgba(255,255,255,0.10);
-    }}
-    .sb-input-hint {{
-        font-size: 10px;
-        color: rgba(255,255,255,0.35) !important;
-        margin: -10px 0 6px 2px;
+        letter-spacing: 0.01em;
     }}
 
-    /* ── Sidebar – widgets ── */
+    /* ── Sidebar – widget labels y valores ── */
+    div[data-testid="stSidebarContent"] label,
+    div[data-testid="stSidebarContent"] .stSelectbox label,
+    div[data-testid="stSidebarContent"] .stDateInput label {{
+        font-family: 'Inter', sans-serif !important;
+        font-size: 13px !important;
+        font-weight: 400 !important;
+        color: rgba(255,255,255,0.75) !important;
+    }}
     div[data-testid="stSidebarContent"] .stSelectbox > div > div,
     div[data-testid="stSidebarContent"] .stSelectbox > label + div > div {{
         background: rgba(255,255,255,0.08) !important;
         border: 1px solid rgba(255,255,255,0.18) !important;
         border-radius: 8px !important;
     }}
-    div[data-testid="stSidebarContent"] .stSelectbox label {{
-        font-size: 11px !important;
-        color: rgba(255,255,255,0.60) !important;
-    }}
     div[data-testid="stSidebarContent"] .stDateInput > div > div > input {{
         background: rgba(255,255,255,0.08) !important;
         border: 1px solid rgba(255,255,255,0.18) !important;
         border-radius: 8px !important;
         color: white !important;
-    }}
-    div[data-testid="stSidebarContent"] .stDateInput label {{
-        font-size: 11px !important;
-        color: rgba(255,255,255,0.60) !important;
+        font-family: 'Inter', sans-serif !important;
+        font-size: 13px !important;
     }}
 
     /* ── Sidebar – footer ── */
     .sb-footer {{
-        font-size: 10px;
-        color: rgba(255,255,255,0.35) !important;
+        font-family: 'Inter', sans-serif !important;
+        font-size: 11px;
+        color: rgba(255,255,255,0.40) !important;
         text-align: center;
-        line-height: 1.6;
-        padding: 14px 4px 4px;
+        line-height: 1.7;
+        padding: 16px 4px 6px;
         border-top: 1px solid rgba(255,255,255,0.10);
-        margin-top: 12px;
+        margin-top: 16px;
     }}
 </style>
 """, unsafe_allow_html=True)
