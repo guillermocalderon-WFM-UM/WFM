@@ -94,18 +94,31 @@ with st.sidebar:
         st.image("logo-scala-learning-transformacion-digital-universidades.webp", use_container_width=True)
 
     st.markdown("""
-    <div class='sb-id'>
-        <div class='sb-id-bar'></div>
-        <div class='sb-id-acronym'>WFM</div>
-        <div class='sb-id-title'>Workforce Management</div>
-        <div class='sb-id-sub'>Uniminuto &nbsp;·&nbsp; Scala Learning &nbsp;·&nbsp; 2026</div>
+    <div class='sbc'>
+        <div class='sbc-orb sbc-orb-1'></div>
+        <div class='sbc-orb sbc-orb-2'></div>
+        <div class='sbc-orb sbc-orb-3'></div>
+        <div class='sbc-live'><span class='sbc-pulse'></span>LIVE</div>
+        <div class='sbc-body'>
+            <div class='sbc-wfm'>WFM</div>
+            <div class='sbc-name'>Workforce Management</div>
+            <div class='sbc-org'>Uniminuto &nbsp;·&nbsp; Scala Learning</div>
+            <div class='sbc-stats'>
+                <div class='sbc-stat'><span class='sbc-sv'>2026</span><span class='sbc-sl'>Año</span></div>
+                <div class='sbc-sep'></div>
+                <div class='sbc-stat'><span class='sbc-sv'>WFM</span><span class='sbc-sl'>Área</span></div>
+                <div class='sbc-sep'></div>
+                <div class='sbc-stat'><span class='sbc-sv'>COL</span><span class='sbc-sl'>País</span></div>
+            </div>
+        </div>
+        <div class='sbc-bar'></div>
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("""<div class='sb-divider' style='--dc:#38BDF8'>
-        <span class='sb-div-bar'></span>
-        <span class='sb-div-txt'>Período</span>
-        <span class='sb-div-line'></span>
+    st.markdown("""<div class='sbh'>
+        <div class='sbh-num' style='color:#38BDF8!important;background:rgba(56,189,248,0.12);border-color:rgba(56,189,248,0.22)'>01</div>
+        <div class='sbh-lbl'>Período</div>
+        <div class='sbh-rule'></div>
     </div>""", unsafe_allow_html=True)
     tipo_periodo = st.selectbox("Agrupar por", ["Día","Semana","Mes"], index=0)
 
@@ -142,10 +155,10 @@ with st.sidebar:
     with col_f2:
         fecha_fin = st.date_input("Hasta", value=fechas[-1], min_value=fechas[0], max_value=fechas[-1])
 
-    st.markdown("""<div class='sb-divider' style='--dc:#34D399'>
-        <span class='sb-div-bar'></span>
-        <span class='sb-div-txt'>Filtros</span>
-        <span class='sb-div-line'></span>
+    st.markdown("""<div class='sbh'>
+        <div class='sbh-num' style='color:#34D399!important;background:rgba(52,211,153,0.12);border-color:rgba(52,211,153,0.22)'>02</div>
+        <div class='sbh-lbl'>Filtros</div>
+        <div class='sbh-rule'></div>
     </div>""", unsafe_allow_html=True)
 
     if "Coordinador" in df.columns:
@@ -164,10 +177,16 @@ with st.sidebar:
     camp_sel = st.selectbox("Campaña", campanas)
 
     st.markdown("""
-    <div class='sb-foot'>
-        <div class='sb-foot-tag'>Desarrollado por WFM</div>
-        <div class='sb-foot-name'>Guillermo Steban Calderón</div>
-        <div class='sb-foot-role'>Analista WFM · Scala Learning</div>
+    <div class='sbf'>
+        <div class='sbf-rule'></div>
+        <div class='sbf-row'>
+            <div class='sbf-avatar'>GC</div>
+            <div class='sbf-info'>
+                <div class='sbf-name'>Guillermo Calderón</div>
+                <div class='sbf-role'>Analista WFM · Scala Learning</div>
+            </div>
+        </div>
+        <div class='sbf-credit'>Desarrollado por Workforce Management</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -482,94 +501,177 @@ st.markdown(f"""
         color: white !important;
     }}
 
-    /* ── Sidebar – fondo limpio ── */
+    /* ══ SIDEBAR BASE ══ */
     section[data-testid="stSidebar"] > div:first-child {{
-        background: linear-gradient(160deg, #1e0638 0%, #28053F 45%, #1a0230 100%);
-        border-right: 1px solid rgba(255,255,255,0.05);
+        background:
+            radial-gradient(ellipse at 0% 0%,   rgba(56,189,248,0.14) 0%,  transparent 45%),
+            radial-gradient(ellipse at 100% 100%, rgba(129,140,248,0.16) 0%, transparent 45%),
+            radial-gradient(ellipse at 50% 55%,  rgba(52,211,153,0.07) 0%,  transparent 40%),
+            linear-gradient(170deg, #1c0636 0%, #28053F 50%, #18022b 100%);
+        border-right: 1px solid rgba(255,255,255,0.06);
     }}
     div[data-testid="stSidebarContent"] * {{ color: white !important; }}
     div[data-testid="stSidebarContent"] hr {{
-        border-color: rgba(255,255,255,0.10);
+        border-color: rgba(255,255,255,0.08);
         margin-top: 4px !important; margin-bottom: 4px !important;
     }}
-
-    /* ── Logo ── */
     div[data-testid="stSidebarContent"] [data-testid="stImage"] img {{
-        filter: drop-shadow(0 4px 16px rgba(14,165,233,0.35));
-        padding: 0 4px;
-    }}
-
-    /* ── Identity card ── */
-    @keyframes sbShift {{
-        0%   {{ background-position: 0% 50%;   }}
-        50%  {{ background-position: 100% 50%; }}
-        100% {{ background-position: 0% 50%;   }}
-    }}
-    .sb-id {{
-        text-align: center;
-        margin: 6px 0 26px;
+        filter: drop-shadow(0 4px 18px rgba(56,189,248,0.30));
         padding: 0 6px;
     }}
-    .sb-id-bar {{
-        height: 2px;
-        background: linear-gradient(90deg, transparent, #38BDF8, #818CF8, #34D399, transparent);
-        background-size: 200% 100%;
-        animation: sbShift 5s linear infinite;
-        border-radius: 99px;
-        margin-bottom: 16px;
+    /* ── Ocultar collapsed control ── */
+    div[data-testid="collapsedControl"] {{ background:transparent!important; border:none!important; box-shadow:none!important; }}
+    div[data-testid="collapsedControl"] * {{ color:transparent!important; background:transparent!important; border:none!important; }}
+    div[data-testid="stSidebarContent"] {{ width:100%!important; box-sizing:border-box!important; padding-right:0.75rem!important; }}
+    div[data-testid="stSidebarContent"] > div {{ width:100%!important; }}
+
+    /* ══ BRAND CARD ══ */
+    @keyframes sbcBar {{
+        0%   {{ background-position: 0% 0%;   }}
+        100% {{ background-position: 200% 0%; }}
     }}
-    .sb-id-acronym {{
-        font-size: 34px !important;
+    @keyframes sbcPulse {{
+        0%,100% {{ opacity:1; transform:scale(1);   }}
+        50%     {{ opacity:.3; transform:scale(.6); }}
+    }}
+    .sbc {{
+        position: relative;
+        border-radius: 20px;
+        overflow: hidden;
+        margin: 6px 0 26px;
+        padding: 20px 18px 18px;
+        background:
+            linear-gradient(145deg,
+                rgba(56,189,248,0.12)  0%,
+                rgba(129,140,248,0.09) 55%,
+                rgba(52,211,153,0.07)  100%),
+            rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.12);
+    }}
+    /* Orbes decorativos */
+    .sbc-orb {{
+        position: absolute;
+        border-radius: 50%;
+        pointer-events: none;
+    }}
+    .sbc-orb-1 {{
+        width: 140px; height: 140px;
+        background: radial-gradient(circle, rgba(56,189,248,0.18) 0%, transparent 70%);
+        top: -50px; right: -40px;
+    }}
+    .sbc-orb-2 {{
+        width: 90px; height: 90px;
+        background: radial-gradient(circle, rgba(129,140,248,0.16) 0%, transparent 70%);
+        bottom: -30px; left: -25px;
+    }}
+    .sbc-orb-3 {{
+        width: 60px; height: 60px;
+        background: radial-gradient(circle, rgba(52,211,153,0.14) 0%, transparent 70%);
+        top: 50%; right: 12px;
+    }}
+    /* Indicador LIVE */
+    .sbc-live {{
+        position: absolute;
+        top: 14px; right: 14px;
+        display: flex; align-items: center; gap: 5px;
+        font-size: 8px !important; font-weight: 800 !important;
+        color: #34D399 !important;
+        background: rgba(52,211,153,0.13);
+        border: 1px solid rgba(52,211,153,0.30);
+        padding: 3px 9px 3px 7px;
+        border-radius: 99px;
+        letter-spacing: 0.10em;
+        z-index: 2;
+    }}
+    .sbc-pulse {{
+        width: 5px; height: 5px;
+        background: #34D399;
+        border-radius: 50%;
+        display: inline-block;
+        animation: sbcPulse 1.8s ease-in-out infinite;
+    }}
+    /* Contenido */
+    .sbc-body {{ position: relative; z-index: 1; text-align: center; }}
+    .sbc-wfm {{
+        font-size: 40px !important;
         font-weight: 900 !important;
-        letter-spacing: 6px !important;
+        letter-spacing: 7px !important;
         line-height: 1 !important;
-        margin-bottom: 7px !important;
-        background: linear-gradient(135deg, #38BDF8 0%, #818CF8 50%, #34D399 100%);
+        margin-bottom: 9px !important;
+        background: linear-gradient(135deg, #38BDF8 0%, #818CF8 52%, #34D399 100%);
         -webkit-background-clip: text !important;
         background-clip: text !important;
         -webkit-text-fill-color: transparent !important;
     }}
-    .sb-id-title {{
-        font-size: 12px !important;
-        font-weight: 700 !important;
-        color: rgba(255,255,255,0.80) !important;
-        letter-spacing: 0.04em !important;
-        margin-bottom: 5px !important;
+    .sbc-name {{
+        font-size: 13px !important; font-weight: 700 !important;
+        color: rgba(255,255,255,0.88) !important;
+        letter-spacing: 0 !important; margin-bottom: 4px !important;
     }}
-    .sb-id-sub {{
+    .sbc-org {{
         font-size: 10px !important;
-        color: rgba(255,255,255,0.30) !important;
-        letter-spacing: 0.04em !important;
+        color: rgba(255,255,255,0.35) !important;
+        margin-bottom: 16px !important;
+    }}
+    /* Stats row */
+    .sbc-stats {{
+        display: flex; align-items: center; justify-content: center;
+        background: rgba(0,0,0,0.22);
+        border-radius: 12px;
+        padding: 10px 8px;
+        border: 1px solid rgba(255,255,255,0.07);
+    }}
+    .sbc-stat {{ flex: 1; text-align: center; }}
+    .sbc-sv {{
+        display: block;
+        font-size: 14px !important; font-weight: 900 !important;
+        color: white !important; line-height: 1; margin-bottom: 3px;
+    }}
+    .sbc-sl {{
+        display: block;
+        font-size: 8px !important; font-weight: 700 !important;
+        color: rgba(255,255,255,0.28) !important;
+        letter-spacing: 0.10em; text-transform: uppercase;
+    }}
+    .sbc-sep {{
+        width: 1px; height: 28px;
+        background: rgba(255,255,255,0.09);
+        flex-shrink: 0;
+    }}
+    /* Barra animada */
+    .sbc-bar {{
+        position: absolute;
+        bottom: 0; left: 0; right: 0; height: 3px;
+        background: linear-gradient(90deg, #38BDF8, #818CF8, #34D399, #F59E0B, #38BDF8);
+        background-size: 300% 100%;
+        animation: sbcBar 4s linear infinite;
     }}
 
-    /* ── Dividers ── */
-    .sb-divider {{
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin: 22px 0 10px;
+    /* ══ SECTION HEADERS ══ */
+    .sbh {{
+        display: flex; align-items: center; gap: 10px;
+        margin: 24px 0 12px;
     }}
-    .sb-div-bar {{
-        width: 3px; height: 14px;
-        border-radius: 99px;
-        background: var(--dc, #38BDF8);
-        flex-shrink: 0;
-        box-shadow: 0 0 8px var(--dc, #38BDF8);
+    .sbh-num {{
+        font-size: 10px !important; font-weight: 900 !important;
+        width: 28px; height: 22px;
+        border-radius: 7px;
+        border: 1px solid;
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0; letter-spacing: 0.04em;
     }}
-    .sb-div-txt {{
-        font-size: 10px !important;
-        font-weight: 800 !important;
+    .sbh-lbl {{
+        font-size: 10px !important; font-weight: 800 !important;
         color: rgba(255,255,255,0.60) !important;
-        letter-spacing: 0.14em !important;
-        text-transform: uppercase !important;
+        letter-spacing: 0.14em !important; text-transform: uppercase !important;
         white-space: nowrap !important;
     }}
-    .sb-div-line {{
+    .sbh-rule {{
         flex: 1; height: 1px;
         background: rgba(255,255,255,0.08);
     }}
 
-    /* ── Dropdown options ── */
+    /* ══ DROPDOWNS ══ */
     div[data-baseweb="popover"] *, div[data-baseweb="menu"] *,
     ul[role="listbox"] *, li[role="option"], li[role="option"] * {{
         color: #1E293B !important;
@@ -577,20 +679,19 @@ st.markdown(f"""
     li[role="option"]:hover,
     li[role="option"][aria-selected="true"] {{ background: #F1F5F9 !important; }}
 
-    /* ── Selectbox valor seleccionado ── */
+    /* ══ SELECTBOX ══ */
     div[data-testid="stSidebarContent"] .stSelectbox [data-baseweb="select"] span,
     div[data-testid="stSidebarContent"] .stSelectbox [data-baseweb="select"] div[class*="ValueContainer"] *,
     div[data-testid="stSidebarContent"] .stSelectbox [data-baseweb="select"] input {{ color: white !important; }}
     div[data-testid="stSidebarContent"] input[type="text"] {{ color: white !important; }}
 
-    /* ── Widget labels ── */
     div[data-testid="stSidebarContent"] label,
     div[data-testid="stSidebarContent"] .stSelectbox label,
     div[data-testid="stSidebarContent"] [data-testid="stWidgetLabel"],
     div[data-testid="stSidebarContent"] [data-testid="stWidgetLabel"] p,
     div[data-testid="stSidebarContent"] [data-testid="stWidgetLabel"] span {{
         font-size: 11px !important; font-weight: 500 !important;
-        color: rgba(255,255,255,0.55) !important;
+        color: rgba(255,255,255,0.50) !important;
     }}
     div[data-testid="stSidebarContent"] .stDateInput label,
     div[data-testid="stSidebarContent"] .stDateInput [data-testid="stWidgetLabel"],
@@ -598,52 +699,63 @@ st.markdown(f"""
         font-size: 11px !important; font-weight: 600 !important;
         color: #38BDF8 !important;
     }}
-
-    /* ── Selectbox container ── */
     div[data-testid="stSidebarContent"] .stSelectbox > div > div,
     div[data-testid="stSidebarContent"] .stSelectbox > label + div > div {{
         background: rgba(255,255,255,0.05) !important;
-        border: 1px solid rgba(255,255,255,0.11) !important;
+        border: 1px solid rgba(255,255,255,0.12) !important;
         border-radius: 9px !important;
-        transition: border-color 0.18s, box-shadow 0.18s !important;
+        transition: border-color .18s, box-shadow .18s !important;
     }}
     div[data-testid="stSidebarContent"] .stSelectbox > div > div:hover {{
-        border-color: rgba(56,189,248,0.45) !important;
-        box-shadow: 0 0 0 3px rgba(56,189,248,0.09) !important;
+        border-color: rgba(56,189,248,0.50) !important;
+        box-shadow: 0 0 0 3px rgba(56,189,248,0.10) !important;
     }}
-
-    /* ── Date input ── */
     div[data-testid="stSidebarContent"] .stDateInput > div > div > input {{
         background: rgba(255,255,255,0.05) !important;
-        border: 1px solid rgba(255,255,255,0.11) !important;
+        border: 1px solid rgba(255,255,255,0.12) !important;
         border-radius: 9px !important; color: white !important;
         font-size: 11px !important;
     }}
     div[data-testid="stSidebarContent"] .stDateInput > div > div > input:focus {{
-        border-color: rgba(56,189,248,0.45) !important;
-        box-shadow: 0 0 0 3px rgba(56,189,248,0.09) !important;
+        border-color: rgba(56,189,248,0.50) !important;
+        box-shadow: 0 0 0 3px rgba(56,189,248,0.10) !important;
     }}
 
-    /* ── Footer ── */
-    .sb-foot {{
-        margin-top: 30px;
-        padding-top: 16px;
-        text-align: center;
-        border-top: 1px solid rgba(255,255,255,0.07);
+    /* ══ FOOTER ══ */
+    .sbf {{
+        margin-top: 28px;
+        padding: 0;
     }}
-    .sb-foot-tag {{
-        font-size: 9px !important; font-weight: 700 !important;
-        color: rgba(255,255,255,0.22) !important;
-        letter-spacing: 0.12em !important; text-transform: uppercase !important;
-        margin-bottom: 8px !important;
+    .sbf-rule {{
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+        margin-bottom: 14px;
     }}
-    .sb-foot-name {{
+    .sbf-row {{
+        display: flex; align-items: center; gap: 10px;
+        margin-bottom: 10px;
+    }}
+    .sbf-avatar {{
+        width: 38px; height: 38px;
+        border-radius: 11px;
+        background: linear-gradient(135deg, #38BDF8 0%, #818CF8 100%);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 13px !important; font-weight: 900 !important;
+        color: white !important; flex-shrink: 0; letter-spacing: 0.5px;
+        box-shadow: 0 4px 14px rgba(56,189,248,0.35);
+    }}
+    .sbf-name {{
         font-size: 11px !important; font-weight: 700 !important;
-        color: rgba(255,255,255,0.60) !important; margin-bottom: 3px !important;
+        color: rgba(255,255,255,0.68) !important; margin-bottom: 2px !important;
     }}
-    .sb-foot-role {{
+    .sbf-role {{
         font-size: 10px !important;
-        color: rgba(255,255,255,0.25) !important;
+        color: rgba(255,255,255,0.28) !important;
+    }}
+    .sbf-credit {{
+        font-size: 9px !important; font-weight: 600 !important;
+        color: rgba(255,255,255,0.18) !important;
+        text-align: center; letter-spacing: 0.06em;
     }}
 </style>
 """, unsafe_allow_html=True)
