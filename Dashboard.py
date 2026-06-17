@@ -120,6 +120,21 @@ with st.sidebar:
     ]
     mes_sel = st.selectbox("Mes", meses_disp)
 
+    semanas_disp = ["Todas"] + sorted(df["Semana"].dropna().unique().tolist())
+    sem_sel = st.selectbox("Semana", semanas_disp)
+
+    if "Trimestre" in df.columns:
+        trimestres_disp = ["Todos"] + sorted(df["Trimestre"].dropna().astype(str).unique().tolist())
+        tri_sel = st.selectbox("Trimestre", trimestres_disp)
+    else:
+        tri_sel = "Todos"
+
+    if "Semestre" in df.columns:
+        semestres_disp = ["Todos"] + sorted(df["Semestre"].dropna().astype(str).unique().tolist())
+        semestre_sel = st.selectbox("Semestre", semestres_disp)
+    else:
+        semestre_sel = "Todos"
+
     fechas = sorted(df["Fecha"].dt.date.unique())
     col_f1, col_f2 = st.columns(2)
     with col_f1:
@@ -135,6 +150,12 @@ with st.sidebar:
 
     supervisores = ["Todos"] + sorted(df["Supervisor"].dropna().unique().tolist())
     sup_sel = st.selectbox("Supervisor", supervisores)
+
+    if "Coordinador" in df.columns:
+        coordinadores = ["Todos"] + sorted(df["Coordinador"].dropna().unique().tolist())
+        coord_sel = st.selectbox("Coordinador", coordinadores)
+    else:
+        coord_sel = "Todos"
 
     expertos = ["Todos"] + sorted(df["Nombre"].dropna().unique().tolist())
     exp_sel = st.selectbox("Experto", expertos)
@@ -583,8 +604,16 @@ mask = (
 if mes_sel != "Todos":
     archivo_mes = f"Consolidado_{mes_sel.upper()}.xlsx"
     mask &= df["_archivo"] == archivo_mes
+if sem_sel != "Todas":
+    mask &= df["Semana"] == sem_sel
+if tri_sel != "Todos" and "Trimestre" in df.columns:
+    mask &= df["Trimestre"].astype(str) == tri_sel
+if semestre_sel != "Todos" and "Semestre" in df.columns:
+    mask &= df["Semestre"].astype(str) == semestre_sel
 if sup_sel != "Todos":
     mask &= df["Supervisor"] == sup_sel
+if coord_sel != "Todos" and "Coordinador" in df.columns:
+    mask &= df["Coordinador"] == coord_sel
 if exp_sel != "Todos":
     mask &= df["Nombre"] == exp_sel
 if camp_sel != "Todas":
