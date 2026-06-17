@@ -94,25 +94,18 @@ with st.sidebar:
         st.image("logo-scala-learning-transformacion-digital-universidades.webp", use_container_width=True)
 
     st.markdown("""
-    <div class='sb-hero'>
-        <div class='sb-hero-grid'></div>
-        <div class='sb-hero-glow'></div>
-        <div class='sb-hero-body'>
-            <div class='sb-hero-chip'>Analytics · 2026</div>
-            <div class='sb-hero-title'>Workforce<br>Management</div>
-            <div class='sb-hero-sep'></div>
-            <div class='sb-hero-org'>Uniminuto · Scala Learning</div>
-        </div>
-        <div class='sb-hero-wm'>WFM</div>
-        <div class='sb-hero-bar'></div>
+    <div class='sb-id'>
+        <div class='sb-id-bar'></div>
+        <div class='sb-id-acronym'>WFM</div>
+        <div class='sb-id-title'>Workforce Management</div>
+        <div class='sb-id-sub'>Uniminuto &nbsp;·&nbsp; Scala Learning &nbsp;·&nbsp; 2026</div>
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("""<div class='sb-sec-hdr'>
-        <div class='sb-sec-pill' style='background:rgba(14,165,233,0.15);border-color:rgba(14,165,233,0.35)'>
-            <span class='sb-sec-icon' style='color:#0EA5E9'>🗓</span>
-            <span class='sb-sec-label'>Período</span>
-        </div>
+    st.markdown("""<div class='sb-divider' style='--dc:#38BDF8'>
+        <span class='sb-div-bar'></span>
+        <span class='sb-div-txt'>Período</span>
+        <span class='sb-div-line'></span>
     </div>""", unsafe_allow_html=True)
     tipo_periodo = st.selectbox("Agrupar por", ["Día","Semana","Mes"], index=0)
 
@@ -149,11 +142,10 @@ with st.sidebar:
     with col_f2:
         fecha_fin = st.date_input("Hasta", value=fechas[-1], min_value=fechas[0], max_value=fechas[-1])
 
-    st.markdown("""<div class='sb-sec-hdr'>
-        <div class='sb-sec-pill' style='background:rgba(16,185,129,0.15);border-color:rgba(16,185,129,0.35)'>
-            <span class='sb-sec-icon' style='color:#10B981'>🎛️</span>
-            <span class='sb-sec-label'>Filtros</span>
-        </div>
+    st.markdown("""<div class='sb-divider' style='--dc:#34D399'>
+        <span class='sb-div-bar'></span>
+        <span class='sb-div-txt'>Filtros</span>
+        <span class='sb-div-line'></span>
     </div>""", unsafe_allow_html=True)
 
     if "Coordinador" in df.columns:
@@ -172,13 +164,10 @@ with st.sidebar:
     camp_sel = st.selectbox("Campaña", campanas)
 
     st.markdown("""
-    <div class='sb-footer-v2'>
-        <div class='sb-fv2-text'>
-            Desarrollado por el equipo de<br><b>Workforce Management</b>
-        </div>
-        <div class='sb-fv2-divider'></div>
-        <div class='sb-fv2-name'>Guillermo Steban Calderón Arrieta</div>
-        <div class='sb-fv2-role'>Analista WFM · Scala Learning</div>
+    <div class='sb-foot'>
+        <div class='sb-foot-tag'>Desarrollado por WFM</div>
+        <div class='sb-foot-name'>Guillermo Steban Calderón</div>
+        <div class='sb-foot-role'>Analista WFM · Scala Learning</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -493,30 +482,94 @@ st.markdown(f"""
         color: white !important;
     }}
 
-    /* ── Sidebar – fondo con malla y degradado ── */
+    /* ── Sidebar – fondo limpio ── */
     section[data-testid="stSidebar"] > div:first-child {{
-        background:
-            linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px),
-            radial-gradient(ellipse at 15% 8%,  rgba(14,165,233,0.18) 0%, transparent 48%),
-            radial-gradient(ellipse at 85% 92%, rgba(139,92,246,0.22) 0%, transparent 48%),
-            radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0.10) 0%, transparent 70%),
-            {COLOR_PRIMARY};
-        background-size: 22px 22px, 22px 22px, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
-        border-right: none;
+        background: linear-gradient(160deg, #1e0638 0%, #28053F 45%, #1a0230 100%);
+        border-right: 1px solid rgba(255,255,255,0.05);
     }}
     div[data-testid="stSidebarContent"] * {{ color: white !important; }}
     div[data-testid="stSidebarContent"] hr {{
-        border-color: rgba(255,255,255,0.12);
+        border-color: rgba(255,255,255,0.10);
         margin-top: 4px !important; margin-bottom: 4px !important;
     }}
 
-    /* ── Logo glow ── */
+    /* ── Logo ── */
     div[data-testid="stSidebarContent"] [data-testid="stImage"] img {{
-        filter: drop-shadow(0 6px 22px rgba(14,165,233,0.40));
+        filter: drop-shadow(0 4px 16px rgba(14,165,233,0.35));
+        padding: 0 4px;
     }}
 
-    /* ── Dropdown options: texto oscuro ── */
+    /* ── Identity card ── */
+    @keyframes sbShift {{
+        0%   {{ background-position: 0% 50%;   }}
+        50%  {{ background-position: 100% 50%; }}
+        100% {{ background-position: 0% 50%;   }}
+    }}
+    .sb-id {{
+        text-align: center;
+        margin: 6px 0 26px;
+        padding: 0 6px;
+    }}
+    .sb-id-bar {{
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #38BDF8, #818CF8, #34D399, transparent);
+        background-size: 200% 100%;
+        animation: sbShift 5s linear infinite;
+        border-radius: 99px;
+        margin-bottom: 16px;
+    }}
+    .sb-id-acronym {{
+        font-size: 34px !important;
+        font-weight: 900 !important;
+        letter-spacing: 6px !important;
+        line-height: 1 !important;
+        margin-bottom: 7px !important;
+        background: linear-gradient(135deg, #38BDF8 0%, #818CF8 50%, #34D399 100%);
+        -webkit-background-clip: text !important;
+        background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+    }}
+    .sb-id-title {{
+        font-size: 12px !important;
+        font-weight: 700 !important;
+        color: rgba(255,255,255,0.80) !important;
+        letter-spacing: 0.04em !important;
+        margin-bottom: 5px !important;
+    }}
+    .sb-id-sub {{
+        font-size: 10px !important;
+        color: rgba(255,255,255,0.30) !important;
+        letter-spacing: 0.04em !important;
+    }}
+
+    /* ── Dividers ── */
+    .sb-divider {{
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 22px 0 10px;
+    }}
+    .sb-div-bar {{
+        width: 3px; height: 14px;
+        border-radius: 99px;
+        background: var(--dc, #38BDF8);
+        flex-shrink: 0;
+        box-shadow: 0 0 8px var(--dc, #38BDF8);
+    }}
+    .sb-div-txt {{
+        font-size: 10px !important;
+        font-weight: 800 !important;
+        color: rgba(255,255,255,0.60) !important;
+        letter-spacing: 0.14em !important;
+        text-transform: uppercase !important;
+        white-space: nowrap !important;
+    }}
+    .sb-div-line {{
+        flex: 1; height: 1px;
+        background: rgba(255,255,255,0.08);
+    }}
+
+    /* ── Dropdown options ── */
     div[data-baseweb="popover"] *, div[data-baseweb="menu"] *,
     ul[role="listbox"] *, li[role="option"], li[role="option"] * {{
         color: #1E293B !important;
@@ -524,160 +577,74 @@ st.markdown(f"""
     li[role="option"]:hover,
     li[role="option"][aria-selected="true"] {{ background: #F1F5F9 !important; }}
 
-    /* ── Sidebar – selectbox valor seleccionado ── */
+    /* ── Selectbox valor seleccionado ── */
     div[data-testid="stSidebarContent"] .stSelectbox [data-baseweb="select"] span,
     div[data-testid="stSidebarContent"] .stSelectbox [data-baseweb="select"] div[class*="ValueContainer"] *,
     div[data-testid="stSidebarContent"] .stSelectbox [data-baseweb="select"] input {{ color: white !important; }}
     div[data-testid="stSidebarContent"] input[type="text"] {{ color: white !important; }}
 
-    /* ── Sidebar – hero card ── */
-    @keyframes gradientFlow {{
-        0%   {{ background-position: 0% 50%;   }}
-        50%  {{ background-position: 100% 50%; }}
-        100% {{ background-position: 0% 50%;   }}
-    }}
-    .sb-hero {{
-        position: relative;
-        border-radius: 16px;
-        overflow: hidden;
-        margin: 12px 0 22px;
-        padding: 20px 18px 18px;
-        background: linear-gradient(135deg,
-            rgba(14,165,233,0.14) 0%,
-            rgba(139,92,246,0.10) 60%,
-            rgba(16,185,129,0.08) 100%);
-        border: 1px solid rgba(255,255,255,0.14);
-        min-height: 108px;
-    }}
-    .sb-hero-grid {{
-        position: absolute; inset: 0; pointer-events: none;
-        background-image:
-            linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
-        background-size: 18px 18px;
-    }}
-    .sb-hero-glow {{
-        position: absolute;
-        top: -20px; right: -20px;
-        width: 100px; height: 100px;
-        background: radial-gradient(circle, rgba(14,165,233,0.35) 0%, transparent 70%);
-        pointer-events: none;
-    }}
-    .sb-hero-body {{ position: relative; z-index: 1; }}
-    .sb-hero-chip {{
-        display: inline-block;
-        font-size: 9px !important; font-weight: 800 !important;
-        color: #0EA5E9 !important;
-        background: rgba(14,165,233,0.16);
-        border: 1px solid rgba(14,165,233,0.32);
-        padding: 3px 10px; border-radius: 99px;
-        letter-spacing: 0.09em; text-transform: uppercase;
-        margin-bottom: 9px;
-    }}
-    .sb-hero-title {{
-        font-size: 19px !important; font-weight: 900 !important;
-        color: white !important; line-height: 1.2 !important;
-        letter-spacing: -0.5px !important; margin-bottom: 10px;
-    }}
-    .sb-hero-sep {{
-        height: 1px;
-        background: linear-gradient(90deg, rgba(14,165,233,0.7), rgba(139,92,246,0.5), transparent);
-        margin-bottom: 8px;
-    }}
-    .sb-hero-org {{
-        font-size: 11px !important;
-        color: rgba(255,255,255,0.45) !important;
-    }}
-    .sb-hero-wm {{
-        position: absolute;
-        right: 10px; bottom: 14px;
-        font-size: 42px !important; font-weight: 900 !important;
-        color: rgba(255,255,255,0.04) !important;
-        line-height: 1; letter-spacing: -3px;
-        pointer-events: none; user-select: none; z-index: 0;
-    }}
-    .sb-hero-bar {{
-        position: absolute;
-        bottom: 0; left: 0; right: 0; height: 3px;
-        background: linear-gradient(90deg, #0EA5E9, #8B5CF6, #10B981, #F59E0B, #EF4444, #0EA5E9);
-        background-size: 300% 100%;
-        animation: gradientFlow 5s ease-in-out infinite;
-    }}
-
-    /* ── Sidebar – section headers ── */
-    .sb-sec-hdr {{ margin: 22px 0 10px; }}
-    .sb-sec-pill {{
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-        padding: 5px 14px 5px 10px;
-        border-radius: 99px;
-        border: 1px solid;
-        background: rgba(255,255,255,0.08);
-    }}
-    .sb-sec-icon {{ font-size: 12px; line-height: 1; flex-shrink: 0; }}
-    .sb-sec-label {{
-        font-size: 10px !important; font-weight: 800 !important;
-        color: rgba(255,255,255,0.80) !important;
-        letter-spacing: 0.10em !important; text-transform: uppercase; white-space: nowrap;
-    }}
-
-    /* ── Sidebar – widget labels ── */
+    /* ── Widget labels ── */
     div[data-testid="stSidebarContent"] label,
     div[data-testid="stSidebarContent"] .stSelectbox label,
     div[data-testid="stSidebarContent"] [data-testid="stWidgetLabel"],
     div[data-testid="stSidebarContent"] [data-testid="stWidgetLabel"] p,
     div[data-testid="stSidebarContent"] [data-testid="stWidgetLabel"] span {{
-        font-size: 11px !important; font-weight: 400 !important;
-        color: rgba(255,255,255,0.72) !important;
+        font-size: 11px !important; font-weight: 500 !important;
+        color: rgba(255,255,255,0.55) !important;
     }}
     div[data-testid="stSidebarContent"] .stDateInput label,
     div[data-testid="stSidebarContent"] .stDateInput [data-testid="stWidgetLabel"],
     div[data-testid="stSidebarContent"] .stDateInput [data-testid="stWidgetLabel"] p {{
-        font-size: 11px !important; font-weight: 500 !important;
-        color: {COLOR_ACCENT} !important;
-    }}
-    div[data-testid="stSidebarContent"] .stSelectbox > div > div,
-    div[data-testid="stSidebarContent"] .stSelectbox > label + div > div {{
-        background: rgba(255,255,255,0.07) !important;
-        border: 1px solid rgba(255,255,255,0.16) !important;
-        border-radius: 10px !important;
-        transition: border-color 0.2s, box-shadow 0.2s !important;
-    }}
-    div[data-testid="stSidebarContent"] .stSelectbox > div > div:focus-within,
-    div[data-testid="stSidebarContent"] .stSelectbox > div > div:hover {{
-        border-color: rgba(14,165,233,0.55) !important;
-        box-shadow: 0 0 0 3px rgba(14,165,233,0.12) !important;
-    }}
-    div[data-testid="stSidebarContent"] .stDateInput > div > div > input {{
-        background: rgba(255,255,255,0.07) !important;
-        border: 1px solid rgba(255,255,255,0.16) !important;
-        border-radius: 10px !important; color: white !important;
-        font-size: 11px !important;
-        transition: border-color 0.2s, box-shadow 0.2s !important;
-    }}
-    div[data-testid="stSidebarContent"] .stDateInput > div > div > input:focus {{
-        border-color: rgba(14,165,233,0.55) !important;
-        box-shadow: 0 0 0 3px rgba(14,165,233,0.12) !important;
+        font-size: 11px !important; font-weight: 600 !important;
+        color: #38BDF8 !important;
     }}
 
-    /* ── Sidebar – footer card v2 ── */
-    .sb-footer-v2 {{
-        background: rgba(255,255,255,0.05);
-        border-radius: 12px;
-        border: 1px solid rgba(255,255,255,0.08);
-        padding: 14px; text-align: center;
-        margin-top: 20px; position: relative; overflow: hidden;
+    /* ── Selectbox container ── */
+    div[data-testid="stSidebarContent"] .stSelectbox > div > div,
+    div[data-testid="stSidebarContent"] .stSelectbox > label + div > div {{
+        background: rgba(255,255,255,0.05) !important;
+        border: 1px solid rgba(255,255,255,0.11) !important;
+        border-radius: 9px !important;
+        transition: border-color 0.18s, box-shadow 0.18s !important;
     }}
-    .sb-footer-v2::before {{
-        content: '';
-        position: absolute; top: 0; left: 0; right: 0; height: 3px;
-        background: linear-gradient(90deg, #0EA5E9, #8B5CF6, #10B981);
+    div[data-testid="stSidebarContent"] .stSelectbox > div > div:hover {{
+        border-color: rgba(56,189,248,0.45) !important;
+        box-shadow: 0 0 0 3px rgba(56,189,248,0.09) !important;
     }}
-    .sb-fv2-text {{ font-size: 10px !important; color: rgba(255,255,255,0.42) !important; line-height: 1.7; margin-bottom: 10px; }}
-    .sb-fv2-divider {{ height: 1px; background: rgba(255,255,255,0.08); margin: 8px 0; }}
-    .sb-fv2-name {{ font-size: 11px !important; font-weight: 700 !important; color: rgba(255,255,255,0.72) !important; margin-bottom: 3px; }}
-    .sb-fv2-role {{ font-size: 10px !important; color: rgba(255,255,255,0.35) !important; }}
+
+    /* ── Date input ── */
+    div[data-testid="stSidebarContent"] .stDateInput > div > div > input {{
+        background: rgba(255,255,255,0.05) !important;
+        border: 1px solid rgba(255,255,255,0.11) !important;
+        border-radius: 9px !important; color: white !important;
+        font-size: 11px !important;
+    }}
+    div[data-testid="stSidebarContent"] .stDateInput > div > div > input:focus {{
+        border-color: rgba(56,189,248,0.45) !important;
+        box-shadow: 0 0 0 3px rgba(56,189,248,0.09) !important;
+    }}
+
+    /* ── Footer ── */
+    .sb-foot {{
+        margin-top: 30px;
+        padding-top: 16px;
+        text-align: center;
+        border-top: 1px solid rgba(255,255,255,0.07);
+    }}
+    .sb-foot-tag {{
+        font-size: 9px !important; font-weight: 700 !important;
+        color: rgba(255,255,255,0.22) !important;
+        letter-spacing: 0.12em !important; text-transform: uppercase !important;
+        margin-bottom: 8px !important;
+    }}
+    .sb-foot-name {{
+        font-size: 11px !important; font-weight: 700 !important;
+        color: rgba(255,255,255,0.60) !important; margin-bottom: 3px !important;
+    }}
+    .sb-foot-role {{
+        font-size: 10px !important;
+        color: rgba(255,255,255,0.25) !important;
+    }}
 </style>
 """, unsafe_allow_html=True)
 
