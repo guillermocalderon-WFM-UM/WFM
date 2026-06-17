@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import glob
 import os
+import base64
 
 # ─────────────────────────────────────────────
 # CONFIGURACIÓN
@@ -86,21 +87,30 @@ COLOR_DANGER  = "#EF4444"
 COLOR_BG      = "#F0F4F8"
 
 # ─────────────────────────────────────────────
+# LOGO BASE64
+# ─────────────────────────────────────────────
+_LOGO_PATH = "logo-scala-learning-transformacion-digital-universidades.webp"
+try:
+    with open(_LOGO_PATH, "rb") as _f:
+        _logo_b64 = base64.b64encode(_f.read()).decode()
+    _logo_src = f"data:image/webp;base64,{_logo_b64}"
+except FileNotFoundError:
+    _logo_src = ""
+
+# ─────────────────────────────────────────────
 # SIDEBAR – FILTROS
 # ─────────────────────────────────────────────
 with st.sidebar:
-    _, _c, _ = st.columns([1, 9, 1])
-    with _c:
-        st.image("logo-scala-learning-transformacion-digital-universidades.webp", use_container_width=True)
-
-    st.markdown("""
+    st.markdown(f"""
     <div class='sbc'>
         <div class='sbc-orb sbc-orb-1'></div>
         <div class='sbc-orb sbc-orb-2'></div>
         <div class='sbc-orb sbc-orb-3'></div>
         <div class='sbc-live'><span class='sbc-pulse'></span>LIVE</div>
         <div class='sbc-body'>
-            <div class='sbc-wfm'>WFM</div>
+            <div class='sbc-logo-wrap'>
+                <img src='{_logo_src}' class='sbc-logo-img' />
+            </div>
             <div class='sbc-name'>Workforce Management</div>
             <div class='sbc-org'>Uniminuto &nbsp;·&nbsp; Scala Learning</div>
             <div class='sbc-stats'>
@@ -504,9 +514,11 @@ st.markdown(f"""
     /* ══ SIDEBAR BASE ══ */
     section[data-testid="stSidebar"] > div:first-child {{
         background:
-            radial-gradient(ellipse at 0% 0%,   rgba(56,189,248,0.14) 0%,  transparent 45%),
-            radial-gradient(ellipse at 100% 100%, rgba(129,140,248,0.16) 0%, transparent 45%),
-            radial-gradient(ellipse at 50% 55%,  rgba(52,211,153,0.07) 0%,  transparent 40%),
+            url("data:image/svg+xml,%3Csvg width='52' height='52' viewBox='0 0 52 52' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M26 0 L52 26 L26 52 L0 26 Z' fill='none' stroke='rgba(255,255,255,0.028)' stroke-width='1'/%3E%3C/svg%3E"),
+            repeating-linear-gradient(-60deg, rgba(255,255,255,0.018) 0px, rgba(255,255,255,0.018) 1px, transparent 1px, transparent 14px),
+            radial-gradient(ellipse at 0% 0%,    rgba(56,189,248,0.16) 0%,  transparent 42%),
+            radial-gradient(ellipse at 100% 100%, rgba(129,140,248,0.18) 0%, transparent 42%),
+            radial-gradient(ellipse at 50% 55%,   rgba(52,211,153,0.08) 0%,  transparent 38%),
             linear-gradient(170deg, #1c0636 0%, #28053F 50%, #18022b 100%);
         border-right: 1px solid rgba(255,255,255,0.06);
     }}
@@ -592,16 +604,15 @@ st.markdown(f"""
     }}
     /* Contenido */
     .sbc-body {{ position: relative; z-index: 1; text-align: center; }}
-    .sbc-wfm {{
-        font-size: 40px !important;
-        font-weight: 900 !important;
-        letter-spacing: 7px !important;
-        line-height: 1 !important;
-        margin-bottom: 9px !important;
-        background: linear-gradient(135deg, #38BDF8 0%, #818CF8 52%, #34D399 100%);
-        -webkit-background-clip: text !important;
-        background-clip: text !important;
-        -webkit-text-fill-color: transparent !important;
+    .sbc-logo-wrap {{
+        margin-bottom: 10px;
+        display: flex; justify-content: center; align-items: center;
+    }}
+    .sbc-logo-img {{
+        max-width: 150px !important;
+        height: auto !important;
+        filter: drop-shadow(0 4px 14px rgba(56,189,248,0.45)) brightness(1.05);
+        display: block;
     }}
     .sbc-name {{
         font-size: 13px !important; font-weight: 700 !important;
