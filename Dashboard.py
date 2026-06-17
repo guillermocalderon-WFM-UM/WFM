@@ -60,6 +60,8 @@ def cargar_datos():
     for c in excesos:
         df[c + "_min"] = pd.to_timedelta(df[c], errors="coerce").dt.total_seconds() / 60
 
+    if "Semana" in df.columns:
+        df["_semana_num"] = df["Semana"]
     df["Semana"]    = df["Fecha"].dt.to_period("W").apply(lambda p: f"Sem {p.start_time.strftime('%d/%m')}")
     df["Mes"]       = df["Fecha"].dt.to_period("M").astype(str)
     df["DiaSemana"] = df["Fecha"].dt.day_name()
@@ -120,7 +122,11 @@ with st.sidebar:
     ]
     mes_sel = st.selectbox("Mes", meses_disp)
 
-    semanas_disp = ["Todas"] + sorted(df["Semana"].dropna().unique().tolist())
+    if "_semana_num" in df.columns:
+        _vals_sem = sorted(df["_semana_num"].dropna().astype(int).unique().tolist())
+        semanas_disp = ["Todas"] + [str(v) for v in _vals_sem]
+    else:
+        semanas_disp = ["Todas"] + sorted(df["Semana"].dropna().unique().tolist())
     sem_sel = st.selectbox("Semana", semanas_disp)
 
     if "Trimestre" in df.columns:
@@ -148,14 +154,14 @@ with st.sidebar:
         <span class='sb-sec-line'></span>
     </div>""", unsafe_allow_html=True)
 
-    supervisores = ["Todos"] + sorted(df["Supervisor"].dropna().unique().tolist())
-    sup_sel = st.selectbox("Supervisor", supervisores)
-
     if "Coordinador" in df.columns:
         coordinadores = ["Todos"] + sorted(df["Coordinador"].dropna().unique().tolist())
         coord_sel = st.selectbox("Coordinador", coordinadores)
     else:
         coord_sel = "Todos"
+
+    supervisores = ["Todos"] + sorted(df["Supervisor"].dropna().unique().tolist())
+    sup_sel = st.selectbox("Supervisor", supervisores)
 
     expertos = ["Todos"] + sorted(df["Nombre"].dropna().unique().tolist())
     exp_sel = st.selectbox("Experto", expertos)
@@ -202,6 +208,27 @@ st.markdown(f"""
     div[data-testid="collapsedControl"] button {{
         background: transparent !important;
         border: none !important;
+    }}
+    /* ── Ocultar texto/ícono gris al colapsar sidebar ── */
+    div[data-testid="collapsedControl"] {{
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }}
+    div[data-testid="collapsedControl"] * {{
+        color: transparent !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }}
+    /* ── Sidebar: eliminar espacio sobrante al ensanchar ── */
+    div[data-testid="stSidebarContent"] {{
+        width: 100% !important;
+        box-sizing: border-box !important;
+        padding-right: 0.75rem !important;
+    }}
+    div[data-testid="stSidebarContent"] > div {{
+        width: 100% !important;
     }}
 
     /* ── Header banner ── */
@@ -605,7 +632,10 @@ if mes_sel != "Todos":
     archivo_mes = f"Consolidado_{mes_sel.upper()}.xlsx"
     mask &= df["_archivo"] == archivo_mes
 if sem_sel != "Todas":
-    mask &= df["Semana"] == sem_sel
+    if "_semana_num" in df.columns:
+        mask &= df["_semana_num"].astype(str) == str(sem_sel)
+    else:
+        mask &= df["Semana"] == sem_sel
 if tri_sel != "Todos" and "Trimestre" in df.columns:
     mask &= df["Trimestre"].astype(str) == tri_sel
 if semestre_sel != "Todos" and "Semestre" in df.columns:
@@ -779,11 +809,18 @@ with c1:
     fig_tend.add_hline(y=0.90, line_dash="dot", line_color=COLOR_SUCCESS,
                        annotation_text="Meta 90%", annotation_position="top right",
                        annotation_font=dict(color=COLOR_SUCCESS, size=11))
+    _n_tend = len(tend)
+    _ini_tend = max(-0.5, _n_tend - 15 - 0.5)
     fig_tend.update_layout(
-        height=320, margin=dict(l=0, r=10, t=24, b=0),
+        height=360, margin=dict(l=0, r=10, t=24, b=40),
         paper_bgcolor="white", plot_bgcolor="white",
         yaxis=dict(tickformat=".0%", gridcolor="#F1F5F9", range=[0.10, 1.05], dtick=0.05, tickfont=dict(size=10)),
-        xaxis=dict(gridcolor="#F1F5F9", tickfont=dict(size=10)),
+        xaxis=dict(
+            gridcolor="#F1F5F9", tickfont=dict(size=10),
+            range=[_ini_tend, _n_tend - 0.5],
+            rangeslider=dict(visible=True, thickness=0.08, bgcolor="#F8FAFC"),
+            tickangle=-30
+        ),
         font=dict(family="Inter", size=11)
     )
     st.plotly_chart(fig_tend, use_container_width=True)
@@ -898,9 +935,10 @@ with c_bar:
     fig_bar.add_trace(go.Bar(
         x=sup_stats["ADH"], y=sup_short["Supervisor"], orientation="h",
         marker=dict(color=sup_stats["Color"], line=dict(width=0)),
-        text=sup_stats["ADH"].apply(lambda x: f"  {x:.1%}"),
-        textposition="inside",
-        textfont=dict(size=11, color="white", family="Inter"),
+        text=sup_stats["ADH"].apply(lambda x: f"{x:.1%}"),
+        textposition="outside",
+        constraintext="none",
+        textfont=dict(size=11, color=COLOR_PRIMARY, family="Inter"),
         hovertemplate="<b>%{y}</b><br>Adherencia: %{x:.1%}<extra></extra>",
         width=0.55
     ))
@@ -910,9 +948,9 @@ with c_bar:
                       annotation_position="top left")
     fig_bar.update_layout(
         barmode="overlay", height=400,
-        margin=dict(l=0, r=20, t=20, b=0),
+        margin=dict(l=0, r=55, t=20, b=0),
         paper_bgcolor="white", plot_bgcolor="white",
-        xaxis=dict(tickformat=".0%", range=[0, 1.02], gridcolor="#F1F5F9",
+        xaxis=dict(tickformat=".0%", range=[0, 1.10], gridcolor="#F1F5F9",
                    showgrid=True, tickfont=dict(size=10, family="Inter")),
         yaxis=dict(gridcolor="rgba(0,0,0,0)", tickfont=dict(size=11, family="Inter")),
         showlegend=False, font=dict(family="Inter", size=11)
@@ -988,11 +1026,19 @@ for sup in sup_lista:
     ))
 fig_sup.add_hline(y=0.90, line_dash="dot", line_color="#9CA3AF",
                   annotation_text="Meta 90%", annotation_position="top right")
+_periodos_sup = tend_sup["_periodo"].unique().tolist()
+_n_sup_per    = len(_periodos_sup)
+_ini_sup      = max(-0.5, _n_sup_per - 15 - 0.5)
 fig_sup.update_layout(
-    height=320, margin=dict(l=0,r=0,t=10,b=0),
+    height=380, margin=dict(l=0,r=0,t=10,b=40),
     paper_bgcolor="white", plot_bgcolor="white",
     yaxis=dict(tickformat=".0%", gridcolor="#F3F4F6", range=[0, 1.2]),
-    xaxis=dict(gridcolor="#F3F4F6"),
+    xaxis=dict(
+        gridcolor="#F3F4F6",
+        range=[_ini_sup, _n_sup_per - 0.5],
+        rangeslider=dict(visible=True, thickness=0.08, bgcolor="#F8FAFC"),
+        tickangle=-30
+    ),
     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0, font=dict(size=10)),
     font=dict(family="Inter", size=11)
 )
