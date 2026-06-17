@@ -94,24 +94,25 @@ with st.sidebar:
         st.image("logo-scala-learning-transformacion-digital-universidades.webp", use_container_width=True)
 
     st.markdown("""
-    <div class='sb-brand-v2'>
-        <div class='sb-bv2-gradient'></div>
-        <div class='sb-bv2-inner'>
-            <div class='sb-bv2-title'>Workforce Management</div>
-            <div class='sb-bv2-sub'>Uniminuto · Scala Learning</div>
-            <div class='sb-bv2-tags'>
-                <span class='sb-bv2-tag'>2026</span>
-                <span class='sb-bv2-tag'>Dashboard</span>
-                <span class='sb-bv2-tag'>WFM</span>
-            </div>
+    <div class='sb-hero'>
+        <div class='sb-hero-grid'></div>
+        <div class='sb-hero-glow'></div>
+        <div class='sb-hero-body'>
+            <div class='sb-hero-chip'>Analytics · 2026</div>
+            <div class='sb-hero-title'>Workforce<br>Management</div>
+            <div class='sb-hero-sep'></div>
+            <div class='sb-hero-org'>Uniminuto · Scala Learning</div>
         </div>
+        <div class='sb-hero-wm'>WFM</div>
+        <div class='sb-hero-bar'></div>
     </div>
     """, unsafe_allow_html=True)
 
     st.markdown("""<div class='sb-sec-hdr'>
-        <span class='sb-sec-dot' style='background:#0EA5E9'></span>
-        <span class='sb-sec-label'>Período</span>
-        <span class='sb-sec-line'></span>
+        <div class='sb-sec-pill' style='background:rgba(14,165,233,0.15);border-color:rgba(14,165,233,0.35)'>
+            <span class='sb-sec-icon' style='color:#0EA5E9'>🗓</span>
+            <span class='sb-sec-label'>Período</span>
+        </div>
     </div>""", unsafe_allow_html=True)
     tipo_periodo = st.selectbox("Agrupar por", ["Día","Semana","Mes"], index=0)
 
@@ -149,9 +150,10 @@ with st.sidebar:
         fecha_fin = st.date_input("Hasta", value=fechas[-1], min_value=fechas[0], max_value=fechas[-1])
 
     st.markdown("""<div class='sb-sec-hdr'>
-        <span class='sb-sec-dot' style='background:#10B981'></span>
-        <span class='sb-sec-label'>Filtros</span>
-        <span class='sb-sec-line'></span>
+        <div class='sb-sec-pill' style='background:rgba(16,185,129,0.15);border-color:rgba(16,185,129,0.35)'>
+            <span class='sb-sec-icon' style='color:#10B981'>🎛️</span>
+            <span class='sb-sec-label'>Filtros</span>
+        </div>
     </div>""", unsafe_allow_html=True)
 
     if "Coordinador" in df.columns:
@@ -491,13 +493,16 @@ st.markdown(f"""
         color: white !important;
     }}
 
-    /* ── Sidebar – fondo degradado difuminado ── */
+    /* ── Sidebar – fondo con malla y degradado ── */
     section[data-testid="stSidebar"] > div:first-child {{
         background:
-            radial-gradient(ellipse at 20% 10%, rgba(255,255,255,0.10) 0%, transparent 55%),
-            radial-gradient(ellipse at 80% 80%, rgba(0,0,0,0.25) 0%, transparent 60%),
-            linear-gradient(175deg, rgba(255,255,255,0.06) 0%, rgba(0,0,0,0.08) 100%),
+            linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px),
+            radial-gradient(ellipse at 15% 8%,  rgba(14,165,233,0.18) 0%, transparent 48%),
+            radial-gradient(ellipse at 85% 92%, rgba(139,92,246,0.22) 0%, transparent 48%),
+            radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0.10) 0%, transparent 70%),
             {COLOR_PRIMARY};
+        background-size: 22px 22px, 22px 22px, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
         border-right: none;
     }}
     div[data-testid="stSidebarContent"] * {{ color: white !important; }}
@@ -525,53 +530,97 @@ st.markdown(f"""
     div[data-testid="stSidebarContent"] .stSelectbox [data-baseweb="select"] input {{ color: white !important; }}
     div[data-testid="stSidebarContent"] input[type="text"] {{ color: white !important; }}
 
-    /* ── Sidebar – brand card v2 ── */
-    .sb-brand-v2 {{
-        background: rgba(255,255,255,0.07);
-        border-radius: 14px;
-        border: 1px solid rgba(255,255,255,0.12);
-        overflow: hidden;
-        margin: 10px 0 16px;
-    }}
+    /* ── Sidebar – hero card ── */
     @keyframes gradientFlow {{
         0%   {{ background-position: 0% 50%;   }}
         50%  {{ background-position: 100% 50%; }}
         100% {{ background-position: 0% 50%;   }}
     }}
-    .sb-bv2-gradient {{
-        height: 4px;
-        background: linear-gradient(90deg, #0EA5E9, #10B981, #F59E0B, #8B5CF6, #EF4444, #0EA5E9);
-        background-size: 300% 100%;
-        animation: gradientFlow 7s ease-in-out infinite;
+    .sb-hero {{
+        position: relative;
+        border-radius: 16px;
+        overflow: hidden;
+        margin: 12px 0 22px;
+        padding: 20px 18px 18px;
+        background: linear-gradient(135deg,
+            rgba(14,165,233,0.14) 0%,
+            rgba(139,92,246,0.10) 60%,
+            rgba(16,185,129,0.08) 100%);
+        border: 1px solid rgba(255,255,255,0.14);
+        min-height: 108px;
     }}
-    .sb-bv2-inner {{ padding: 14px 16px 16px; text-align: center; }}
-    .sb-bv2-title {{
-        font-size: 15px !important; font-weight: 800 !important;
-        color: white !important; letter-spacing: -0.3px !important; margin-bottom: 4px;
+    .sb-hero-grid {{
+        position: absolute; inset: 0; pointer-events: none;
+        background-image:
+            linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+        background-size: 18px 18px;
     }}
-    .sb-bv2-sub {{
-        font-size: 12px !important;
-        color: rgba(255,255,255,0.55) !important; margin-bottom: 12px;
+    .sb-hero-glow {{
+        position: absolute;
+        top: -20px; right: -20px;
+        width: 100px; height: 100px;
+        background: radial-gradient(circle, rgba(14,165,233,0.35) 0%, transparent 70%);
+        pointer-events: none;
     }}
-    .sb-bv2-tags {{ display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }}
-    .sb-bv2-tag {{
-        font-size: 9px !important; font-weight: 700 !important;
-        color: rgba(255,255,255,0.80) !important;
-        background: rgba(255,255,255,0.12);
-        border: 1px solid rgba(255,255,255,0.22);
+    .sb-hero-body {{ position: relative; z-index: 1; }}
+    .sb-hero-chip {{
+        display: inline-block;
+        font-size: 9px !important; font-weight: 800 !important;
+        color: #0EA5E9 !important;
+        background: rgba(14,165,233,0.16);
+        border: 1px solid rgba(14,165,233,0.32);
         padding: 3px 10px; border-radius: 99px;
-        letter-spacing: 0.06em !important; text-transform: uppercase;
+        letter-spacing: 0.09em; text-transform: uppercase;
+        margin-bottom: 9px;
+    }}
+    .sb-hero-title {{
+        font-size: 19px !important; font-weight: 900 !important;
+        color: white !important; line-height: 1.2 !important;
+        letter-spacing: -0.5px !important; margin-bottom: 10px;
+    }}
+    .sb-hero-sep {{
+        height: 1px;
+        background: linear-gradient(90deg, rgba(14,165,233,0.7), rgba(139,92,246,0.5), transparent);
+        margin-bottom: 8px;
+    }}
+    .sb-hero-org {{
+        font-size: 11px !important;
+        color: rgba(255,255,255,0.45) !important;
+    }}
+    .sb-hero-wm {{
+        position: absolute;
+        right: 10px; bottom: 14px;
+        font-size: 42px !important; font-weight: 900 !important;
+        color: rgba(255,255,255,0.04) !important;
+        line-height: 1; letter-spacing: -3px;
+        pointer-events: none; user-select: none; z-index: 0;
+    }}
+    .sb-hero-bar {{
+        position: absolute;
+        bottom: 0; left: 0; right: 0; height: 3px;
+        background: linear-gradient(90deg, #0EA5E9, #8B5CF6, #10B981, #F59E0B, #EF4444, #0EA5E9);
+        background-size: 300% 100%;
+        animation: gradientFlow 5s ease-in-out infinite;
     }}
 
     /* ── Sidebar – section headers ── */
-    .sb-sec-hdr {{ display: flex; align-items: center; gap: 8px; margin: 18px 0 8px; }}
-    .sb-sec-dot {{ width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; display: inline-block; }}
+    .sb-sec-hdr {{ margin: 22px 0 10px; }}
+    .sb-sec-pill {{
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 5px 14px 5px 10px;
+        border-radius: 99px;
+        border: 1px solid;
+        background: rgba(255,255,255,0.08);
+    }}
+    .sb-sec-icon {{ font-size: 12px; line-height: 1; flex-shrink: 0; }}
     .sb-sec-label {{
-        font-size: 10px !important; font-weight: 700 !important;
-        color: rgba(255,255,255,0.55) !important;
+        font-size: 10px !important; font-weight: 800 !important;
+        color: rgba(255,255,255,0.80) !important;
         letter-spacing: 0.10em !important; text-transform: uppercase; white-space: nowrap;
     }}
-    .sb-sec-line {{ flex: 1; height: 1px; background: rgba(255,255,255,0.10); display: block; }}
 
     /* ── Sidebar – widget labels ── */
     div[data-testid="stSidebarContent"] label,
@@ -590,15 +639,26 @@ st.markdown(f"""
     }}
     div[data-testid="stSidebarContent"] .stSelectbox > div > div,
     div[data-testid="stSidebarContent"] .stSelectbox > label + div > div {{
-        background: rgba(255,255,255,0.08) !important;
-        border: 1px solid rgba(255,255,255,0.18) !important;
-        border-radius: 8px !important;
+        background: rgba(255,255,255,0.07) !important;
+        border: 1px solid rgba(255,255,255,0.16) !important;
+        border-radius: 10px !important;
+        transition: border-color 0.2s, box-shadow 0.2s !important;
+    }}
+    div[data-testid="stSidebarContent"] .stSelectbox > div > div:focus-within,
+    div[data-testid="stSidebarContent"] .stSelectbox > div > div:hover {{
+        border-color: rgba(14,165,233,0.55) !important;
+        box-shadow: 0 0 0 3px rgba(14,165,233,0.12) !important;
     }}
     div[data-testid="stSidebarContent"] .stDateInput > div > div > input {{
-        background: rgba(255,255,255,0.08) !important;
-        border: 1px solid rgba(255,255,255,0.18) !important;
-        border-radius: 8px !important; color: white !important;
+        background: rgba(255,255,255,0.07) !important;
+        border: 1px solid rgba(255,255,255,0.16) !important;
+        border-radius: 10px !important; color: white !important;
         font-size: 11px !important;
+        transition: border-color 0.2s, box-shadow 0.2s !important;
+    }}
+    div[data-testid="stSidebarContent"] .stDateInput > div > div > input:focus {{
+        border-color: rgba(14,165,233,0.55) !important;
+        box-shadow: 0 0 0 3px rgba(14,165,233,0.12) !important;
     }}
 
     /* ── Sidebar – footer card v2 ── */
@@ -657,6 +717,14 @@ elif tipo_periodo == "Semana":
     dff["_periodo"] = dff["Semana"]
 else:
     dff["_periodo"] = dff["Mes"]
+
+# Orden cronológico real de períodos (evita mezcla de meses en modo Día)
+_periodo_sorted = (
+    dff.groupby("_periodo")["Fecha"].min()
+    .sort_values()
+    .index.tolist()
+)
+_periodo_rank = {p: i for i, p in enumerate(_periodo_sorted)}
 
 # ─────────────────────────────────────────────
 # MÉTRICAS GLOBALES
@@ -782,6 +850,8 @@ tend = (
     .apply(lambda g: g["adh_s"].sum() / g["prog_s"].sum() if g["prog_s"].sum() > 0 else 0)
     .reset_index(name="ADH")
 )
+tend["_ord"] = tend["_periodo"].map(_periodo_rank)
+tend = tend.sort_values("_ord").drop(columns="_ord")
 
 c1, c2 = st.columns([3, 2])
 with c1:
@@ -794,34 +864,49 @@ with c1:
         <span class='ch-tag'>Tendencia</span>
     </div>""", unsafe_allow_html=True)
     fig_tend = go.Figure()
+    # Zonas de color de fondo
+    fig_tend.add_hrect(y0=0.60, y1=0.80, fillcolor="rgba(239,68,68,0.04)",   layer="below", line_width=0)
+    fig_tend.add_hrect(y0=0.80, y1=0.90, fillcolor="rgba(245,158,11,0.05)",  layer="below", line_width=0)
+    fig_tend.add_hrect(y0=0.90, y1=1.01, fillcolor="rgba(16,185,129,0.05)",  layer="below", line_width=0)
+    # Halo/glow detrás de la línea
+    fig_tend.add_trace(go.Scatter(
+        x=tend["_periodo"], y=tend["ADH"],
+        mode="lines",
+        line=dict(color="rgba(14,165,233,0.20)", width=10, shape="spline"),
+        showlegend=False, hoverinfo="skip"
+    ))
+    # Línea principal
     fig_tend.add_trace(go.Scatter(
         x=tend["_periodo"], y=tend["ADH"],
         mode="lines+markers+text",
-        line=dict(color=COLOR_ACCENT, width=1.25, shape="spline"),
-        marker=dict(size=7, color=COLOR_PRIMARY),
+        line=dict(color=COLOR_ACCENT, width=2.5, shape="spline"),
+        marker=dict(size=10, color="white", line=dict(color=COLOR_ACCENT, width=2.5)),
         text=tend["ADH"].apply(lambda x: f"{x:.0%}"),
         textposition="top center",
-        textfont=dict(size=9, color=COLOR_PRIMARY, family="Inter"),
-        fill="tozeroy",
-        fillcolor="rgba(14,165,233,0.07)",
-        hovertemplate="%{x}<br><b>%{y:.1%}</b><extra></extra>"
+        textfont=dict(size=9, color=COLOR_PRIMARY, family="Inter", weight=700),
+        hovertemplate="%{x}<br><b>ADH: %{y:.1%}</b><extra></extra>"
     ))
-    fig_tend.add_hline(y=0.90, line_dash="dot", line_color=COLOR_SUCCESS,
+    fig_tend.add_hline(y=0.90, line_dash="dot", line_color=COLOR_SUCCESS, line_width=1.5,
                        annotation_text="Meta 90%", annotation_position="top right",
-                       annotation_font=dict(color=COLOR_SUCCESS, size=11))
+                       annotation_font=dict(color=COLOR_SUCCESS, size=10, family="Inter"))
     _n_tend = len(tend)
     _ini_tend = max(-0.5, _n_tend - 15 - 0.5)
     fig_tend.update_layout(
-        height=360, margin=dict(l=0, r=10, t=24, b=40),
+        height=370, margin=dict(l=0, r=10, t=24, b=40),
         paper_bgcolor="white", plot_bgcolor="white",
-        yaxis=dict(tickformat=".0%", gridcolor="#F1F5F9", range=[0.10, 1.05], dtick=0.05, tickfont=dict(size=10)),
+        yaxis=dict(
+            tickformat=".0%", gridcolor="#F1F5F9",
+            range=[0.60, 1.01], dtick=0.04,
+            tickfont=dict(size=10, family="Inter"),
+            zeroline=False, showgrid=True
+        ),
         xaxis=dict(
-            gridcolor="#F1F5F9", tickfont=dict(size=10),
+            gridcolor="rgba(0,0,0,0)", tickfont=dict(size=10, family="Inter"),
             range=[_ini_tend, _n_tend - 0.5],
             rangeslider=dict(visible=True, thickness=0.08, bgcolor="#F8FAFC"),
-            tickangle=-30
+            tickangle=-30, showgrid=False
         ),
-        font=dict(family="Inter", size=11)
+        font=dict(family="Inter", size=11), showlegend=False
     )
     st.plotly_chart(fig_tend, use_container_width=True)
 
@@ -999,6 +1084,8 @@ tend_sup = (
     .apply(lambda g: g["adh_s"].sum() / g["prog_s"].sum() if g["prog_s"].sum() > 0 else 0)
     .reset_index(name="ADH")
 )
+tend_sup["_ord"] = tend_sup["_periodo"].map(_periodo_rank)
+tend_sup = tend_sup.sort_values(["Supervisor","_ord"]).drop(columns="_ord")
 
 sup_lista = sorted(tend_sup["Supervisor"].unique())
 colores_sup = {s: SUPERVISOR_COLORS[i % len(SUPERVISOR_COLORS)] for i, s in enumerate(sup_lista)}
@@ -1013,6 +1100,11 @@ st.markdown("""<div class='chart-hdr' style='--cc:#8B5CF6'>
 </div>""", unsafe_allow_html=True)
 
 fig_sup = go.Figure()
+# Zonas de fondo
+fig_sup.add_hrect(y0=0.60, y1=0.80, fillcolor="rgba(239,68,68,0.03)",  layer="below", line_width=0)
+fig_sup.add_hrect(y0=0.80, y1=0.90, fillcolor="rgba(245,158,11,0.04)", layer="below", line_width=0)
+fig_sup.add_hrect(y0=0.90, y1=1.05, fillcolor="rgba(16,185,129,0.04)", layer="below", line_width=0)
+
 for sup in sup_lista:
     sub = tend_sup[tend_sup["Supervisor"] == sup]
     nombre_corto = " ".join(sup.split()[:2])
@@ -1020,26 +1112,37 @@ for sup in sup_lista:
         x=sub["_periodo"], y=sub["ADH"],
         name=nombre_corto,
         mode="lines+markers",
-        line=dict(color=colores_sup[sup], width=1.25, shape="spline"),
-        marker=dict(size=5),
+        line=dict(color=colores_sup[sup], width=2, shape="spline"),
+        marker=dict(size=6, color="white", line=dict(color=colores_sup[sup], width=2)),
         hovertemplate=f"<b>{nombre_corto}</b><br>%{{x}}: %{{y:.1%}}<extra></extra>"
     ))
-fig_sup.add_hline(y=0.90, line_dash="dot", line_color="#9CA3AF",
-                  annotation_text="Meta 90%", annotation_position="top right")
-_periodos_sup = tend_sup["_periodo"].unique().tolist()
+fig_sup.add_hline(y=0.90, line_dash="dot", line_color="rgba(100,116,139,0.6)", line_width=1.5,
+                  annotation_text="Meta 90%", annotation_position="top right",
+                  annotation_font=dict(color="#64748B", size=10, family="Inter"))
+
+_periodos_sup = _periodo_sorted
 _n_sup_per    = len(_periodos_sup)
 _ini_sup      = max(-0.5, _n_sup_per - 15 - 0.5)
 fig_sup.update_layout(
-    height=380, margin=dict(l=0,r=0,t=10,b=40),
+    height=390, margin=dict(l=0, r=0, t=10, b=40),
     paper_bgcolor="white", plot_bgcolor="white",
-    yaxis=dict(tickformat=".0%", gridcolor="#F3F4F6", range=[0, 1.2]),
+    yaxis=dict(
+        tickformat=".0%", gridcolor="#F1F5F9",
+        range=[0.60, 1.05], dtick=0.05,
+        tickfont=dict(size=10, family="Inter"),
+        zeroline=False
+    ),
     xaxis=dict(
-        gridcolor="#F3F4F6",
+        gridcolor="rgba(0,0,0,0)", tickfont=dict(size=10, family="Inter"),
         range=[_ini_sup, _n_sup_per - 0.5],
         rangeslider=dict(visible=True, thickness=0.08, bgcolor="#F8FAFC"),
-        tickangle=-30
+        tickangle=-30, showgrid=False
     ),
-    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0, font=dict(size=10)),
+    legend=dict(
+        orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0,
+        font=dict(size=10, family="Inter"),
+        itemsizing="constant", bgcolor="rgba(0,0,0,0)"
+    ),
     font=dict(family="Inter", size=11)
 )
 st.plotly_chart(fig_sup, use_container_width=True)
