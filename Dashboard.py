@@ -3,6 +3,8 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+import glob
+import os
 
 # ─────────────────────────────────────────────
 # CONFIGURACIÓN
@@ -19,9 +21,30 @@ SUPERVISOR_COLORS = px.colors.qualitative.Bold
 # ─────────────────────────────────────────────
 # CARGA Y PREPARACIÓN DE DATOS
 # ─────────────────────────────────────────────
+ORDEN_MESES = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO",
+               "JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"]
+
+def _mes_orden(path):
+    nombre = os.path.basename(path).upper()
+    for i, mes in enumerate(ORDEN_MESES):
+        if mes in nombre:
+            return i
+    return 99
+
 @st.cache_data
-def cargar_datos(path):
-    df = pd.read_excel(path, sheet_name="Detalle")
+def cargar_datos():
+    archivos = sorted(glob.glob("Consolidado_*.xlsx"), key=_mes_orden)
+    if not archivos:
+        st.error("No se encontraron archivos Consolidado_*.xlsx en la carpeta.")
+        st.stop()
+
+    partes = []
+    for archivo in archivos:
+        df_mes = pd.read_excel(archivo, sheet_name="Detalle")
+        df_mes["_archivo"] = os.path.basename(archivo)
+        partes.append(df_mes)
+
+    df = pd.concat(partes, ignore_index=True)
     df["Fecha"] = pd.to_datetime(df["Fecha"])
 
     def a_seg(col):
@@ -46,9 +69,9 @@ def cargar_datos(path):
     df["ADH_pct"] = None
     df.loc[mask, "ADH_pct"] = df.loc[mask, "adh_s"] / df.loc[mask, "prog_s"]
 
-    return df
+    return df, archivos
 
-df = cargar_datos("Consolidado_MAYO.xlsx")
+df, archivos_cargados = cargar_datos()
 
 # ─────────────────────────────────────────────
 # COLORES (fijos)
@@ -89,6 +112,13 @@ with st.sidebar:
         <span class='sb-sec-line'></span>
     </div>""", unsafe_allow_html=True)
     tipo_periodo = st.selectbox("Agrupar por", ["Día","Semana","Mes"], index=0)
+
+    # Selector de mes (generado dinámicamente desde los archivos cargados)
+    meses_disp = ["Todos"] + [
+        os.path.basename(a).replace("Consolidado_", "").replace(".xlsx", "").capitalize()
+        for a in archivos_cargados
+    ]
+    mes_sel = st.selectbox("Mes", meses_disp)
 
     fechas = sorted(df["Fecha"].dt.date.unique())
     col_f1, col_f2 = st.columns(2)
@@ -550,6 +580,9 @@ mask = (
     (df["Fecha"].dt.date >= fecha_ini) &
     (df["Fecha"].dt.date <= fecha_fin)
 )
+if mes_sel != "Todos":
+    archivo_mes = f"Consolidado_{mes_sel.upper()}.xlsx"
+    mask &= df["_archivo"] == archivo_mes
 if sup_sel != "Todos":
     mask &= df["Supervisor"] == sup_sel
 if exp_sel != "Todos":
