@@ -341,33 +341,38 @@ st.markdown(f"""
         width: 6px; height: 6px; border-radius: 50%;
         background: var(--mc, {COLOR_PRIMARY}); flex-shrink: 0;
     }}
-    /* Streamlit buttons in module cards */
-    div[data-testid="stButton"] > button {{
-        border-radius: 12px !important;
-        font-weight: 700 !important;
-        font-size: 13px !important;
-        letter-spacing: 0.01em !important;
-        height: 44px !important;
-        transition: transform 0.18s ease, box-shadow 0.18s ease !important;
+    /* Navigation buttons (pure HTML anchors) */
+    .mod-nav-btn {{
+        display: block;
+        text-align: center;
+        padding: 13px 20px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 13px;
+        text-decoration: none !important;
+        cursor: pointer;
+        transition: transform 0.18s ease, box-shadow 0.18s ease;
+        position: relative; z-index: 1;
     }}
-    div[data-testid="stButton"] > button[kind="primary"] {{
-        background: linear-gradient(135deg, {COLOR_PRIMARY}, {COLOR_ACCENT}) !important;
-        border: none !important;
-        box-shadow: 0 4px 14px rgba(14,165,233,0.30) !important;
+    .mod-nav-primary {{
+        background: linear-gradient(135deg, {COLOR_PRIMARY}, {COLOR_ACCENT});
+        color: white !important;
+        box-shadow: 0 4px 14px rgba(14,165,233,0.30);
     }}
-    div[data-testid="stButton"] > button[kind="primary"]:hover {{
-        transform: translateY(-2px) !important;
-        box-shadow: 0 8px 22px rgba(14,165,233,0.40) !important;
+    .mod-nav-primary:hover {{
+        transform: translateY(-2px);
+        box-shadow: 0 8px 22px rgba(14,165,233,0.42);
+        color: white !important;
     }}
-    div[data-testid="stButton"] > button[kind="secondary"] {{
-        background: white !important;
-        border: 2px solid #E2E8F0 !important;
+    .mod-nav-secondary {{
+        background: white;
         color: #64748B !important;
+        border: 2px solid #E2E8F0;
     }}
-    div[data-testid="stButton"] > button[kind="secondary"]:hover {{
-        border-color: #8B5CF6 !important;
+    .mod-nav-secondary:hover {{
+        border-color: #8B5CF6;
         color: #8B5CF6 !important;
-        transform: translateY(-2px) !important;
+        transform: translateY(-2px);
     }}
 
     /* Stats row at bottom of page */
@@ -453,10 +458,9 @@ with col1:
             <div class='mod-feat'><span class='mod-feat-dot' style='--mc:#0EA5E9'></span>Ranking y comparativo por supervisor</div>
             <div class='mod-feat'><span class='mod-feat-dot' style='--mc:#0EA5E9'></span>Tablas de planificación y excesos</div>
         </div>
+        <a href='/Adherencia' target='_self' class='mod-nav-btn mod-nav-primary'>🎯&nbsp;&nbsp;Abrir módulo de Adherencia →</a>
     </div>
     """, unsafe_allow_html=True)
-    if st.button("🎯  Abrir módulo de Adherencia →", use_container_width=True, key="btn_adh", type="primary"):
-        st.switch_page("pages/1_Adherencia.py")
 
 with col2:
     st.markdown("""
@@ -478,10 +482,9 @@ with col2:
             <div class='mod-feat'><span class='mod-feat-dot' style='--mc:#8B5CF6'></span>Cobertura y nivel de servicio</div>
             <div class='mod-feat'><span class='mod-feat-dot' style='--mc:#8B5CF6'></span>Próximamente disponible</div>
         </div>
+        <a href='/Ocupacion' target='_self' class='mod-nav-btn mod-nav-secondary'>📊&nbsp;&nbsp;Ver módulo de Ocupación →</a>
     </div>
     """, unsafe_allow_html=True)
-    if st.button("📊  Ver módulo de Ocupación →", use_container_width=True, key="btn_ocu"):
-        st.switch_page("pages/2_Ocupacion.py")
 
 # ─────────────────────────────────────────────
 # STATS ROW
