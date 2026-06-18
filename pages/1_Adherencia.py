@@ -296,64 +296,126 @@ st.markdown(f"""
         font-size: 12px; font-weight: 700; color: white;
         white-space: nowrap; letter-spacing: 0.02em;
     }}
-    /* ── HEADER · banner grande con fondo aurora del sidebar (sin cuadrícula) ── */
+    /* ══ HEADER · "Aurora Control Deck" (data-driven / LIVE) ══ */
     .st-key-hdrbanner {{
-        position: relative; overflow: hidden;
+        position:relative; overflow:hidden; isolation:isolate;
+        border-radius:22px; padding:24px 30px 20px; margin-bottom:18px;
+        border:1px solid rgba(129,140,248,0.20);
         background:
-            radial-gradient(ellipse 70% 130% at 2% -15%,  rgba(14,165,233,0.34) 0%, transparent 60%),
-            radial-gradient(ellipse 65% 130% at 100% 120%, rgba(129,140,248,0.34) 0%, transparent 60%),
-            radial-gradient(ellipse 55% 110% at 72% 130%,  rgba(52,211,153,0.16) 0%, transparent 60%),
-            linear-gradient(155deg, #0B0518 0%, #14082b 50%, #0A0414 100%);
-        border: 1px solid rgba(255,255,255,0.10);
-        border-radius: 24px; padding: 36px 42px; margin-bottom: 26px;
-        box-shadow: 0 24px 60px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.08);
+            radial-gradient(ellipse 70% 130% at 2% -15%,  rgba(14,165,233,0.34), transparent 60%),
+            radial-gradient(ellipse 65% 130% at 100% 120%, rgba(129,140,248,0.34), transparent 60%),
+            radial-gradient(ellipse 55% 110% at 72% 130%,  rgba(52,211,153,0.16), transparent 60%),
+            linear-gradient(155deg, #0B0518, #14082b 50%, #0A0414);
+        box-shadow: 0 18px 50px -22px rgba(8,3,24,0.9), inset 0 1px 0 rgba(255,255,255,0.05);
     }}
-    .hb-eyebrow {{ display:inline-flex;align-items:center;gap:9px;
-        background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.16);
-        border-radius:99px;padding:6px 15px;margin-bottom:16px;
-        font-size:10.5px;font-weight:700;color:rgba(255,255,255,0.78);
-        letter-spacing:0.12em;text-transform:uppercase; }}
-    .hb-dot {{ width:7px;height:7px;border-radius:50%;background:#34D399;
-        box-shadow:0 0 9px #34D399;animation:sbcPulse 1.8s ease-in-out infinite; }}
-    .hb-title {{ font-family:'Space Grotesk',sans-serif!important;
-        font-size:38px;font-weight:700;color:white;margin:0 0 12px;
-        letter-spacing:-1.2px;line-height:1.04; }}
-    .hb-title .g {{ background:linear-gradient(90deg,#FBBF24,#FB923C,#F97316);
-        -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text; }}
-    .hb-sub {{ font-size:13.5px;color:rgba(255,255,255,0.62);margin:0;line-height:1.55; }}
-    .hb-sub b {{ color:rgba(255,255,255,0.92);font-weight:700; }}
-    /* chips de período / filtro */
-    .hb-meta {{ display:flex;flex-wrap:wrap;gap:9px;margin:0 0 4px; }}
-    .hb-chip {{ display:inline-flex;align-items:center;gap:7px;
-        background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.13);
-        border-radius:10px;padding:7px 13px;font-size:12px;font-weight:600;color:rgba(255,255,255,0.74); }}
-    .hb-chip b {{ color:#fff;font-weight:700; }}
-    /* etiqueta de la fila de navegación */
-    .nav-lbl {{ font-size:9.5px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;
-        color:rgba(255,255,255,0.40);margin:4px 0 8px; }}
-    /* separación entre el bloque de título y la fila de navegación */
-    .st-key-hdrbanner [data-testid="stVerticalBlock"] {{ gap: 0.55rem !important; }}
-    /* botones del menú */
+    /* textura: retícula HUD + barras-stream (data-viz) */
+    .st-key-hdrbanner::before {{
+        content:""; position:absolute; inset:0; z-index:-2;
+        background-image:
+            linear-gradient(rgba(129,140,248,0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(129,140,248,0.05) 1px, transparent 1px),
+            repeating-linear-gradient(90deg, rgba(56,189,248,0.10) 0 2px, transparent 2px 13px);
+        background-size:34px 34px, 34px 34px, 13px 100%;
+        background-position:0 0, 0 0, left bottom;
+        background-repeat:repeat, repeat, repeat-x;
+        -webkit-mask-image:radial-gradient(ellipse 90% 130% at 28% 0%, #000 35%, transparent 78%);
+                mask-image:radial-gradient(ellipse 90% 130% at 28% 0%, #000 35%, transparent 78%);
+        opacity:.65;
+    }}
+    /* watermark gigante del ícono */
+    .st-key-hdrbanner::after {{
+        content:"🎯"; position:absolute; right:-26px; top:50%; transform:translateY(-50%);
+        z-index:-1; font-size:190px; line-height:1; opacity:.08;
+        filter:blur(1.5px) saturate(1.2); pointer-events:none;
+        -webkit-mask-image:linear-gradient(90deg, transparent, #000 58%);
+                mask-image:linear-gradient(90deg, transparent, #000 58%);
+        animation:hbFloat 9s ease-in-out infinite;
+    }}
+    /* borde de luz animado */
+    .hb-border {{
+        position:absolute; inset:0; border-radius:22px; padding:1px; pointer-events:none; z-index:3;
+        background:linear-gradient(120deg, rgba(56,189,248,0) 18%, rgba(56,189,248,.9) 33%, rgba(129,140,248,.95) 48%, rgba(52,211,153,.55) 63%, rgba(129,140,248,0) 80%);
+        background-size:300% 100%;
+        -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+        -webkit-mask-composite:xor;
+                mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+                mask-composite:exclude;
+        animation:hbBorder 7s linear infinite;
+    }}
+    /* barra escáner superior */
+    .hb-scan {{
+        position:absolute; top:0; left:0; right:0; height:3px; border-radius:22px 22px 0 0; z-index:4;
+        background:linear-gradient(90deg, transparent 0%, #38BDF8 18%, #818CF8 42%, #34D399 60%, #818CF8 78%, transparent 100%);
+        background-size:220% 100%; animation:hbScan 5.5s linear infinite;
+    }}
+    .hb-head {{ position:relative; z-index:2; }}
+    .hb-top {{ display:flex; align-items:center; flex-wrap:wrap; gap:8px; }}
+    .hb-eyebrow {{
+        display:inline-flex; align-items:center; gap:8px;
+        font-family:'Space Grotesk','Inter',sans-serif; font-size:11px; font-weight:700;
+        letter-spacing:.16em; text-transform:uppercase; color:#C7D2FE;
+        padding:5px 12px; border-radius:999px; border:1px solid rgba(129,140,248,0.28);
+        background:linear-gradient(180deg, rgba(56,189,248,0.10), rgba(129,140,248,0.06));
+        backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+    }}
+    .hb-dot {{ width:8px; height:8px; border-radius:50%; background:#34D399;
+        box-shadow:0 0 0 0 rgba(52,211,153,0.55); animation:hbPulse 1.8s ease-out infinite; }}
+    .hb-live {{ display:inline-flex; align-items:center; gap:7px;
+        font-family:'Space Grotesk','Inter',sans-serif; font-size:10px; font-weight:700; letter-spacing:.18em;
+        color:#7DE3C3; padding:4px 10px; border-radius:999px;
+        background:rgba(52,211,153,.08); border:1px solid rgba(52,211,153,.30); }}
+    .hb-live i {{ position:relative; width:7px; height:7px; border-radius:50%; background:#34D399; font-style:normal; }}
+    .hb-live i::after {{ content:""; position:absolute; inset:-3px; border-radius:50%;
+        border:1px solid rgba(52,211,153,.6); animation:hbRadar 1.8s ease-out infinite; }}
+    .hb-title {{ margin:11px 0 0; padding:0; font-family:'Space Grotesk','Inter',sans-serif;
+        font-size:30px; font-weight:700; line-height:1.08; letter-spacing:-.015em; color:#F4F5FF;
+        display:inline-flex; align-items:center; gap:12px; position:relative; }}
+    .hb-title .hb-ic {{ font-size:26px; filter:drop-shadow(0 2px 10px rgba(56,189,248,0.5)); }}
+    .hb-title .hb-grad {{ position:relative;
+        background:linear-gradient(92deg, #38BDF8, #818CF8);
+        -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent; }}
+    .hb-title .hb-grad::after {{ content:""; position:absolute; left:0; right:0; bottom:-6px; height:3px; border-radius:3px;
+        background:linear-gradient(90deg, #38BDF8, #818CF8, transparent);
+        transform-origin:left; animation:hbUnderline 1.1s cubic-bezier(.2,.7,.2,1) .15s both; }}
+    .hb-meta {{ display:flex; flex-wrap:wrap; gap:9px; margin-top:14px; }}
+    .hb-chip {{ display:inline-flex; align-items:center; gap:7px;
+        font-family:'Inter',sans-serif; font-size:12.5px; font-weight:500; color:#D9DEF7;
+        padding:6px 13px; border-radius:11px; border:1px solid rgba(255,255,255,0.10);
+        background:rgba(255,255,255,0.045); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+        box-shadow:inset 0 1px 0 rgba(255,255,255,0.06); }}
+    .hb-chip b {{ color:#fff; font-weight:700; }}
+
+    /* navegación · botones a la izquierda, compactos */
+    .st-key-hdrbanner [data-testid="stHorizontalBlock"] {{ gap:9px !important; margin-top:16px; justify-content:flex-start; }}
+    .st-key-hdrbanner [data-testid="column"],
+    .st-key-hdrbanner [data-testid="stColumn"] {{ flex:0 0 auto !important; width:auto !important; min-width:0 !important; }}
     .st-key-hdrbanner [data-testid="stButton"] > button {{
-        background: rgba(255,255,255,0.08) !important;
-        border: 1px solid rgba(255,255,255,0.18) !important;
-        color: rgba(255,255,255,0.92) !important; border-radius: 11px !important;
-        font-size: 11.5px !important; font-weight: 700 !important; white-space: nowrap !important;
-        height: 40px !important; min-height: 40px !important; padding: 0 8px !important;
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.06) !important;
-        transition: transform .2s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease !important;
+        position:relative; z-index:2; width:auto;
+        font-family:'Space Grotesk','Inter',sans-serif !important; font-size:13px !important; font-weight:600 !important; letter-spacing:.01em;
+        color:#C7D0F0 !important; padding:8px 16px !important; border-radius:11px !important; height:auto !important; min-height:0 !important;
+        border:1px solid rgba(255,255,255,0.10) !important; background:rgba(255,255,255,0.045) !important;
+        backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); white-space:nowrap !important;
+        box-shadow:inset 0 1px 0 rgba(255,255,255,0.05) !important;
+        transition:transform .18s ease, background .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease !important;
     }}
     .st-key-hdrbanner [data-testid="stButton"] > button:hover {{
-        background: rgba(255,255,255,0.16) !important;
-        border-color: rgba(56,189,248,0.5) !important; transform: translateY(-2px) !important;
-    }}
-    /* botón de la página actual (Adherencia = primary) resaltado */
+        color:#F4F6FF !important; border-color:rgba(129,140,248,0.55) !important; background:rgba(129,140,248,0.14) !important;
+        transform:translateY(-1px) !important; box-shadow:0 6px 18px -8px rgba(56,189,248,0.5) !important; }}
     .st-key-hdrbanner [data-testid="stButton"] > button[kind="primary"] {{
-        background: linear-gradient(135deg,#38BDF8,#818CF8) !important; color: white !important;
-        border: 1px solid transparent !important;
-        box-shadow: 0 8px 22px -6px rgba(56,189,248,0.65) !important; }}
+        color:#FFFFFF !important; font-weight:700 !important; border:1px solid transparent !important;
+        background:linear-gradient(#160a30,#160a30) padding-box, linear-gradient(92deg, #38BDF8, #818CF8) border-box !important;
+        box-shadow:0 0 0 1px rgba(56,189,248,.25), 0 8px 22px -10px rgba(56,189,248,.8) !important; }}
     .st-key-hdrbanner [data-testid="stButton"] > button[kind="primary"]:hover {{
-        filter: brightness(1.08) !important; transform: translateY(-2px) !important; }}
+        color:#FFFFFF !important; transform:translateY(-1px) !important;
+        box-shadow:0 0 0 1px rgba(56,189,248,.4), 0 10px 26px -10px rgba(129,140,248,.9) !important; }}
+
+    /* keyframes del header */
+    @keyframes hbScan {{ 0% {{ background-position:120% 0; }} 100% {{ background-position:-120% 0; }} }}
+    @keyframes hbBorder {{ to {{ background-position:300% 0; }} }}
+    @keyframes hbFloat {{ 0%,100% {{ transform:translateY(-50%) rotate(-3deg); }} 50% {{ transform:translateY(-54%) rotate(3deg); }} }}
+    @keyframes hbPulse {{ 0% {{ box-shadow:0 0 0 0 rgba(52,211,153,0.55); }} 70% {{ box-shadow:0 0 0 7px rgba(52,211,153,0); }} 100% {{ box-shadow:0 0 0 0 rgba(52,211,153,0); }} }}
+    @keyframes hbRadar {{ 0% {{ transform:scale(.6); opacity:1; }} 100% {{ transform:scale(2.4); opacity:0; }} }}
+    @keyframes hbUnderline {{ from {{ transform:scaleX(0); opacity:0; }} to {{ transform:scaleX(1); opacity:1; }} }}
 
     /* ── KPI cards ── */
     .kpi-card {{
@@ -909,13 +971,21 @@ _nov_pg  = st.Page("pages/3_Novedades.py", title="Novedades", icon="📢")
 
 with st.container(key="hdrbanner"):
     st.markdown(f"""
-    <div class='hb-eyebrow'><span class='hb-dot'></span>Centro de Control · Uniminuto 2026</div>
-    <div class='hb-title'>Módulo de Adherencia</div>
-    <div class='hb-meta'>
-        <span class='hb-chip'>📅 <b>{rango}</b></span>
-        <span class='hb-chip'>👤 {filtro_txt}</span>
+    <span class='hb-scan'></span>
+    <span class='hb-border'></span>
+    <div class='hb-head'>
+        <div class='hb-top'>
+            <span class='hb-eyebrow'><span class='hb-dot'></span>Centro de Control · Uniminuto 2026</span>
+            <span class='hb-live'><i></i>LIVE</span>
+        </div>
+        <h1 class='hb-title'>
+            <span class='hb-ic'>🎯</span>Módulo de <span class='hb-grad'>Adherencia</span>
+        </h1>
+        <div class='hb-meta'>
+            <span class='hb-chip'>📅 <b>{rango}</b></span>
+            <span class='hb-chip'>👤 {filtro_txt}</span>
+        </div>
     </div>
-    <div class='nav-lbl'>⚡ Navegación</div>
     """, unsafe_allow_html=True)
     nb1, nb2, nb3, nb4, _nsp = st.columns([1.0, 1.35, 1.3, 1.3, 4.05], vertical_alignment="center")
     with nb1:
