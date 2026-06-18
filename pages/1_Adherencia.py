@@ -322,14 +322,17 @@ st.markdown(f"""
         -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text; }}
     .hb-sub {{ font-size:13.5px;color:rgba(255,255,255,0.62);margin:0;line-height:1.55; }}
     .hb-sub b {{ color:rgba(255,255,255,0.92);font-weight:700; }}
-    /* etiqueta "Menú" encima de los botones */
-    .menu-lbl {{ display:flex;align-items:center;justify-content:flex-end;gap:7px;
-        font-size:10px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;
-        color:rgba(255,255,255,0.50);margin-bottom:10px; }}
-    .menu-lbl::before {{ content:'';flex:1;height:1px;
-        background:linear-gradient(90deg,transparent,rgba(255,255,255,0.18)); }}
-    /* espaciado compacto: los 3 botones forman un bloque ── */
-    .st-key-hdrbanner [data-testid="stVerticalBlock"] {{ gap: 0.45rem !important; }}
+    /* chips de período / filtro */
+    .hb-meta {{ display:flex;flex-wrap:wrap;gap:9px;margin:0 0 4px; }}
+    .hb-chip {{ display:inline-flex;align-items:center;gap:7px;
+        background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.13);
+        border-radius:10px;padding:7px 13px;font-size:12px;font-weight:600;color:rgba(255,255,255,0.74); }}
+    .hb-chip b {{ color:#fff;font-weight:700; }}
+    /* etiqueta de la fila de navegación */
+    .nav-lbl {{ font-size:9.5px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;
+        color:rgba(255,255,255,0.40);margin:4px 0 8px; }}
+    /* separación entre el bloque de título y la fila de navegación */
+    .st-key-hdrbanner [data-testid="stVerticalBlock"] {{ gap: 0.55rem !important; }}
     /* botones del menú */
     .st-key-hdrbanner [data-testid="stButton"] > button {{
         background: rgba(255,255,255,0.08) !important;
@@ -902,25 +905,30 @@ rango = f"{fecha_ini.strftime('%d/%m/%Y')} – {fecha_fin.strftime('%d/%m/%Y')}"
 filtro_txt = (f"{'Detalle por supervisor y experto.' if camp_sel == 'Todas' else camp_sel}")
 _home_pg = st.Page("home.py", title="Inicio", icon="🏠", default=True)
 _ocu_pg  = st.Page("pages/2_Ocupacion.py", title="Ocupación", icon="📊")
+_nov_pg  = st.Page("pages/3_Novedades.py", title="Novedades", icon="📢")
 
 with st.container(key="hdrbanner"):
-    htitle, hmenu, _hsp = st.columns([1.55, 1.75, 0.7], vertical_alignment="center")
-    with htitle:
-        st.markdown(f"""
-        <div class='hb-eyebrow'><span class='hb-dot'></span>Centro de Control · Uniminuto 2026</div>
-        <div class='hb-title'>Módulo de adherencia</div>
-        <div class='hb-sub'>📅 <b>{rango}</b> &nbsp;·&nbsp; 👤 {filtro_txt}</div>
-        """, unsafe_allow_html=True)
-    with hmenu:
-        st.markdown("<div class='menu-lbl'>⚡ Menú</div>", unsafe_allow_html=True)
-        if st.button("🏠  Inicio", key="hdr_home", use_container_width=True):
+    st.markdown(f"""
+    <div class='hb-eyebrow'><span class='hb-dot'></span>Centro de Control · Uniminuto 2026</div>
+    <div class='hb-title'>Módulo de Adherencia</div>
+    <div class='hb-meta'>
+        <span class='hb-chip'>📅 <b>{rango}</b></span>
+        <span class='hb-chip'>👤 {filtro_txt}</span>
+    </div>
+    <div class='nav-lbl'>⚡ Navegación</div>
+    """, unsafe_allow_html=True)
+    nb1, nb2, nb3, nb4, _nsp = st.columns([1.0, 1.35, 1.3, 1.3, 4.05], vertical_alignment="center")
+    with nb1:
+        if st.button("🏠 Inicio", key="hdr_home", use_container_width=True):
             st.switch_page(_home_pg)
-        mb1, mb2 = st.columns(2, gap="small")
-        with mb1:
-            st.button("🎯 Adherencia", key="hdr_adh", use_container_width=True, type="primary")
-        with mb2:
-            if st.button("📊 Ocupación", key="hdr_ocu", use_container_width=True):
-                st.switch_page(_ocu_pg)
+    with nb2:
+        st.button("🎯 Adherencia", key="hdr_adh", use_container_width=True, type="primary")
+    with nb3:
+        if st.button("📊 Ocupación", key="hdr_ocu", use_container_width=True):
+            st.switch_page(_ocu_pg)
+    with nb4:
+        if st.button("📢 Novedades", key="hdr_nov", use_container_width=True):
+            st.switch_page(_nov_pg)
 
 # ─────────────────────────────────────────────
 # KPIs GLOBALES

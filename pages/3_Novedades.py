@@ -202,12 +202,14 @@ st.markdown(f"""
         letter-spacing:-1.2px;line-height:1.04; }}
     .hb-sub {{ font-size:13.5px;color:rgba(255,255,255,0.62);margin:0;line-height:1.55; }}
     .hb-sub b {{ color:rgba(255,255,255,0.92);font-weight:700; }}
-    .menu-lbl {{ display:flex;align-items:center;justify-content:flex-end;gap:7px;
-        font-size:10px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;
-        color:rgba(255,255,255,0.50);margin-bottom:10px; }}
-    .menu-lbl::before {{ content:'';flex:1;height:1px;
-        background:linear-gradient(90deg,transparent,rgba(255,255,255,0.18)); }}
-    .st-key-hdrbanner [data-testid="stVerticalBlock"] {{ gap: 0.45rem !important; }}
+    .hb-meta {{ display:flex;flex-wrap:wrap;gap:9px;margin:0 0 4px; }}
+    .hb-chip {{ display:inline-flex;align-items:center;gap:7px;
+        background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.13);
+        border-radius:10px;padding:7px 13px;font-size:12px;font-weight:600;color:rgba(255,255,255,0.74); }}
+    .hb-chip b {{ color:#fff;font-weight:700; }}
+    .nav-lbl {{ font-size:9.5px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;
+        color:rgba(255,255,255,0.40);margin:4px 0 8px; }}
+    .st-key-hdrbanner [data-testid="stVerticalBlock"] {{ gap: 0.55rem !important; }}
     .st-key-hdrbanner [data-testid="stButton"] > button {{
         background: rgba(255,255,255,0.08) !important;
         border: 1px solid rgba(255,255,255,0.18) !important;
@@ -287,24 +289,27 @@ _adh_pg  = st.Page("pages/1_Adherencia.py", title="Adherencia", icon="🎯")
 _ocu_pg  = st.Page("pages/2_Ocupacion.py", title="Ocupación", icon="📊")
 
 with st.container(key="hdrbanner"):
-    htitle, hmenu = st.columns([2.0, 2.0], vertical_alignment="center")
-    with htitle:
-        st.markdown("""
-        <div class='hb-eyebrow'><span class='hb-dot'></span>Centro de Control · Uniminuto 2026</div>
-        <div class='hb-title'>Novedades</div>
-        <div class='hb-sub'>🚧 <b>En desarrollo</b> &nbsp;·&nbsp; Próximamente disponible</div>
-        """, unsafe_allow_html=True)
-    with hmenu:
-        st.markdown("<div class='menu-lbl'>⚡ Menú</div>", unsafe_allow_html=True)
-        if st.button("🏠  Inicio", key="hdr_home", use_container_width=True):
+    st.markdown("""
+    <div class='hb-eyebrow'><span class='hb-dot'></span>Centro de Control · Uniminuto 2026</div>
+    <div class='hb-title'>Novedades</div>
+    <div class='hb-meta'>
+        <span class='hb-chip'>🚧 <b>En desarrollo</b></span>
+        <span class='hb-chip'>⏳ Próximamente disponible</span>
+    </div>
+    <div class='nav-lbl'>⚡ Navegación</div>
+    """, unsafe_allow_html=True)
+    nb1, nb2, nb3, nb4, _nsp = st.columns([1.0, 1.35, 1.3, 1.3, 4.05], vertical_alignment="center")
+    with nb1:
+        if st.button("🏠 Inicio", key="hdr_home", use_container_width=True):
             st.switch_page(_home_pg)
-        mb1, mb2 = st.columns(2, gap="small")
-        with mb1:
-            if st.button("🎯 Adherencia", key="hdr_adh", use_container_width=True):
-                st.switch_page(_adh_pg)
-        with mb2:
-            if st.button("📊 Ocupación", key="hdr_ocu", use_container_width=True):
-                st.switch_page(_ocu_pg)
+    with nb2:
+        if st.button("🎯 Adherencia", key="hdr_adh", use_container_width=True):
+            st.switch_page(_adh_pg)
+    with nb3:
+        if st.button("📊 Ocupación", key="hdr_ocu", use_container_width=True):
+            st.switch_page(_ocu_pg)
+    with nb4:
+        st.button("📢 Novedades", key="hdr_nov", use_container_width=True, type="primary")
 
 # ─────────────────────────────────────────────
 # VISTA PREVIA DEL MÓDULO
