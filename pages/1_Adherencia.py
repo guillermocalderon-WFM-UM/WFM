@@ -302,17 +302,16 @@ st.markdown(f"""
         border-radius:20px; padding:18px 28px 20px; margin-bottom:16px;
         border:1px solid rgba(255,255,255,0.12);
         background:
-            linear-gradient(145deg, rgba(56,189,248,0.13) 0%, rgba(129,140,248,0.10) 55%, rgba(52,211,153,0.07) 100%),
-            linear-gradient(155deg, #0B0518, #14082b 52%, #0A0414);
+            linear-gradient(150deg, rgba(56,189,248,0.16) 0%, rgba(129,140,248,0.12) 52%, rgba(56,189,248,0.05) 100%),
+            linear-gradient(150deg, #1b1545 0%, #241c54 50%, #161138 100%);
         box-shadow: 0 16px 46px -20px rgba(8,3,24,0.92), inset 0 1px 0 rgba(255,255,255,0.10);
     }}
-    /* orbes de glow (ambiente, sin cuadrícula ni ícono) */
+    /* difuminado azul sobre el morado (como el brand card del sidebar) */
     .st-key-hdrbanner::before {{
         content:""; position:absolute; inset:0; z-index:-1; pointer-events:none;
         background:
-            radial-gradient(260px 240px at 3% -42%,  rgba(56,189,248,0.28), transparent 70%),
-            radial-gradient(240px 240px at 50% 165%, rgba(129,140,248,0.22), transparent 70%),
-            radial-gradient(200px 200px at 100% 140%, rgba(52,211,153,0.14), transparent 70%);
+            radial-gradient(380px 320px at 20% -35%, rgba(56,189,248,0.34), transparent 66%),
+            radial-gradient(320px 300px at 102% 120%, rgba(129,140,248,0.30), transparent 66%);
     }}
     .hb-head {{ position:relative; z-index:2; }}
     .hb-top {{ display:flex; align-items:center; flex-wrap:wrap; gap:8px; }}
@@ -340,13 +339,15 @@ st.markdown(f"""
         animation:hbShine 6s linear infinite; }}
     .hb-subtitle {{ margin:6px 0 0; padding:0; font-family:'Inter',sans-serif;
         font-size:13.5px; font-weight:500; color:rgba(255,255,255,0.85); line-height:1.4; }}
-    .hb-meta {{ display:flex; flex-wrap:wrap; gap:8px; margin-top:13px; }}
-    .hb-chip {{ display:inline-flex; align-items:center; gap:7px;
-        font-family:'Inter',sans-serif; font-size:11.5px; font-weight:600; color:#E2E8F8;
-        padding:6px 13px; border-radius:10px; border:1px solid rgba(255,255,255,0.12);
-        background:linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03));
-        box-shadow:inset 0 1px 0 rgba(255,255,255,0.07); }}
-    .hb-chip b {{ color:#fff; font-weight:700; }}
+    .hb-stats {{ display:inline-flex; align-items:center; margin-top:14px;
+        background:rgba(0,0,0,0.22); border:1px solid rgba(255,255,255,0.09);
+        border-radius:13px; padding:9px 4px; box-shadow:inset 0 1px 0 rgba(255,255,255,0.05); }}
+    .hb-stat {{ padding:0 18px; text-align:center; }}
+    .hb-sv {{ display:block; font-family:'Space Grotesk',sans-serif !important;
+        font-size:14px; font-weight:700; color:#fff; line-height:1; margin-bottom:4px; }}
+    .hb-sl {{ display:block; font-size:8.5px; font-weight:700; letter-spacing:.14em;
+        text-transform:uppercase; color:rgba(255,255,255,0.42); }}
+    .hb-sep {{ width:1px; height:26px; background:rgba(255,255,255,0.10); flex-shrink:0; }}
 
     /* navegación · grilla 2×2 a la derecha */
     .st-key-hdrbanner [data-testid="stHorizontalBlock"] {{ gap:8px !important; }}
@@ -942,13 +943,13 @@ with st.container(key="hdrbanner"):
         <div class='hb-head'>
             <div class='hb-top'>
                 <span class='hb-eyebrow'><span class='hb-dot'></span>Centro de Control · Uniminuto 2026</span>
-                <span class='hb-live'><i></i>LIVE</span>
             </div>
             <h1 class='hb-title'>Módulo de Adherencia</h1>
             <p class='hb-subtitle'>Detalle de adherencia por supervisor y experto</p>
-            <div class='hb-meta'>
-                <span class='hb-chip'>📅 <b>{rango}</b></span>
-                <span class='hb-chip'>🎯 Meta <b>90%</b></span>
+            <div class='hb-stats'>
+                <div class='hb-stat'><span class='hb-sv'>{rango}</span><span class='hb-sl'>Período</span></div>
+                <div class='hb-sep'></div>
+                <div class='hb-stat'><span class='hb-sv'>90%</span><span class='hb-sl'>Meta</span></div>
             </div>
         </div>
         """, unsafe_allow_html=True)
