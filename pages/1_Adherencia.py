@@ -200,7 +200,7 @@ with st.sidebar:
 # ─────────────────────────────────────────────
 st.markdown(f"""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap');
     * {{ font-family: 'Inter', sans-serif !important; }}
     /* restaurar la fuente de íconos Material (si no, sale el texto "keyboard_double_arrow_right") */
     span[data-testid="stIconMaterial"],
@@ -212,11 +212,14 @@ st.markdown(f"""
     /* ocultar el menú automático del sidebar */
     [data-testid="stSidebarNav"] {{ display:none !important; }}
 
-    /* ── Fondo con patrón de puntos ── */
+    /* ── Fondo claro con tinte suave (idea de diseño de la home) ── */
     .main {{
-        background-color: {COLOR_BG};
-        background-image: radial-gradient(circle, #C8D6E3 1px, transparent 1px);
-        background-size: 28px 28px;
+        background:
+            radial-gradient(ellipse 55% 45% at 0% 0%,   rgba(14,165,233,0.07) 0%, transparent 55%),
+            radial-gradient(ellipse 50% 45% at 100% 6%, rgba(139,92,246,0.07) 0%, transparent 55%),
+            radial-gradient(ellipse 60% 50% at 90% 100%, rgba(52,211,153,0.05) 0%, transparent 55%),
+            #F4F7FB;
+        background-attachment: fixed;
     }}
     .block-container {{ padding-top: 2rem; padding-bottom: 1rem; }}
 
@@ -287,34 +290,53 @@ st.markdown(f"""
         font-size: 12px; font-weight: 700; color: white;
         white-space: nowrap; letter-spacing: 0.02em;
     }}
-    /* ── Banner con botones de menú (contenedor keyed) ── */
+    /* ── HEADER · banner grande con fondo aurora del sidebar ── */
     .st-key-hdrbanner {{
+        position: relative; overflow: hidden;
         background:
-            repeating-linear-gradient(-45deg, rgba(255,255,255,0) 0px, rgba(255,255,255,0) 12px,
-                rgba(255,255,255,0.025) 12px, rgba(255,255,255,0.025) 13px),
-            radial-gradient(ellipse at 15% 50%, rgba(255,255,255,0.14) 0%, transparent 55%),
-            radial-gradient(ellipse at 85% 80%, rgba(0,0,0,0.20) 0%, transparent 55%),
-            linear-gradient(120deg, {COLOR_PRIMARY} 0%, #0EA5E9 100%);
-        border-radius: 16px; padding: 20px 28px; margin-bottom: 22px;
-        box-shadow: 0 6px 28px rgba(40,5,63,0.30);
+            linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px),
+            radial-gradient(ellipse 70% 130% at 2% -15%,  rgba(14,165,233,0.34) 0%, transparent 60%),
+            radial-gradient(ellipse 65% 130% at 100% 120%, rgba(129,140,248,0.34) 0%, transparent 60%),
+            radial-gradient(ellipse 55% 110% at 72% 130%,  rgba(52,211,153,0.16) 0%, transparent 60%),
+            linear-gradient(155deg, #0B0518 0%, #14082b 50%, #0A0414 100%);
+        background-size: 42px 42px, 42px 42px, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+        border: 1px solid rgba(255,255,255,0.10);
+        border-radius: 24px; padding: 38px 44px; margin-bottom: 26px;
+        box-shadow: 0 24px 60px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.08);
     }}
+    .hb-eyebrow {{ display:inline-flex;align-items:center;gap:9px;
+        background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.16);
+        border-radius:99px;padding:6px 15px;margin-bottom:16px;
+        font-size:10.5px;font-weight:700;color:rgba(255,255,255,0.78);
+        letter-spacing:0.12em;text-transform:uppercase; }}
+    .hb-dot {{ width:7px;height:7px;border-radius:50%;background:#34D399;
+        box-shadow:0 0 9px #34D399;animation:sbcPulse 1.8s ease-in-out infinite; }}
+    .hb-title {{ font-family:'Space Grotesk',sans-serif!important;
+        font-size:38px;font-weight:700;color:white;margin:0 0 12px;
+        letter-spacing:-1.2px;line-height:1.04; }}
+    .hb-title .g {{ background:linear-gradient(90deg,#38BDF8,#818CF8,#34D399);
+        -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text; }}
+    .hb-sub {{ font-size:13.5px;color:rgba(255,255,255,0.62);margin:0;line-height:1.55; }}
+    .hb-sub b {{ color:rgba(255,255,255,0.92);font-weight:700; }}
+    /* botones del menú · más chicos */
     .st-key-hdrbanner [data-testid="stButton"] > button {{
-        background: rgba(255,255,255,0.16) !important;
-        border: 1px solid rgba(255,255,255,0.32) !important;
-        color: white !important; border-radius: 12px !important;
-        font-size: 12.5px !important; font-weight: 700 !important; height: 42px !important;
+        background: rgba(255,255,255,0.08) !important;
+        border: 1px solid rgba(255,255,255,0.20) !important;
+        color: white !important; border-radius: 10px !important;
+        font-size: 11.5px !important; font-weight: 700 !important; height: 38px !important;
+        min-height: 38px !important; padding: 0 8px !important;
         transition: transform .2s ease, background .2s ease, border-color .2s ease !important;
     }}
     .st-key-hdrbanner [data-testid="stButton"] > button:hover {{
-        background: rgba(255,255,255,0.30) !important;
-        border-color: rgba(255,255,255,0.55) !important; transform: translateY(-2px) !important;
+        background: rgba(255,255,255,0.18) !important;
+        border-color: rgba(56,189,248,0.55) !important; transform: translateY(-2px) !important;
     }}
     /* botón de la página actual (Adherencia, 3ª columna) resaltado */
     .st-key-hdrbanner div[data-testid="column"]:nth-of-type(3) [data-testid="stButton"] > button,
     .st-key-hdrbanner div[data-testid="stColumn"]:nth-of-type(3) [data-testid="stButton"] > button {{
-        background: rgba(255,255,255,0.92) !important; color: {COLOR_PRIMARY} !important;
-        border-color: white !important; box-shadow: 0 6px 18px rgba(0,0,0,0.18) !important;
-    }}
+        background: linear-gradient(135deg,#38BDF8,#818CF8) !important; color: white !important;
+        border-color: transparent !important; box-shadow: 0 8px 22px -6px rgba(56,189,248,0.6) !important; }}
 
     /* ── KPI cards ── */
     .kpi-card {{
@@ -363,7 +385,7 @@ st.markdown(f"""
         z-index: 0;
     }}
     .kpi-label {{ font-size: 10px; color: #94A3B8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; position: relative; z-index: 1; }}
-    .kpi-value {{ font-size: 32px; font-weight: 900; line-height: 1.1; margin: 10px 0 4px; position: relative; z-index: 1; }}
+    .kpi-value {{ font-family:'Space Grotesk',sans-serif!important; font-size: 33px; font-weight: 700; line-height: 1.1; margin: 10px 0 4px; position: relative; z-index: 1; letter-spacing:-0.5px; }}
     .kpi-sub   {{ font-size: 11px; color: #CBD5E1; position: relative; z-index: 1; }}
     .kpi-bar-wrap {{ background: #F1F5F9; border-radius: 99px; height: 5px; margin-top: 12px; overflow: hidden; position: relative; z-index: 1; }}
     .kpi-bar-fill {{ height: 5px; border-radius: 99px; }}
@@ -433,8 +455,9 @@ st.markdown(f"""
         position: relative; z-index: 1;
     }}
     .sec-meta-val {{
-        font-size: 22px; font-weight: 900;
-        line-height: 1.1; margin-bottom: 2px;
+        font-family:'Space Grotesk',sans-serif!important;
+        font-size: 23px; font-weight: 700;
+        line-height: 1.1; margin-bottom: 2px; letter-spacing:-0.5px;
     }}
     .sec-meta-lab {{
         font-size: 9px; font-weight: 700;
@@ -859,11 +882,12 @@ _home_pg = st.Page("home.py", title="Inicio", icon="🏠", default=True)
 _ocu_pg  = st.Page("pages/2_Ocupacion.py", title="Ocupación", icon="📊")
 
 with st.container(key="hdrbanner"):
-    htitle, hb1, hb2, hb3 = st.columns([3.2, 1, 1.2, 1.15], vertical_alignment="center")
+    htitle, hb1, hb2, hb3 = st.columns([4.4, 1, 1.15, 1.05], vertical_alignment="center")
     with htitle:
         st.markdown(f"""
-        <div class='header-title'>TABLERO DE SEGUIMIENTO WORKFORCE MANAGEMENT · UNIMINUTO 2026</div>
-        <div class='header-sub'>📅 {rango} &nbsp;|&nbsp; 👤 {filtro_txt}</div>
+        <div class='hb-eyebrow'><span class='hb-dot'></span>Centro de Control · Uniminuto 2026</div>
+        <div class='hb-title'>Tablero de <span class='g'>Adherencia</span></div>
+        <div class='hb-sub'>📅 <b>{rango}</b> &nbsp;·&nbsp; 👤 {filtro_txt}</div>
         """, unsafe_allow_html=True)
     with hb1:
         if st.button("🏠 Inicio", key="hdr_home", use_container_width=True):
