@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import base64
 
 st.set_page_config(
@@ -341,39 +342,6 @@ st.markdown(f"""
         width: 6px; height: 6px; border-radius: 50%;
         background: var(--mc, {COLOR_PRIMARY}); flex-shrink: 0;
     }}
-    /* Navigation buttons (pure HTML anchors) */
-    .mod-nav-btn {{
-        display: block;
-        text-align: center;
-        padding: 13px 20px;
-        border-radius: 12px;
-        font-weight: 700;
-        font-size: 13px;
-        text-decoration: none !important;
-        cursor: pointer;
-        transition: transform 0.18s ease, box-shadow 0.18s ease;
-        position: relative; z-index: 1;
-    }}
-    .mod-nav-primary {{
-        background: linear-gradient(135deg, {COLOR_PRIMARY}, {COLOR_ACCENT});
-        color: white !important;
-        box-shadow: 0 4px 14px rgba(14,165,233,0.30);
-    }}
-    .mod-nav-primary:hover {{
-        transform: translateY(-2px);
-        box-shadow: 0 8px 22px rgba(14,165,233,0.42);
-        color: white !important;
-    }}
-    .mod-nav-secondary {{
-        background: white;
-        color: #64748B !important;
-        border: 2px solid #E2E8F0;
-    }}
-    .mod-nav-secondary:hover {{
-        border-color: #8B5CF6;
-        color: #8B5CF6 !important;
-        transform: translateY(-2px);
-    }}
 
     /* Stats row at bottom of page */
     .home-stats {{
@@ -458,9 +426,22 @@ with col1:
             <div class='mod-feat'><span class='mod-feat-dot' style='--mc:#0EA5E9'></span>Ranking y comparativo por supervisor</div>
             <div class='mod-feat'><span class='mod-feat-dot' style='--mc:#0EA5E9'></span>Tablas de planificación y excesos</div>
         </div>
-        <a href='/Adherencia' target='_self' class='mod-nav-btn mod-nav-primary'>🎯&nbsp;&nbsp;Abrir módulo de Adherencia →</a>
     </div>
     """, unsafe_allow_html=True)
+    components.html("""
+    <style>
+      body { margin:0; padding:0; }
+      .nb { display:block; width:100%; text-align:center; padding:13px 20px;
+            border-radius:12px; background:linear-gradient(135deg,#28053F,#0EA5E9);
+            color:white; font-weight:700; font-size:14px; font-family:Inter,sans-serif;
+            border:none; cursor:pointer; box-shadow:0 4px 14px rgba(14,165,233,0.30);
+            transition:transform .18s,box-shadow .18s; box-sizing:border-box; }
+      .nb:hover { transform:translateY(-2px); box-shadow:0 8px 22px rgba(14,165,233,0.42); }
+    </style>
+    <button class="nb" onclick="window.parent.location.href='/Adherencia'">
+      🎯 &nbsp; Abrir módulo de Adherencia →
+    </button>
+    """, height=55)
 
 with col2:
     st.markdown("""
@@ -482,9 +463,23 @@ with col2:
             <div class='mod-feat'><span class='mod-feat-dot' style='--mc:#8B5CF6'></span>Cobertura y nivel de servicio</div>
             <div class='mod-feat'><span class='mod-feat-dot' style='--mc:#8B5CF6'></span>Próximamente disponible</div>
         </div>
-        <a href='/Ocupacion' target='_self' class='mod-nav-btn mod-nav-secondary'>📊&nbsp;&nbsp;Ver módulo de Ocupación →</a>
     </div>
     """, unsafe_allow_html=True)
+    components.html("""
+    <style>
+      body { margin:0; padding:0; }
+      .nb { display:block; width:100%; text-align:center; padding:13px 20px;
+            border-radius:12px; background:white; color:#64748B;
+            font-weight:700; font-size:14px; font-family:Inter,sans-serif;
+            border:2px solid #E2E8F0; cursor:pointer;
+            transition:transform .18s,border-color .18s,color .18s;
+            box-sizing:border-box; }
+      .nb:hover { transform:translateY(-2px); border-color:#8B5CF6; color:#8B5CF6; }
+    </style>
+    <button class="nb" onclick="window.parent.location.href='/Ocupacion'">
+      📊 &nbsp; Ver módulo de Ocupación →
+    </button>
+    """, height=55)
 
 # ─────────────────────────────────────────────
 # STATS ROW
