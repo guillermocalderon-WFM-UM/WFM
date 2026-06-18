@@ -341,13 +341,33 @@ st.markdown(f"""
         width: 6px; height: 6px; border-radius: 50%;
         background: var(--mc, {COLOR_PRIMARY}); flex-shrink: 0;
     }}
-    /* Streamlit button wrapper overrides */
-    div[data-testid="stPageLink"] a,
-    div[data-testid="stPageLink"] a:hover {{
-        text-decoration: none !important;
+    /* Streamlit buttons in module cards */
+    div[data-testid="stButton"] > button {{
+        border-radius: 12px !important;
+        font-weight: 700 !important;
+        font-size: 13px !important;
+        letter-spacing: 0.01em !important;
+        height: 44px !important;
+        transition: transform 0.18s ease, box-shadow 0.18s ease !important;
     }}
-    div[data-testid="stPageLink"] a p {{
-        font-size: 13px !important; font-weight: 700 !important;
+    div[data-testid="stButton"] > button[kind="primary"] {{
+        background: linear-gradient(135deg, {COLOR_PRIMARY}, {COLOR_ACCENT}) !important;
+        border: none !important;
+        box-shadow: 0 4px 14px rgba(14,165,233,0.30) !important;
+    }}
+    div[data-testid="stButton"] > button[kind="primary"]:hover {{
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 22px rgba(14,165,233,0.40) !important;
+    }}
+    div[data-testid="stButton"] > button[kind="secondary"] {{
+        background: white !important;
+        border: 2px solid #E2E8F0 !important;
+        color: #64748B !important;
+    }}
+    div[data-testid="stButton"] > button[kind="secondary"]:hover {{
+        border-color: #8B5CF6 !important;
+        color: #8B5CF6 !important;
+        transform: translateY(-2px) !important;
     }}
 
     /* Stats row at bottom of page */
@@ -435,7 +455,8 @@ with col1:
         </div>
     </div>
     """, unsafe_allow_html=True)
-    st.page_link("pages/1_Adherencia.py", label="Abrir módulo de Adherencia →", icon="🎯")
+    if st.button("🎯  Abrir módulo de Adherencia →", use_container_width=True, key="btn_adh", type="primary"):
+        st.switch_page("pages/1_Adherencia.py")
 
 with col2:
     st.markdown("""
@@ -459,7 +480,8 @@ with col2:
         </div>
     </div>
     """, unsafe_allow_html=True)
-    st.page_link("pages/2_Ocupacion.py", label="Ver módulo de Ocupación →", icon="📊")
+    if st.button("📊  Ver módulo de Ocupación →", use_container_width=True, key="btn_ocu"):
+        st.switch_page("pages/2_Ocupacion.py")
 
 # ─────────────────────────────────────────────
 # STATS ROW
