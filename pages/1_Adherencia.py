@@ -336,43 +336,54 @@ st.markdown(f"""
     .hb-live i {{ position:relative; width:6px; height:6px; border-radius:50%; background:#34D399; font-style:normal; }}
     .hb-live i::after {{ content:""; position:absolute; inset:-3px; border-radius:50%;
         border:1px solid rgba(52,211,153,.6); animation:hbRadar 1.8s ease-out infinite; }}
-    .hb-title {{ margin:8px 0 0; padding:0; font-family:'Space Grotesk','Inter',sans-serif;
-        font-size:27px; font-weight:700; line-height:1.06; letter-spacing:-.01em;
+    .hb-title {{ margin:9px 0 0; padding:0; font-family:'Space Grotesk','Inter',sans-serif;
+        font-size:27px; font-weight:700; line-height:1.05; letter-spacing:-.015em;
         display:inline-block; position:relative;
         background:linear-gradient(92deg,#7DD3FC,#38BDF8,#60A5FA);
         background-size:200% auto;
         -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent;
         animation:hbShine 6s linear infinite; }}
-    .hb-meta {{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }}
-    .hb-chip {{ display:inline-flex; align-items:center; gap:6px;
-        font-family:'Inter',sans-serif; font-size:11.5px; font-weight:500; color:#D9DEF7;
-        padding:5px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.11);
-        background:rgba(255,255,255,0.05); }}
+    .hb-subtitle {{ margin:6px 0 0; padding:0; font-family:'Inter',sans-serif;
+        font-size:13.5px; font-weight:500; color:rgba(255,255,255,0.85); line-height:1.4; }}
+    .hb-meta {{ display:flex; flex-wrap:wrap; gap:8px; margin-top:13px; }}
+    .hb-chip {{ display:inline-flex; align-items:center; gap:7px;
+        font-family:'Inter',sans-serif; font-size:11.5px; font-weight:600; color:#E2E8F8;
+        padding:6px 13px; border-radius:10px; border:1px solid rgba(255,255,255,0.12);
+        background:linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03));
+        box-shadow:inset 0 1px 0 rgba(255,255,255,0.07); }}
     .hb-chip b {{ color:#fff; font-weight:700; }}
 
     /* navegación · grilla 2×2 a la derecha */
     .st-key-hdrbanner [data-testid="stHorizontalBlock"] {{ gap:8px !important; }}
     .st-key-hdrbanner [data-testid="stVerticalBlock"] {{ gap:8px !important; }}
-    .menu-cap {{ font-family:'Space Grotesk','Inter',sans-serif; font-size:9.5px; font-weight:800;
-        letter-spacing:.16em; text-transform:uppercase; color:rgba(199,210,254,0.55); margin:0 0 2px; }}
+    .menu-cap {{ display:flex; align-items:center; gap:7px;
+        font-family:'Space Grotesk','Inter',sans-serif; font-size:9.5px; font-weight:800;
+        letter-spacing:.18em; text-transform:uppercase; color:rgba(199,210,254,0.55); margin:0 0 4px; }}
+    .menu-cap::after {{ content:''; flex:1; height:1px;
+        background:linear-gradient(90deg, rgba(129,140,248,0.30), transparent); }}
     .st-key-hdrbanner [data-testid="stButton"] > button {{
-        position:relative; z-index:2; width:100%;
+        position:relative; z-index:2; width:100%; overflow:hidden;
         font-family:'Space Grotesk','Inter',sans-serif !important; font-size:12.5px !important; font-weight:600 !important;
-        color:#C7D0F0 !important; padding:9px 12px !important; border-radius:11px !important; height:auto !important; min-height:0 !important;
-        border:1px solid rgba(255,255,255,0.10) !important; background:rgba(255,255,255,0.05) !important; white-space:nowrap !important;
-        box-shadow:inset 0 1px 0 rgba(255,255,255,0.06) !important;
-        transition:transform .18s ease, background .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease !important;
+        color:#CBD3F2 !important; padding:10px 14px !important; border-radius:12px !important; height:auto !important; min-height:0 !important;
+        border:1px solid rgba(255,255,255,0.12) !important; white-space:nowrap !important;
+        background:linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03)) !important;
+        box-shadow:inset 0 1px 0 rgba(255,255,255,0.09) !important;
+        transition:transform .2s ease, background .2s ease, border-color .2s ease, color .2s ease, box-shadow .2s ease !important;
     }}
     .st-key-hdrbanner [data-testid="stButton"] > button:hover {{
-        color:#F4F6FF !important; border-color:rgba(129,140,248,0.5) !important; background:rgba(129,140,248,0.14) !important;
-        transform:translateY(-2px) !important; box-shadow:0 8px 18px -8px rgba(56,189,248,0.55) !important; }}
+        color:#FFFFFF !important; border-color:rgba(129,140,248,0.6) !important;
+        background:linear-gradient(180deg, rgba(129,140,248,0.20), rgba(56,189,248,0.10)) !important;
+        transform:translateY(-2px) !important; box-shadow:0 10px 22px -10px rgba(56,189,248,0.6) !important; }}
     .st-key-hdrbanner [data-testid="stButton"] > button[kind="primary"] {{
-        color:#fff !important; font-weight:700 !important; border:1px solid rgba(56,189,248,0.55) !important;
-        background:linear-gradient(92deg, rgba(56,189,248,0.34), rgba(129,140,248,0.30)) !important;
-        box-shadow:0 8px 20px -8px rgba(56,189,248,0.75) !important; }}
+        color:#fff !important; font-weight:700 !important; border:1px solid rgba(56,189,248,0.65) !important;
+        background:linear-gradient(135deg, rgba(56,189,248,0.40), rgba(129,140,248,0.32)) !important;
+        box-shadow:0 10px 24px -10px rgba(56,189,248,0.85), inset 0 1px 0 rgba(255,255,255,0.20) !important; }}
+    .st-key-hdrbanner [data-testid="stButton"] > button[kind="primary"]::after {{
+        content:""; position:absolute; left:0; top:0; bottom:0; width:3px;
+        background:linear-gradient(#38BDF8,#818CF8); box-shadow:0 0 10px rgba(56,189,248,0.9); }}
     .st-key-hdrbanner [data-testid="stButton"] > button[kind="primary"]:hover {{
         transform:translateY(-2px) !important;
-        background:linear-gradient(92deg, rgba(56,189,248,0.44), rgba(129,140,248,0.38)) !important; }}
+        background:linear-gradient(135deg, rgba(56,189,248,0.50), rgba(129,140,248,0.40)) !important; }}
 
     /* keyframes del header */
     @keyframes hbBar {{ 0% {{ background-position:0% 0; }} 100% {{ background-position:220% 0; }} }}
@@ -942,9 +953,10 @@ with st.container(key="hdrbanner"):
                 <span class='hb-live'><i></i>LIVE</span>
             </div>
             <h1 class='hb-title'>Módulo de Adherencia</h1>
+            <p class='hb-subtitle'>Detalle de adherencia por supervisor y experto</p>
             <div class='hb-meta'>
                 <span class='hb-chip'>📅 <b>{rango}</b></span>
-                <span class='hb-chip'>👤 {filtro_txt}</span>
+                <span class='hb-chip'>🎯 Meta <b>90%</b></span>
             </div>
         </div>
         """, unsafe_allow_html=True)
