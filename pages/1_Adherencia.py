@@ -300,29 +300,49 @@ st.markdown(f"""
     .st-key-hdrbanner {{
         position:relative; overflow:hidden; isolation:isolate;
         border-radius:20px; padding:18px 28px 20px; margin-bottom:16px;
-        border:1px solid rgba(255,255,255,0.12);
-        background:
-            linear-gradient(150deg, rgba(56,189,248,0.16) 0%, rgba(129,140,248,0.12) 52%, rgba(56,189,248,0.05) 100%),
-            linear-gradient(150deg, #1b1545 0%, #241c54 50%, #161138 100%);
-        box-shadow: 0 16px 46px -20px rgba(8,3,24,0.92), inset 0 1px 0 rgba(255,255,255,0.10);
+        border:1px solid rgba(255,255,255,0.11);
+        background: linear-gradient(150deg, #2b0b48 0%, #200838 52%, #150526 100%);
+        box-shadow:
+            0 1px 1px rgba(0,0,0,0.40),
+            0 6px 14px -8px rgba(8,3,24,0.70),
+            0 26px 60px -24px rgba(8,3,24,0.95),
+            0 2px 10px -6px rgba(56,189,248,0.16),
+            inset 0 1px 0 rgba(255,255,255,0.12),
+            inset 0 -1px 0 rgba(0,0,0,0.42),
+            inset 1px 0 0 rgba(255,255,255,0.04),
+            inset 0 -22px 40px -28px rgba(0,0,0,0.50);
     }}
-    /* difuminado azul sobre el morado (como el brand card del sidebar) */
+    /* ambiente: toque azul (derecha) + halo morado superior + viñeta */
     .st-key-hdrbanner::before {{
         content:""; position:absolute; inset:0; z-index:-1; pointer-events:none;
         background:
-            radial-gradient(380px 320px at 20% -35%, rgba(56,189,248,0.34), transparent 66%),
-            radial-gradient(320px 300px at 102% 120%, rgba(129,140,248,0.30), transparent 66%);
+            radial-gradient(440px 250px at 82% 38%, rgba(56,189,248,0.20), transparent 60%),
+            radial-gradient(260px 180px at 88% 30%, rgba(96,165,250,0.10), transparent 62%),
+            radial-gradient(620px 300px at 26% -12%, rgba(167,139,250,0.15), transparent 62%),
+            radial-gradient(140% 120% at 50% 116%, rgba(7,2,18,0.50), transparent 60%);
+        animation:hbAmbient 11s ease-in-out infinite;
+    }}
+    /* sheen de vidrio superior (bajo el contenido) */
+    .st-key-hdrbanner::after {{
+        content:""; position:absolute; inset:0; z-index:0; pointer-events:none; border-radius:inherit;
+        background:
+            linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.015) 18%, transparent 38%),
+            radial-gradient(120% 60% at 78% -10%, rgba(255,255,255,0.05), transparent 60%);
     }}
     .hb-head {{ position:relative; z-index:2; }}
     .hb-top {{ display:flex; align-items:center; flex-wrap:wrap; gap:8px; }}
     .hb-eyebrow {{
         display:inline-flex; align-items:center; gap:7px;
         font-family:'Space Grotesk','Inter',sans-serif; font-size:9.5px; font-weight:700;
-        letter-spacing:.14em; text-transform:uppercase; color:#C7D2FE;
-        padding:4px 12px; border-radius:999px; border:1px solid rgba(129,140,248,0.28);
-        background:linear-gradient(180deg, rgba(56,189,248,0.12), rgba(129,140,248,0.06)); }}
-    .hb-dot {{ width:7px; height:7px; border-radius:50%; background:#34D399;
-        box-shadow:0 0 0 0 rgba(52,211,153,0.55); animation:hbPulse 1.8s ease-out infinite; }}
+        letter-spacing:.14em; text-transform:uppercase; color:#DBE4FF;
+        padding:4px 13px; border-radius:999px;
+        border:1px solid rgba(129,140,248,0.30); border-top-color:rgba(173,184,255,0.45);
+        background:linear-gradient(180deg, rgba(56,189,248,0.15), rgba(129,140,248,0.05));
+        box-shadow:inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -6px 10px -8px rgba(13,4,32,0.55), 0 4px 12px -8px rgba(56,189,248,0.28); }}
+    .hb-dot {{ width:7px; height:7px; border-radius:50%;
+        background:radial-gradient(circle at 35% 30%, #6EE7B7, #10B981 70%);
+        box-shadow:0 0 0 1px rgba(52,211,153,0.30), 0 0 8px rgba(52,211,153,0.60);
+        animation:hbPulse 1.8s ease-out infinite; }}
     .hb-live {{ display:inline-flex; align-items:center; gap:6px;
         font-family:'Space Grotesk','Inter',sans-serif; font-size:9px; font-weight:700; letter-spacing:.16em;
         color:#7DE3C3; padding:3px 9px; border-radius:999px;
@@ -333,21 +353,28 @@ st.markdown(f"""
     .hb-title {{ margin:9px 0 2px; padding:0; font-family:'Space Grotesk',sans-serif !important;
         font-size:28px; font-weight:700; line-height:1.08; letter-spacing:-.015em;
         display:inline-block; position:relative;
-        background:linear-gradient(92deg,#7DD3FC,#38BDF8,#60A5FA);
+        background:linear-gradient(92deg,#8FD8FF,#38BDF8,#60A5FA);
         background-size:200% auto;
         -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent;
+        filter:drop-shadow(0 1px 0 rgba(0,0,0,0.35)) drop-shadow(0 3px 14px rgba(56,189,248,0.18));
         animation:hbShine 6s linear infinite; }}
     .hb-subtitle {{ margin:6px 0 0; padding:0; font-family:'Inter',sans-serif;
-        font-size:13.5px; font-weight:500; color:rgba(255,255,255,0.85); line-height:1.4; }}
+        font-size:13.5px; font-weight:500; color:rgba(255,255,255,0.85); line-height:1.4;
+        text-shadow:0 1px 2px rgba(0,0,0,0.35); }}
     .hb-stats {{ display:inline-flex; align-items:center; margin-top:14px;
-        background:rgba(0,0,0,0.22); border:1px solid rgba(255,255,255,0.09);
-        border-radius:13px; padding:9px 4px; box-shadow:inset 0 1px 0 rgba(255,255,255,0.05); }}
+        background:linear-gradient(180deg, rgba(255,255,255,0.045), rgba(0,0,0,0.10)), rgba(0,0,0,0.26);
+        border:1px solid rgba(255,255,255,0.08); border-radius:13px; padding:9px 4px;
+        box-shadow:inset 0 1px 3px rgba(0,0,0,0.42), inset 0 -1px 0 rgba(255,255,255,0.06), 0 6px 16px -10px rgba(8,3,24,0.65); }}
     .hb-stat {{ padding:0 18px; text-align:center; }}
     .hb-sv {{ display:block; font-family:'Space Grotesk',sans-serif !important;
-        font-size:14px; font-weight:700; color:#fff; line-height:1; margin-bottom:4px; }}
+        font-size:14px; font-weight:700; color:#fff; line-height:1; margin-bottom:4px;
+        text-shadow:0 1px 0 rgba(0,0,0,0.40); }}
     .hb-sl {{ display:block; font-size:8.5px; font-weight:700; letter-spacing:.14em;
-        text-transform:uppercase; color:rgba(255,255,255,0.42); }}
-    .hb-sep {{ width:1px; height:26px; background:rgba(255,255,255,0.10); flex-shrink:0; }}
+        text-transform:uppercase; color:rgba(255,255,255,0.48); }}
+    .hb-sep {{ width:1px; height:26px; flex-shrink:0;
+        background:linear-gradient(180deg, transparent, rgba(255,255,255,0.16) 50%, transparent); }}
+    .hb-stats .hb-stat:last-child .hb-sv {{ color:#7DD3FC; text-shadow:0 0 10px rgba(56,189,248,0.32); }}
+    .hb-stats .hb-stat:last-child .hb-sl {{ color:rgba(125,211,252,0.60); }}
 
     /* navegación · grilla 2×2 a la derecha */
     .st-key-hdrbanner [data-testid="stHorizontalBlock"] {{ gap:8px !important; }}
