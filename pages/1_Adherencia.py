@@ -296,79 +296,68 @@ st.markdown(f"""
         font-size: 12px; font-weight: 700; color: white;
         white-space: nowrap; letter-spacing: 0.02em;
     }}
-    /* ══ HEADER · "Aurora Deck" compacto (data / LIVE) ══ */
+    /* ══ HEADER · "Aurora Glass Deck" (estilo brand card · sin cuadrícula) ══ */
     .st-key-hdrbanner {{
         position:relative; overflow:hidden; isolation:isolate;
-        border-radius:18px; padding:14px 24px; margin-bottom:16px;
-        border:1px solid rgba(129,140,248,0.18);
+        border-radius:20px; padding:16px 26px 18px; margin-bottom:16px;
+        border:1px solid rgba(255,255,255,0.12);
         background:
-            radial-gradient(ellipse 70% 130% at 2% -15%,  rgba(14,165,233,0.30), transparent 60%),
-            radial-gradient(ellipse 65% 130% at 100% 120%, rgba(129,140,248,0.30), transparent 60%),
-            radial-gradient(ellipse 55% 110% at 72% 130%,  rgba(52,211,153,0.13), transparent 60%),
-            linear-gradient(155deg, #0B0518, #14082b 50%, #0A0414);
-        box-shadow: 0 14px 40px -22px rgba(8,3,24,0.9), inset 0 1px 0 rgba(255,255,255,0.05);
+            linear-gradient(145deg, rgba(56,189,248,0.13) 0%, rgba(129,140,248,0.10) 55%, rgba(52,211,153,0.07) 100%),
+            linear-gradient(155deg, #0B0518, #14082b 52%, #0A0414);
+        box-shadow: 0 16px 46px -20px rgba(8,3,24,0.92), inset 0 1px 0 rgba(255,255,255,0.10);
     }}
-    /* textura: retícula HUD + barras-stream (data-viz) */
+    /* orbes de color (glow) — el "llamativo" del brand card, sin cuadrícula */
     .st-key-hdrbanner::before {{
-        content:""; position:absolute; inset:0; z-index:-2;
-        background-image:
-            linear-gradient(rgba(129,140,248,0.045) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(129,140,248,0.045) 1px, transparent 1px),
-            repeating-linear-gradient(90deg, rgba(56,189,248,0.09) 0 2px, transparent 2px 13px);
-        background-size:32px 32px, 32px 32px, 13px 100%;
-        background-position:0 0, 0 0, left bottom;
-        background-repeat:repeat, repeat, repeat-x;
-        -webkit-mask-image:radial-gradient(ellipse 95% 130% at 25% 0%, #000 30%, transparent 75%);
-                mask-image:radial-gradient(ellipse 95% 130% at 25% 0%, #000 30%, transparent 75%);
-        opacity:.55;
+        content:""; position:absolute; inset:0; z-index:-1; pointer-events:none;
+        background:
+            radial-gradient(230px 210px at 9% -35%, rgba(56,189,248,0.30), transparent 70%),
+            radial-gradient(210px 210px at 89% 150%, rgba(129,140,248,0.30), transparent 70%),
+            radial-gradient(160px 160px at 64% 165%, rgba(52,211,153,0.18), transparent 70%);
     }}
-    /* watermark del ícono */
+    /* watermark del ícono, tenue */
     .st-key-hdrbanner::after {{
-        content:"🎯"; position:absolute; right:-20px; top:50%; transform:translateY(-50%);
-        z-index:-1; font-size:140px; line-height:1; opacity:.06;
-        filter:blur(1px); pointer-events:none;
-        -webkit-mask-image:linear-gradient(90deg, transparent, #000 62%);
-                mask-image:linear-gradient(90deg, transparent, #000 62%);
+        content:"🎯"; position:absolute; right:-16px; top:50%; transform:translateY(-50%);
+        z-index:-1; font-size:128px; line-height:1; opacity:.07; filter:blur(.5px); pointer-events:none;
+        -webkit-mask-image:linear-gradient(90deg, transparent, #000 66%);
+                mask-image:linear-gradient(90deg, transparent, #000 66%);
         animation:hbFloat 9s ease-in-out infinite;
     }}
-    /* línea superior con glow (segura, sin mask-composite) */
+    /* barra de arcoíris animada (firma del brand card) */
     .hb-scan {{
-        position:absolute; top:0; left:0; right:0; height:2px; z-index:3;
-        background:linear-gradient(90deg, transparent, #38BDF8 20%, #818CF8 45%, #34D399 62%, transparent 90%);
-        background-size:220% 100%; animation:hbScan 6s linear infinite;
-    }}
+        position:absolute; bottom:0; left:0; right:0; height:3px; z-index:3;
+        background:linear-gradient(90deg,#38BDF8,#818CF8,#34D399,#F59E0B,#38BDF8);
+        background-size:300% 100%; animation:hbBar 4s linear infinite; }}
     .hb-head {{ position:relative; z-index:2; }}
     .hb-top {{ display:flex; align-items:center; flex-wrap:wrap; gap:8px; }}
     .hb-eyebrow {{
         display:inline-flex; align-items:center; gap:7px;
         font-family:'Space Grotesk','Inter',sans-serif; font-size:9.5px; font-weight:700;
         letter-spacing:.14em; text-transform:uppercase; color:#C7D2FE;
-        padding:4px 11px; border-radius:999px; border:1px solid rgba(129,140,248,0.26);
-        background:rgba(129,140,248,0.08); }}
+        padding:4px 12px; border-radius:999px; border:1px solid rgba(129,140,248,0.28);
+        background:linear-gradient(180deg, rgba(56,189,248,0.12), rgba(129,140,248,0.06)); }}
     .hb-dot {{ width:7px; height:7px; border-radius:50%; background:#34D399;
         box-shadow:0 0 0 0 rgba(52,211,153,0.55); animation:hbPulse 1.8s ease-out infinite; }}
     .hb-live {{ display:inline-flex; align-items:center; gap:6px;
         font-family:'Space Grotesk','Inter',sans-serif; font-size:9px; font-weight:700; letter-spacing:.16em;
         color:#7DE3C3; padding:3px 9px; border-radius:999px;
-        background:rgba(52,211,153,.08); border:1px solid rgba(52,211,153,.28); }}
+        background:rgba(52,211,153,.10); border:1px solid rgba(52,211,153,.30); }}
     .hb-live i {{ position:relative; width:6px; height:6px; border-radius:50%; background:#34D399; font-style:normal; }}
     .hb-live i::after {{ content:""; position:absolute; inset:-3px; border-radius:50%;
         border:1px solid rgba(52,211,153,.6); animation:hbRadar 1.8s ease-out infinite; }}
-    .hb-title {{ margin:7px 0 0; padding:0; font-family:'Space Grotesk','Inter',sans-serif;
-        font-size:25px; font-weight:700; line-height:1.05; letter-spacing:-.01em; color:#F4F5FF;
+    .hb-title {{ margin:8px 0 0; padding:0; font-family:'Space Grotesk','Inter',sans-serif;
+        font-size:26px; font-weight:700; line-height:1.05; letter-spacing:-.01em; color:#F4F5FF;
         display:inline-flex; align-items:center; gap:10px; position:relative; }}
-    .hb-title .hb-ic {{ font-size:22px; filter:drop-shadow(0 2px 8px rgba(56,189,248,0.5)); }}
-    .hb-title .hb-grad {{ position:relative;
-        background:linear-gradient(92deg, #38BDF8, #818CF8);
-        -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent; }}
-    .hb-title .hb-grad::after {{ content:""; position:absolute; left:0; right:0; bottom:-3px; height:2px; border-radius:2px;
-        background:linear-gradient(90deg, #38BDF8, #818CF8, transparent);
-        transform-origin:left; animation:hbUnderline 1s cubic-bezier(.2,.7,.2,1) .15s both; }}
-    .hb-meta {{ display:flex; flex-wrap:wrap; gap:8px; margin-top:9px; }}
+    .hb-title .hb-ic {{ font-size:23px; filter:drop-shadow(0 3px 10px rgba(56,189,248,0.55)); }}
+    .hb-title .hb-grad {{
+        background:linear-gradient(92deg,#38BDF8,#818CF8,#34D399,#38BDF8);
+        background-size:220% auto;
+        -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent;
+        animation:hbShine 4.5s linear infinite; }}
+    .hb-meta {{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }}
     .hb-chip {{ display:inline-flex; align-items:center; gap:6px;
         font-family:'Inter',sans-serif; font-size:11.5px; font-weight:500; color:#D9DEF7;
-        padding:5px 11px; border-radius:9px; border:1px solid rgba(255,255,255,0.10);
-        background:rgba(255,255,255,0.04); }}
+        padding:5px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.11);
+        background:rgba(255,255,255,0.05); }}
     .hb-chip b {{ color:#fff; font-weight:700; }}
 
     /* navegación · botones compactos a la izquierda */
@@ -395,11 +384,11 @@ st.markdown(f"""
         background:linear-gradient(92deg, rgba(56,189,248,0.42), rgba(129,140,248,0.38)) !important; }}
 
     /* keyframes del header */
-    @keyframes hbScan {{ 0% {{ background-position:120% 0; }} 100% {{ background-position:-120% 0; }} }}
+    @keyframes hbBar {{ 0% {{ background-position:0% 0; }} 100% {{ background-position:300% 0; }} }}
+    @keyframes hbShine {{ 0% {{ background-position:0% center; }} 100% {{ background-position:220% center; }} }}
     @keyframes hbFloat {{ 0%,100% {{ transform:translateY(-50%) rotate(-3deg); }} 50% {{ transform:translateY(-53%) rotate(3deg); }} }}
     @keyframes hbPulse {{ 0% {{ box-shadow:0 0 0 0 rgba(52,211,153,0.55); }} 70% {{ box-shadow:0 0 0 6px rgba(52,211,153,0); }} 100% {{ box-shadow:0 0 0 0 rgba(52,211,153,0); }} }}
     @keyframes hbRadar {{ 0% {{ transform:scale(.6); opacity:1; }} 100% {{ transform:scale(2.3); opacity:0; }} }}
-    @keyframes hbUnderline {{ from {{ transform:scaleX(0); opacity:0; }} to {{ transform:scaleX(1); opacity:1; }} }}
 
     /* ── KPI cards ── */
     .kpi-card {{
