@@ -306,16 +306,13 @@ st.markdown(f"""
             linear-gradient(155deg, #0B0518, #14082b 52%, #0A0414);
         box-shadow: 0 16px 46px -20px rgba(8,3,24,0.92), inset 0 1px 0 rgba(255,255,255,0.10);
     }}
-    /* figuras: orbes de glow + anillos geométricos (sin cuadrícula, sin ícono) */
+    /* orbes de glow (ambiente, sin cuadrícula ni ícono) */
     .st-key-hdrbanner::before {{
         content:""; position:absolute; inset:0; z-index:-1; pointer-events:none;
         background:
-            radial-gradient(circle at 89% 28%, transparent 0 33px, rgba(56,189,248,0.22) 34px 36px, transparent 37px),
-            radial-gradient(circle at 79% 88%, transparent 0 20px, rgba(129,140,248,0.20) 21px 23px, transparent 24px),
-            radial-gradient(circle at 96% 66%, transparent 0 11px, rgba(52,211,153,0.22) 12px 13px, transparent 14px),
-            radial-gradient(240px 220px at 8% -38%, rgba(56,189,248,0.30), transparent 70%),
-            radial-gradient(220px 220px at 93% 150%, rgba(129,140,248,0.28), transparent 70%),
-            radial-gradient(170px 170px at 66% 168%, rgba(52,211,153,0.16), transparent 70%);
+            radial-gradient(260px 240px at 3% -42%,  rgba(56,189,248,0.28), transparent 70%),
+            radial-gradient(240px 240px at 50% 165%, rgba(129,140,248,0.22), transparent 70%),
+            radial-gradient(200px 200px at 100% 140%, rgba(52,211,153,0.14), transparent 70%);
     }}
     /* barra de acento azul animada, anclada al fondo del banner (confiable) */
     .st-key-hdrbanner::after {{
@@ -353,28 +350,29 @@ st.markdown(f"""
         background:rgba(255,255,255,0.05); }}
     .hb-chip b {{ color:#fff; font-weight:700; }}
 
-    /* navegación · botones compactos a la izquierda */
-    .st-key-hdrbanner [data-testid="stHorizontalBlock"] {{ gap:8px !important; margin-top:12px; justify-content:flex-start; }}
-    .st-key-hdrbanner [data-testid="column"],
-    .st-key-hdrbanner [data-testid="stColumn"] {{ flex:0 0 auto !important; width:auto !important; min-width:0 !important; }}
+    /* navegación · grilla 2×2 a la derecha */
+    .st-key-hdrbanner [data-testid="stHorizontalBlock"] {{ gap:8px !important; }}
+    .st-key-hdrbanner [data-testid="stVerticalBlock"] {{ gap:8px !important; }}
+    .menu-cap {{ font-family:'Space Grotesk','Inter',sans-serif; font-size:9.5px; font-weight:800;
+        letter-spacing:.16em; text-transform:uppercase; color:rgba(199,210,254,0.55); margin:0 0 2px; }}
     .st-key-hdrbanner [data-testid="stButton"] > button {{
-        position:relative; z-index:2; width:auto;
-        font-family:'Space Grotesk','Inter',sans-serif !important; font-size:12px !important; font-weight:600 !important;
-        color:#C7D0F0 !important; padding:6px 13px !important; border-radius:9px !important; height:auto !important; min-height:0 !important;
-        border:1px solid rgba(255,255,255,0.10) !important; background:rgba(255,255,255,0.04) !important; white-space:nowrap !important;
-        box-shadow:inset 0 1px 0 rgba(255,255,255,0.05) !important;
-        transition:transform .18s ease, background .18s ease, border-color .18s ease, color .18s ease !important;
+        position:relative; z-index:2; width:100%;
+        font-family:'Space Grotesk','Inter',sans-serif !important; font-size:12.5px !important; font-weight:600 !important;
+        color:#C7D0F0 !important; padding:9px 12px !important; border-radius:11px !important; height:auto !important; min-height:0 !important;
+        border:1px solid rgba(255,255,255,0.10) !important; background:rgba(255,255,255,0.05) !important; white-space:nowrap !important;
+        box-shadow:inset 0 1px 0 rgba(255,255,255,0.06) !important;
+        transition:transform .18s ease, background .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease !important;
     }}
     .st-key-hdrbanner [data-testid="stButton"] > button:hover {{
-        color:#F4F6FF !important; border-color:rgba(129,140,248,0.5) !important; background:rgba(129,140,248,0.13) !important;
-        transform:translateY(-1px) !important; }}
+        color:#F4F6FF !important; border-color:rgba(129,140,248,0.5) !important; background:rgba(129,140,248,0.14) !important;
+        transform:translateY(-2px) !important; box-shadow:0 8px 18px -8px rgba(56,189,248,0.55) !important; }}
     .st-key-hdrbanner [data-testid="stButton"] > button[kind="primary"] {{
         color:#fff !important; font-weight:700 !important; border:1px solid rgba(56,189,248,0.55) !important;
-        background:linear-gradient(92deg, rgba(56,189,248,0.32), rgba(129,140,248,0.30)) !important;
-        box-shadow:0 6px 18px -8px rgba(56,189,248,0.7) !important; }}
+        background:linear-gradient(92deg, rgba(56,189,248,0.34), rgba(129,140,248,0.30)) !important;
+        box-shadow:0 8px 20px -8px rgba(56,189,248,0.75) !important; }}
     .st-key-hdrbanner [data-testid="stButton"] > button[kind="primary"]:hover {{
-        transform:translateY(-1px) !important;
-        background:linear-gradient(92deg, rgba(56,189,248,0.42), rgba(129,140,248,0.38)) !important; }}
+        transform:translateY(-2px) !important;
+        background:linear-gradient(92deg, rgba(56,189,248,0.44), rgba(129,140,248,0.38)) !important; }}
 
     /* keyframes del header */
     @keyframes hbBar {{ 0% {{ background-position:0% 0; }} 100% {{ background-position:220% 0; }} }}
@@ -935,31 +933,36 @@ _ocu_pg  = st.Page("pages/2_Ocupacion.py", title="Ocupación", icon="📊")
 _nov_pg  = st.Page("pages/3_Novedades.py", title="Novedades", icon="📢")
 
 with st.container(key="hdrbanner"):
-    st.markdown(f"""
-    <div class='hb-head'>
-        <div class='hb-top'>
-            <span class='hb-eyebrow'><span class='hb-dot'></span>Centro de Control · Uniminuto 2026</span>
-            <span class='hb-live'><i></i>LIVE</span>
+    hleft, hright = st.columns([1.55, 1.05], vertical_alignment="center")
+    with hleft:
+        st.markdown(f"""
+        <div class='hb-head'>
+            <div class='hb-top'>
+                <span class='hb-eyebrow'><span class='hb-dot'></span>Centro de Control · Uniminuto 2026</span>
+                <span class='hb-live'><i></i>LIVE</span>
+            </div>
+            <h1 class='hb-title'>Módulo de Adherencia</h1>
+            <div class='hb-meta'>
+                <span class='hb-chip'>📅 <b>{rango}</b></span>
+                <span class='hb-chip'>👤 {filtro_txt}</span>
+            </div>
         </div>
-        <h1 class='hb-title'>Módulo de Adherencia</h1>
-        <div class='hb-meta'>
-            <span class='hb-chip'>📅 <b>{rango}</b></span>
-            <span class='hb-chip'>👤 {filtro_txt}</span>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-    nb1, nb2, nb3, nb4, _nsp = st.columns([1.0, 1.35, 1.3, 1.3, 4.05], vertical_alignment="center")
-    with nb1:
-        if st.button("🏠 Inicio", key="hdr_home", use_container_width=True):
-            st.switch_page(_home_pg)
-    with nb2:
-        st.button("🎯 Adherencia", key="hdr_adh", use_container_width=True, type="primary")
-    with nb3:
-        if st.button("📊 Ocupación", key="hdr_ocu", use_container_width=True):
-            st.switch_page(_ocu_pg)
-    with nb4:
-        if st.button("📢 Novedades", key="hdr_nov", use_container_width=True):
-            st.switch_page(_nov_pg)
+        """, unsafe_allow_html=True)
+    with hright:
+        st.markdown("<div class='menu-cap'>⚡ Navegación</div>", unsafe_allow_html=True)
+        g1a, g1b = st.columns(2, gap="small")
+        with g1a:
+            if st.button("🏠 Inicio", key="hdr_home", use_container_width=True):
+                st.switch_page(_home_pg)
+        with g1b:
+            st.button("🎯 Adherencia", key="hdr_adh", use_container_width=True, type="primary")
+        g2a, g2b = st.columns(2, gap="small")
+        with g2a:
+            if st.button("📊 Ocupación", key="hdr_ocu", use_container_width=True):
+                st.switch_page(_ocu_pg)
+        with g2b:
+            if st.button("📢 Novedades", key="hdr_nov", use_container_width=True):
+                st.switch_page(_nov_pg)
 
 # ─────────────────────────────────────────────
 # KPIs GLOBALES
