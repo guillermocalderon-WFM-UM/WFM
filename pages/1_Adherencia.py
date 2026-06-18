@@ -312,7 +312,7 @@ st.markdown(f"""
     .hb-title {{ font-family:'Space Grotesk',sans-serif!important;
         font-size:38px;font-weight:700;color:white;margin:0 0 12px;
         letter-spacing:-1.2px;line-height:1.04; }}
-    .hb-title .g {{ background:linear-gradient(90deg,#38BDF8,#818CF8,#34D399);
+    .hb-title .g {{ background:linear-gradient(90deg,#FBBF24,#FB923C,#F97316);
         -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text; }}
     .hb-sub {{ font-size:13.5px;color:rgba(255,255,255,0.62);margin:0;line-height:1.55; }}
     .hb-sub b {{ color:rgba(255,255,255,0.92);font-weight:700; }}
@@ -324,13 +324,13 @@ st.markdown(f"""
         background:linear-gradient(90deg,transparent,rgba(255,255,255,0.18)); }}
     /* espaciado compacto: los 3 botones forman un bloque ── */
     .st-key-hdrbanner [data-testid="stVerticalBlock"] {{ gap: 0.45rem !important; }}
-    /* botones del menú · más grandes */
+    /* botones del menú */
     .st-key-hdrbanner [data-testid="stButton"] > button {{
         background: rgba(255,255,255,0.08) !important;
         border: 1px solid rgba(255,255,255,0.18) !important;
-        color: rgba(255,255,255,0.92) !important; border-radius: 12px !important;
-        font-size: 13px !important; font-weight: 700 !important;
-        height: 50px !important; min-height: 50px !important; padding: 0 8px !important;
+        color: rgba(255,255,255,0.92) !important; border-radius: 11px !important;
+        font-size: 12px !important; font-weight: 700 !important;
+        height: 42px !important; min-height: 42px !important; padding: 0 6px !important;
         box-shadow: inset 0 1px 0 rgba(255,255,255,0.06) !important;
         transition: transform .2s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease !important;
     }}
@@ -900,7 +900,7 @@ _home_pg = st.Page("home.py", title="Inicio", icon="🏠", default=True)
 _ocu_pg  = st.Page("pages/2_Ocupacion.py", title="Ocupación", icon="📊")
 
 with st.container(key="hdrbanner"):
-    htitle, hmenu = st.columns([2.25, 1.75], vertical_alignment="center")
+    htitle, hmenu, _hsp = st.columns([2.5, 1.35, 0.35], vertical_alignment="center")
     with htitle:
         st.markdown(f"""
         <div class='hb-eyebrow'><span class='hb-dot'></span>Centro de Control · Uniminuto 2026</div>
@@ -1109,7 +1109,7 @@ with c2:
 # COMPARATIVO POR SUPERVISOR
 # ─────────────────────────────────────────────
 st.markdown(f"""
-<div class='sec-header' style='--sc:{COLOR_PRIMARY}'>
+<div class='sec-header' style='--sc:{COLOR_PRIMARY}; background:radial-gradient(ellipse 95% 60% at 6% 0%, rgba(14,165,233,0.30) 0%, transparent 55%), radial-gradient(ellipse 90% 70% at 100% 120%, rgba(129,140,248,0.32) 0%, transparent 55%), radial-gradient(ellipse 80% 70% at 55% 130%, rgba(52,211,153,0.14) 0%, transparent 55%), linear-gradient(150deg, #0B0518 0%, #1a0b34 50%, #0A0414 100%)'>
     <div class='sec-wash'></div>
     <div class='sec-icon' style='background:linear-gradient(135deg,rgba(40,5,63,0.20),rgba(40,5,63,0.06))'>👥</div>
     <div class='sec-text'>
