@@ -290,19 +290,16 @@ st.markdown(f"""
         font-size: 12px; font-weight: 700; color: white;
         white-space: nowrap; letter-spacing: 0.02em;
     }}
-    /* ── HEADER · banner grande con fondo aurora del sidebar ── */
+    /* ── HEADER · banner grande con fondo aurora del sidebar (sin cuadrícula) ── */
     .st-key-hdrbanner {{
         position: relative; overflow: hidden;
         background:
-            linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px),
             radial-gradient(ellipse 70% 130% at 2% -15%,  rgba(14,165,233,0.34) 0%, transparent 60%),
             radial-gradient(ellipse 65% 130% at 100% 120%, rgba(129,140,248,0.34) 0%, transparent 60%),
             radial-gradient(ellipse 55% 110% at 72% 130%,  rgba(52,211,153,0.16) 0%, transparent 60%),
             linear-gradient(155deg, #0B0518 0%, #14082b 50%, #0A0414 100%);
-        background-size: 42px 42px, 42px 42px, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
         border: 1px solid rgba(255,255,255,0.10);
-        border-radius: 24px; padding: 38px 44px; margin-bottom: 26px;
+        border-radius: 24px; padding: 36px 42px; margin-bottom: 26px;
         box-shadow: 0 24px 60px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.08);
     }}
     .hb-eyebrow {{ display:inline-flex;align-items:center;gap:9px;
@@ -319,31 +316,40 @@ st.markdown(f"""
         -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text; }}
     .hb-sub {{ font-size:13.5px;color:rgba(255,255,255,0.62);margin:0;line-height:1.55; }}
     .hb-sub b {{ color:rgba(255,255,255,0.92);font-weight:700; }}
-    /* botones del menú · más chicos */
+    /* etiqueta "Menú" encima de los botones */
+    .menu-lbl {{ display:flex;align-items:center;justify-content:flex-end;gap:7px;
+        font-size:10px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;
+        color:rgba(255,255,255,0.50);margin-bottom:10px; }}
+    .menu-lbl::before {{ content:'';flex:1;height:1px;
+        background:linear-gradient(90deg,transparent,rgba(255,255,255,0.18)); }}
+    /* botones del menú */
     .st-key-hdrbanner [data-testid="stButton"] > button {{
         background: rgba(255,255,255,0.08) !important;
-        border: 1px solid rgba(255,255,255,0.20) !important;
-        color: white !important; border-radius: 10px !important;
-        font-size: 11.5px !important; font-weight: 700 !important; height: 38px !important;
-        min-height: 38px !important; padding: 0 8px !important;
-        transition: transform .2s ease, background .2s ease, border-color .2s ease !important;
+        border: 1px solid rgba(255,255,255,0.18) !important;
+        color: rgba(255,255,255,0.92) !important; border-radius: 11px !important;
+        font-size: 11.5px !important; font-weight: 700 !important;
+        height: 40px !important; min-height: 40px !important; padding: 0 6px !important;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.06) !important;
+        transition: transform .2s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease !important;
     }}
     .st-key-hdrbanner [data-testid="stButton"] > button:hover {{
-        background: rgba(255,255,255,0.18) !important;
-        border-color: rgba(56,189,248,0.55) !important; transform: translateY(-2px) !important;
+        background: rgba(255,255,255,0.16) !important;
+        border-color: rgba(56,189,248,0.5) !important; transform: translateY(-2px) !important;
     }}
-    /* botón de la página actual (Adherencia, 3ª columna) resaltado */
-    .st-key-hdrbanner div[data-testid="column"]:nth-of-type(3) [data-testid="stButton"] > button,
-    .st-key-hdrbanner div[data-testid="stColumn"]:nth-of-type(3) [data-testid="stButton"] > button {{
+    /* botón de la página actual (Adherencia = primary) resaltado */
+    .st-key-hdrbanner [data-testid="stButton"] > button[kind="primary"] {{
         background: linear-gradient(135deg,#38BDF8,#818CF8) !important; color: white !important;
-        border-color: transparent !important; box-shadow: 0 8px 22px -6px rgba(56,189,248,0.6) !important; }}
+        border: 1px solid transparent !important;
+        box-shadow: 0 8px 22px -6px rgba(56,189,248,0.65) !important; }}
+    .st-key-hdrbanner [data-testid="stButton"] > button[kind="primary"]:hover {{
+        filter: brightness(1.08) !important; transform: translateY(-2px) !important; }}
 
     /* ── KPI cards ── */
     .kpi-card {{
         background: white;
-        border-radius: 18px;
+        border-radius: 20px;
         padding: 22px 22px 18px;
-        box-shadow: 0 6px 28px rgba(0,0,0,0.10);
+        box-shadow: 0 10px 34px rgba(15,23,42,0.08);
         position: relative;
         overflow: hidden;
         min-height: 148px;
@@ -393,15 +399,15 @@ st.markdown(f"""
     /* ── Section header cards ── */
     .sec-header {{
         background: white;
-        border-radius: 16px;
-        padding: 18px 24px 16px;
-        margin: 24px 0 18px;
-        box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+        border-radius: 20px;
+        padding: 20px 26px 18px;
+        margin: 32px 0 18px;
+        box-shadow: 0 10px 34px rgba(15,23,42,0.08);
         position: relative;
         overflow: hidden;
         display: flex;
         align-items: center;
-        gap: 16px;
+        gap: 18px;
         border: 1px solid rgba(0,0,0,0.04);
     }}
     .sec-header::before {{
@@ -431,12 +437,14 @@ st.markdown(f"""
         z-index: 0;
     }}
     .sec-icon {{
-        width: 52px; height: 52px;
-        border-radius: 14px;
+        width: 54px; height: 54px;
+        border-radius: 16px;
         display: flex; align-items: center; justify-content: center;
         font-size: 26px;
         flex-shrink: 0;
         position: relative; z-index: 1;
+        border: 1px solid rgba(0,0,0,0.05);
+        box-shadow: 0 6px 16px -6px rgba(15,23,42,0.25);
     }}
     .sec-text {{ flex: 1; min-width: 0; position: relative; z-index: 1; }}
     .sec-title {{
@@ -478,17 +486,22 @@ st.markdown(f"""
     .chart-hdr {{
         display: flex;
         align-items: center;
-        gap: 10px;
-        padding: 10px 14px;
-        background: #F8FAFC;
-        border-radius: 10px;
+        gap: 12px;
+        padding: 12px 16px;
+        background: #ffffff;
+        border-radius: 14px;
+        border: 1px solid rgba(0,0,0,0.05);
         border-left: 4px solid var(--cc, {COLOR_ACCENT});
-        margin-bottom: 10px;
+        box-shadow: 0 5px 18px rgba(15,23,42,0.05);
+        margin-bottom: 12px;
     }}
-    .ch-icon {{ font-size: 18px; line-height: 1; flex-shrink: 0; }}
+    .ch-icon {{ font-size: 18px; line-height: 1; flex-shrink: 0;
+        width: 36px; height: 36px; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        background: #F1F5F9; border: 1px solid rgba(0,0,0,0.04); }}
     .ch-texts {{ flex: 1; min-width: 0; }}
-    .ch-title {{ font-size: 12px; font-weight: 700; color: #334155; margin: 0 0 1px; }}
-    .ch-sub {{ font-size: 10px; color: #94A3B8; margin: 0; }}
+    .ch-title {{ font-size: 13px; font-weight: 800; color: #1E293B; margin: 0 0 1px; letter-spacing:-0.2px; }}
+    .ch-sub {{ font-size: 10.5px; color: #94A3B8; margin: 0; }}
     .ch-tag {{
         margin-left: auto;
         font-size: 9px; font-weight: 700;
@@ -541,16 +554,22 @@ st.markdown(f"""
     /* ── Plotly chart: card styling ── */
     div[data-testid="stPlotlyChart"] {{
         background: white !important;
-        border-radius: 14px !important;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.07) !important;
+        border-radius: 18px !important;
+        box-shadow: 0 10px 30px rgba(15,23,42,0.07) !important;
         border: 1px solid rgba(0,0,0,0.04) !important;
         overflow: hidden !important;
-        padding: 4px !important;
+        padding: 10px !important;
     }}
 
-    /* ── Encabezados de tablas ── */
+    /* ── Tablas: contenedor redondeado + encabezado con degradado ── */
+    div[data-testid="stDataFrame"] {{
+        border-radius: 16px !important;
+        overflow: hidden !important;
+        box-shadow: 0 10px 30px rgba(15,23,42,0.07) !important;
+        border: 1px solid rgba(0,0,0,0.05) !important;
+    }}
     div[data-testid="stDataFrame"] div[role="columnheader"] {{
-        background-color: {COLOR_PRIMARY} !important;
+        background: linear-gradient(135deg, {COLOR_PRIMARY} 0%, #0EA5E9 100%) !important;
         color: white !important; font-weight: 700 !important;
     }}
     div[data-testid="stDataFrame"] div[role="columnheader"] span {{
@@ -882,21 +901,24 @@ _home_pg = st.Page("home.py", title="Inicio", icon="🏠", default=True)
 _ocu_pg  = st.Page("pages/2_Ocupacion.py", title="Ocupación", icon="📊")
 
 with st.container(key="hdrbanner"):
-    htitle, hb1, hb2, hb3 = st.columns([4.4, 1, 1.15, 1.05], vertical_alignment="center")
+    htitle, hmenu = st.columns([2.25, 1.75], vertical_alignment="center")
     with htitle:
         st.markdown(f"""
         <div class='hb-eyebrow'><span class='hb-dot'></span>Centro de Control · Uniminuto 2026</div>
         <div class='hb-title'>Tablero de <span class='g'>Adherencia</span></div>
         <div class='hb-sub'>📅 <b>{rango}</b> &nbsp;·&nbsp; 👤 {filtro_txt}</div>
         """, unsafe_allow_html=True)
-    with hb1:
-        if st.button("🏠 Inicio", key="hdr_home", use_container_width=True):
-            st.switch_page(_home_pg)
-    with hb2:
-        st.button("🎯 Adherencia", key="hdr_adh", use_container_width=True)
-    with hb3:
-        if st.button("📊 Ocupación", key="hdr_ocu", use_container_width=True):
-            st.switch_page(_ocu_pg)
+    with hmenu:
+        st.markdown("<div class='menu-lbl'>⚡ Menú</div>", unsafe_allow_html=True)
+        hb1, hb2, hb3 = st.columns(3, gap="small")
+        with hb1:
+            if st.button("🏠 Inicio", key="hdr_home", use_container_width=True):
+                st.switch_page(_home_pg)
+        with hb2:
+            st.button("🎯 Adherencia", key="hdr_adh", use_container_width=True, type="primary")
+        with hb3:
+            if st.button("📊 Ocupación", key="hdr_ocu", use_container_width=True):
+                st.switch_page(_ocu_pg)
 
 # ─────────────────────────────────────────────
 # KPIs GLOBALES
