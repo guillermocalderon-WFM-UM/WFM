@@ -202,6 +202,15 @@ st.markdown(f"""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
     * {{ font-family: 'Inter', sans-serif !important; }}
+    /* restaurar la fuente de íconos Material (si no, sale el texto "keyboard_double_arrow_right") */
+    span[data-testid="stIconMaterial"],
+    [data-testid="stSidebarCollapseButton"] span,
+    [data-testid="collapsedControl"] span,
+    .material-symbols-rounded, .material-symbols-outlined, .material-icons {{
+        font-family: 'Material Symbols Rounded','Material Symbols Outlined','Material Icons' !important;
+    }}
+    /* ocultar el menú automático del sidebar */
+    [data-testid="stSidebarNav"] {{ display:none !important; }}
 
     /* ── Fondo con patrón de puntos ── */
     .main {{
@@ -211,31 +220,24 @@ st.markdown(f"""
     }}
     .block-container {{ padding-top: 2rem; padding-bottom: 1rem; }}
 
-    /* ── Sidebar collapse/expand button: ícono transparente ── */
-    div[data-testid="stSidebarCollapseButton"] button span,
-    button[data-testid="baseButton-headerNoPadding"] span,
-    div[data-testid="collapsedControl"] button span,
-    div[data-testid="collapsedControl"] span {{
-        color: transparent !important;
-    }}
-    div[data-testid="stSidebarCollapseButton"] button,
-    button[data-testid="baseButton-headerNoPadding"],
+    /* ── Botón colapsar/expandir sidebar: ícono limpio ── */
+    [data-testid="stSidebarCollapseButton"] button,
     div[data-testid="collapsedControl"] button {{
-        background: transparent !important;
-        border: none !important;
+        background: rgba(255,255,255,0.06) !important;
+        border: 1px solid rgba(255,255,255,0.10) !important;
+        border-radius: 10px !important; transition: all .2s ease !important;
     }}
-    /* ── Ocultar texto/ícono gris al colapsar sidebar ── */
-    div[data-testid="collapsedControl"] {{
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
+    div[data-testid="collapsedControl"] button {{
+        background: rgba(40,5,63,0.06) !important;
+        border: 1px solid rgba(40,5,63,0.15) !important;
     }}
-    div[data-testid="collapsedControl"] * {{
-        color: transparent !important;
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
+    [data-testid="stSidebarCollapseButton"] button:hover,
+    div[data-testid="collapsedControl"] button:hover {{
+        border-color: rgba(14,165,233,0.45) !important;
     }}
+    /* ícono blanco dentro del sidebar oscuro; oscuro cuando está colapsado sobre el fondo claro */
+    [data-testid="stSidebarCollapseButton"] span {{ color: rgba(255,255,255,0.80) !important; font-size:20px !important; }}
+    div[data-testid="collapsedControl"] span {{ color: {COLOR_PRIMARY} !important; font-size:20px !important; }}
     /* ── Sidebar: eliminar espacio sobrante al ensanchar ── */
     div[data-testid="stSidebarContent"] {{
         width: 100% !important;
@@ -284,6 +286,34 @@ st.markdown(f"""
         padding: 7px 18px;
         font-size: 12px; font-weight: 700; color: white;
         white-space: nowrap; letter-spacing: 0.02em;
+    }}
+    /* ── Banner con botones de menú (contenedor keyed) ── */
+    .st-key-hdrbanner {{
+        background:
+            repeating-linear-gradient(-45deg, rgba(255,255,255,0) 0px, rgba(255,255,255,0) 12px,
+                rgba(255,255,255,0.025) 12px, rgba(255,255,255,0.025) 13px),
+            radial-gradient(ellipse at 15% 50%, rgba(255,255,255,0.14) 0%, transparent 55%),
+            radial-gradient(ellipse at 85% 80%, rgba(0,0,0,0.20) 0%, transparent 55%),
+            linear-gradient(120deg, {COLOR_PRIMARY} 0%, #0EA5E9 100%);
+        border-radius: 16px; padding: 20px 28px; margin-bottom: 22px;
+        box-shadow: 0 6px 28px rgba(40,5,63,0.30);
+    }}
+    .st-key-hdrbanner [data-testid="stButton"] > button {{
+        background: rgba(255,255,255,0.16) !important;
+        border: 1px solid rgba(255,255,255,0.32) !important;
+        color: white !important; border-radius: 12px !important;
+        font-size: 12.5px !important; font-weight: 700 !important; height: 42px !important;
+        transition: transform .2s ease, background .2s ease, border-color .2s ease !important;
+    }}
+    .st-key-hdrbanner [data-testid="stButton"] > button:hover {{
+        background: rgba(255,255,255,0.30) !important;
+        border-color: rgba(255,255,255,0.55) !important; transform: translateY(-2px) !important;
+    }}
+    /* botón de la página actual (Adherencia, 3ª columna) resaltado */
+    .st-key-hdrbanner div[data-testid="column"]:nth-of-type(3) [data-testid="stButton"] > button,
+    .st-key-hdrbanner div[data-testid="stColumn"]:nth-of-type(3) [data-testid="stButton"] > button {{
+        background: rgba(255,255,255,0.92) !important; color: {COLOR_PRIMARY} !important;
+        border-color: white !important; box-shadow: 0 6px 18px rgba(0,0,0,0.18) !important;
     }}
 
     /* ── KPI cards ── */
@@ -504,16 +534,13 @@ st.markdown(f"""
         color: white !important;
     }}
 
-    /* ══ SIDEBAR BASE · mismo fondo de diseño que el hero ══ */
+    /* ══ SIDEBAR BASE · mismo fondo de diseño que el hero (sin grid) ══ */
     section[data-testid="stSidebar"] > div:first-child {{
         background:
-            linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px),
             radial-gradient(ellipse 95% 42% at 8% 0%,    rgba(14,165,233,0.30) 0%, transparent 55%),
             radial-gradient(ellipse 90% 42% at 100% 26%, rgba(129,140,248,0.28) 0%, transparent 55%),
             radial-gradient(ellipse 85% 42% at 50% 102%, rgba(52,211,153,0.15) 0%, transparent 55%),
             linear-gradient(160deg, #0B0518 0%, #14082b 45%, #0A0414 100%);
-        background-size: 46px 46px, 46px 46px, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
         border-right: 1px solid rgba(255,255,255,0.07);
     }}
     div[data-testid="stSidebarContent"] * {{ color: white !important; }}
@@ -828,19 +855,25 @@ rango = f"{fecha_ini.strftime('%d/%m/%Y')} – {fecha_fin.strftime('%d/%m/%Y')}"
 filtro_txt = (f"{'Todos los supervisores' if sup_sel == 'Todos' else sup_sel} · "
               f"{'Todos los expertos' if exp_sel == 'Todos' else exp_sel} · "
               f"{'Todas las campañas' if camp_sel == 'Todas' else camp_sel}")
-st.markdown(f"""
-<div class='header-banner'>
-    <div class='header-left'>
+from nav import home_content
+_home_pg = st.Page(home_content, title="Inicio", icon="🏠", default=True)
+_ocu_pg  = st.Page("pages/2_Ocupacion.py", title="Ocupación", icon="📊")
+
+with st.container(key="hdrbanner"):
+    htitle, hb1, hb2, hb3 = st.columns([3.2, 1, 1.2, 1.15], vertical_alignment="center")
+    with htitle:
+        st.markdown(f"""
         <div class='header-title'>TABLERO DE SEGUIMIENTO WORKFORCE MANAGEMENT · UNIMINUTO 2026</div>
         <div class='header-sub'>📅 {rango} &nbsp;|&nbsp; 👤 {filtro_txt}</div>
-    </div>
-    <div class='header-right'>
-        <span class='header-badge'>Uniminuto</span>
-        <span class='header-badge'>Scala Learning</span>
-        <span class='header-badge'>2026</span>
-    </div>
-</div>
-""", unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
+    with hb1:
+        if st.button("🏠 Inicio", key="hdr_home", use_container_width=True):
+            st.switch_page(_home_pg)
+    with hb2:
+        st.button("🎯 Adherencia", key="hdr_adh", use_container_width=True)
+    with hb3:
+        if st.button("📊 Ocupación", key="hdr_ocu", use_container_width=True):
+            st.switch_page(_ocu_pg)
 
 # ─────────────────────────────────────────────
 # KPIs GLOBALES
