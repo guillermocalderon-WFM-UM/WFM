@@ -435,10 +435,19 @@ with col1:
             border-radius:12px; background:linear-gradient(135deg,#28053F,#0EA5E9);
             color:white; font-weight:700; font-size:14px; font-family:Inter,sans-serif;
             border:none; cursor:pointer; box-shadow:0 4px 14px rgba(14,165,233,0.30);
-            transition:transform .18s,box-shadow .18s; box-sizing:border-box; }
-      .nb:hover { transform:translateY(-2px); box-shadow:0 8px 22px rgba(14,165,233,0.42); }
+            box-sizing:border-box; }
+      .nb:hover { opacity:0.88; }
     </style>
-    <button class="nb" onclick="window.parent.location.href='/Adherencia'">
+    <script>
+    function navTo(url) {
+      try {
+        var s = window.parent.document.createElement('script');
+        s.innerHTML = 'window.location.assign("' + url + '");';
+        window.parent.document.head.appendChild(s);
+      } catch(e) { window.open(url, '_blank'); }
+    }
+    </script>
+    <button class="nb" onclick="navTo('/Adherencia')">
       🎯 &nbsp; Abrir módulo de Adherencia →
     </button>
     """, height=55)
@@ -471,12 +480,19 @@ with col2:
       .nb { display:block; width:100%; text-align:center; padding:13px 20px;
             border-radius:12px; background:white; color:#64748B;
             font-weight:700; font-size:14px; font-family:Inter,sans-serif;
-            border:2px solid #E2E8F0; cursor:pointer;
-            transition:transform .18s,border-color .18s,color .18s;
-            box-sizing:border-box; }
-      .nb:hover { transform:translateY(-2px); border-color:#8B5CF6; color:#8B5CF6; }
+            border:2px solid #E2E8F0; cursor:pointer; box-sizing:border-box; }
+      .nb:hover { border-color:#8B5CF6; color:#8B5CF6; }
     </style>
-    <button class="nb" onclick="window.parent.location.href='/Ocupacion'">
+    <script>
+    function navTo(url) {
+      try {
+        var s = window.parent.document.createElement('script');
+        s.innerHTML = 'window.location.assign("' + url + '");';
+        window.parent.document.head.appendChild(s);
+      } catch(e) { window.open(url, '_blank'); }
+    }
+    </script>
+    <button class="nb" onclick="navTo('/Ocupacion')">
       📊 &nbsp; Ver módulo de Ocupación →
     </button>
     """, height=55)
