@@ -306,27 +306,22 @@ st.markdown(f"""
             linear-gradient(155deg, #0B0518, #14082b 52%, #0A0414);
         box-shadow: 0 16px 46px -20px rgba(8,3,24,0.92), inset 0 1px 0 rgba(255,255,255,0.10);
     }}
-    /* orbes de color (glow) — el "llamativo" del brand card, sin cuadrícula */
+    /* figuras: orbes de glow + anillos geométricos (sin cuadrícula, sin ícono) */
     .st-key-hdrbanner::before {{
         content:""; position:absolute; inset:0; z-index:-1; pointer-events:none;
         background:
-            radial-gradient(230px 210px at 9% -35%, rgba(56,189,248,0.30), transparent 70%),
-            radial-gradient(210px 210px at 89% 150%, rgba(129,140,248,0.30), transparent 70%),
-            radial-gradient(160px 160px at 64% 165%, rgba(52,211,153,0.18), transparent 70%);
+            radial-gradient(circle at 89% 28%, transparent 0 33px, rgba(56,189,248,0.22) 34px 36px, transparent 37px),
+            radial-gradient(circle at 79% 88%, transparent 0 20px, rgba(129,140,248,0.20) 21px 23px, transparent 24px),
+            radial-gradient(circle at 96% 66%, transparent 0 11px, rgba(52,211,153,0.22) 12px 13px, transparent 14px),
+            radial-gradient(240px 220px at 8% -38%, rgba(56,189,248,0.30), transparent 70%),
+            radial-gradient(220px 220px at 93% 150%, rgba(129,140,248,0.28), transparent 70%),
+            radial-gradient(170px 170px at 66% 168%, rgba(52,211,153,0.16), transparent 70%);
     }}
-    /* watermark del ícono, tenue */
+    /* barra de acento azul animada, anclada al fondo del banner (confiable) */
     .st-key-hdrbanner::after {{
-        content:"🎯"; position:absolute; right:-16px; top:50%; transform:translateY(-50%);
-        z-index:-1; font-size:128px; line-height:1; opacity:.07; filter:blur(.5px); pointer-events:none;
-        -webkit-mask-image:linear-gradient(90deg, transparent, #000 66%);
-                mask-image:linear-gradient(90deg, transparent, #000 66%);
-        animation:hbFloat 9s ease-in-out infinite;
-    }}
-    /* barra de arcoíris animada (firma del brand card) */
-    .hb-scan {{
-        position:absolute; bottom:0; left:0; right:0; height:3px; z-index:3;
-        background:linear-gradient(90deg,#38BDF8,#818CF8,#34D399,#F59E0B,#38BDF8);
-        background-size:300% 100%; animation:hbBar 4s linear infinite; }}
+        content:""; position:absolute; bottom:0; left:0; right:0; height:3px; z-index:1; pointer-events:none;
+        background:linear-gradient(90deg, transparent, #38BDF8 22%, #60A5FA 42%, #818CF8 58%, #38BDF8 80%, transparent);
+        background-size:220% 100%; animation:hbBar 5s linear infinite; }}
     .hb-head {{ position:relative; z-index:2; }}
     .hb-top {{ display:flex; align-items:center; flex-wrap:wrap; gap:8px; }}
     .hb-eyebrow {{
@@ -345,14 +340,12 @@ st.markdown(f"""
     .hb-live i::after {{ content:""; position:absolute; inset:-3px; border-radius:50%;
         border:1px solid rgba(52,211,153,.6); animation:hbRadar 1.8s ease-out infinite; }}
     .hb-title {{ margin:8px 0 0; padding:0; font-family:'Space Grotesk','Inter',sans-serif;
-        font-size:26px; font-weight:700; line-height:1.05; letter-spacing:-.01em; color:#F4F5FF;
-        display:inline-flex; align-items:center; gap:10px; position:relative; }}
-    .hb-title .hb-ic {{ font-size:23px; filter:drop-shadow(0 3px 10px rgba(56,189,248,0.55)); }}
-    .hb-title .hb-grad {{
-        background:linear-gradient(92deg,#38BDF8,#818CF8,#34D399,#38BDF8);
-        background-size:220% auto;
+        font-size:27px; font-weight:700; line-height:1.06; letter-spacing:-.01em;
+        display:inline-block; position:relative;
+        background:linear-gradient(92deg,#7DD3FC,#38BDF8,#60A5FA);
+        background-size:200% auto;
         -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent;
-        animation:hbShine 4.5s linear infinite; }}
+        animation:hbShine 6s linear infinite; }}
     .hb-meta {{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }}
     .hb-chip {{ display:inline-flex; align-items:center; gap:6px;
         font-family:'Inter',sans-serif; font-size:11.5px; font-weight:500; color:#D9DEF7;
@@ -384,9 +377,8 @@ st.markdown(f"""
         background:linear-gradient(92deg, rgba(56,189,248,0.42), rgba(129,140,248,0.38)) !important; }}
 
     /* keyframes del header */
-    @keyframes hbBar {{ 0% {{ background-position:0% 0; }} 100% {{ background-position:300% 0; }} }}
-    @keyframes hbShine {{ 0% {{ background-position:0% center; }} 100% {{ background-position:220% center; }} }}
-    @keyframes hbFloat {{ 0%,100% {{ transform:translateY(-50%) rotate(-3deg); }} 50% {{ transform:translateY(-53%) rotate(3deg); }} }}
+    @keyframes hbBar {{ 0% {{ background-position:0% 0; }} 100% {{ background-position:220% 0; }} }}
+    @keyframes hbShine {{ 0% {{ background-position:0% center; }} 100% {{ background-position:200% center; }} }}
     @keyframes hbPulse {{ 0% {{ box-shadow:0 0 0 0 rgba(52,211,153,0.55); }} 70% {{ box-shadow:0 0 0 6px rgba(52,211,153,0); }} 100% {{ box-shadow:0 0 0 0 rgba(52,211,153,0); }} }}
     @keyframes hbRadar {{ 0% {{ transform:scale(.6); opacity:1; }} 100% {{ transform:scale(2.3); opacity:0; }} }}
 
@@ -944,15 +936,12 @@ _nov_pg  = st.Page("pages/3_Novedades.py", title="Novedades", icon="📢")
 
 with st.container(key="hdrbanner"):
     st.markdown(f"""
-    <span class='hb-scan'></span>
     <div class='hb-head'>
         <div class='hb-top'>
             <span class='hb-eyebrow'><span class='hb-dot'></span>Centro de Control · Uniminuto 2026</span>
             <span class='hb-live'><i></i>LIVE</span>
         </div>
-        <h1 class='hb-title'>
-            <span class='hb-ic'>🎯</span>Módulo de <span class='hb-grad'>Adherencia</span>
-        </h1>
+        <h1 class='hb-title'>Módulo de Adherencia</h1>
         <div class='hb-meta'>
             <span class='hb-chip'>📅 <b>{rango}</b></span>
             <span class='hb-chip'>👤 {filtro_txt}</span>
