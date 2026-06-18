@@ -439,15 +439,21 @@ with col1:
       .nb:hover { opacity:0.88; }
     </style>
     <script>
-    function navTo(url) {
+    function navTo(pageName) {
       try {
-        var s = window.parent.document.createElement('script');
-        s.innerHTML = 'window.location.assign("' + url + '");';
-        window.parent.document.head.appendChild(s);
-      } catch(e) { window.open(url, '_blank'); }
+        var links = window.parent.document.querySelectorAll('a');
+        for (var i = 0; i < links.length; i++) {
+          var text = (links[i].innerText || links[i].textContent || '').trim();
+          var href  = links[i].getAttribute('href') || '';
+          if (text === pageName || href.toLowerCase().indexOf(pageName.toLowerCase()) !== -1) {
+            links[i].click();
+            return;
+          }
+        }
+      } catch(e) {}
     }
     </script>
-    <button class="nb" onclick="navTo('/Adherencia')">
+    <button class="nb" onclick="navTo('Adherencia')">
       🎯 &nbsp; Abrir módulo de Adherencia →
     </button>
     """, height=55)
@@ -484,15 +490,21 @@ with col2:
       .nb:hover { border-color:#8B5CF6; color:#8B5CF6; }
     </style>
     <script>
-    function navTo(url) {
+    function navTo(pageName) {
       try {
-        var s = window.parent.document.createElement('script');
-        s.innerHTML = 'window.location.assign("' + url + '");';
-        window.parent.document.head.appendChild(s);
-      } catch(e) { window.open(url, '_blank'); }
+        var links = window.parent.document.querySelectorAll('a');
+        for (var i = 0; i < links.length; i++) {
+          var text = (links[i].innerText || links[i].textContent || '').trim();
+          var href  = links[i].getAttribute('href') || '';
+          if (text === pageName || href.toLowerCase().indexOf(pageName.toLowerCase()) !== -1) {
+            links[i].click();
+            return;
+          }
+        }
+      } catch(e) {}
     }
     </script>
-    <button class="nb" onclick="navTo('/Ocupacion')">
+    <button class="nb" onclick="navTo('Ocupacion')">
       📊 &nbsp; Ver módulo de Ocupación →
     </button>
     """, height=55)
