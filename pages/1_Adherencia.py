@@ -322,13 +322,15 @@ st.markdown(f"""
         color:rgba(255,255,255,0.50);margin-bottom:10px; }}
     .menu-lbl::before {{ content:'';flex:1;height:1px;
         background:linear-gradient(90deg,transparent,rgba(255,255,255,0.18)); }}
-    /* botones del menú */
+    /* espaciado compacto: los 3 botones forman un bloque ── */
+    .st-key-hdrbanner [data-testid="stVerticalBlock"] {{ gap: 0.45rem !important; }}
+    /* botones del menú · más grandes */
     .st-key-hdrbanner [data-testid="stButton"] > button {{
         background: rgba(255,255,255,0.08) !important;
         border: 1px solid rgba(255,255,255,0.18) !important;
-        color: rgba(255,255,255,0.92) !important; border-radius: 11px !important;
-        font-size: 11.5px !important; font-weight: 700 !important;
-        height: 40px !important; min-height: 40px !important; padding: 0 6px !important;
+        color: rgba(255,255,255,0.92) !important; border-radius: 12px !important;
+        font-size: 13px !important; font-weight: 700 !important;
+        height: 50px !important; min-height: 50px !important; padding: 0 8px !important;
         box-shadow: inset 0 1px 0 rgba(255,255,255,0.06) !important;
         transition: transform .2s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease !important;
     }}
@@ -396,86 +398,83 @@ st.markdown(f"""
     .kpi-bar-wrap {{ background: #F1F5F9; border-radius: 99px; height: 5px; margin-top: 12px; overflow: hidden; position: relative; z-index: 1; }}
     .kpi-bar-fill {{ height: 5px; border-radius: 99px; }}
 
-    /* ── Section header cards ── */
+    /* ── Section header · banner con degradado de color ── */
     .sec-header {{
-        background: white;
+        background:
+            radial-gradient(ellipse at 12% 35%, rgba(255,255,255,0.18) 0%, transparent 55%),
+            radial-gradient(ellipse at 92% 135%, rgba(0,0,0,0.24) 0%, transparent 55%),
+            var(--sc, {COLOR_PRIMARY});
         border-radius: 20px;
-        padding: 20px 26px 18px;
-        margin: 32px 0 18px;
-        box-shadow: 0 10px 34px rgba(15,23,42,0.08);
+        padding: 22px 28px;
+        margin: 34px 0 18px;
+        box-shadow: 0 18px 42px -12px rgba(15,23,42,0.45);
         position: relative;
         overflow: hidden;
         display: flex;
         align-items: center;
         gap: 18px;
-        border: 1px solid rgba(0,0,0,0.04);
+        border: 1px solid rgba(255,255,255,0.14);
     }}
     .sec-header::before {{
         content: '';
         position: absolute;
-        top: 0; left: 0; right: 0;
-        height: 4px;
-        background: var(--sc, {COLOR_PRIMARY});
-        border-radius: 16px 16px 0 0;
+        left: -25px; top: -35px;
+        width: 130px; height: 130px;
+        background: rgba(255,255,255,0.10);
+        border-radius: 50%;
     }}
     .sec-header::after {{
         content: '';
         position: absolute;
-        right: -24px; top: -24px;
-        width: 110px; height: 110px;
-        background: var(--sc, {COLOR_PRIMARY});
-        opacity: 0.05;
+        right: -35px; bottom: -45px;
+        width: 150px; height: 150px;
+        background: rgba(255,255,255,0.07);
         border-radius: 50%;
     }}
-    .sec-wash {{
-        position: absolute;
-        left: 0; top: 0; bottom: 0;
-        width: 220px;
-        background: linear-gradient(90deg, var(--sc, {COLOR_PRIMARY}), transparent);
-        opacity: 0.07;
-        pointer-events: none;
-        z-index: 0;
-    }}
+    .sec-wash {{ display: none; }}
     .sec-icon {{
-        width: 54px; height: 54px;
+        width: 56px; height: 56px;
         border-radius: 16px;
         display: flex; align-items: center; justify-content: center;
-        font-size: 26px;
+        font-size: 27px;
         flex-shrink: 0;
         position: relative; z-index: 1;
-        border: 1px solid rgba(0,0,0,0.05);
-        box-shadow: 0 6px 16px -6px rgba(15,23,42,0.25);
+        background: rgba(255,255,255,0.18) !important;
+        border: 1px solid rgba(255,255,255,0.28) !important;
+        box-shadow: 0 8px 18px -6px rgba(0,0,0,0.4);
     }}
     .sec-text {{ flex: 1; min-width: 0; position: relative; z-index: 1; }}
     .sec-title {{
-        font-size: 17px; font-weight: 800;
-        color: #1E293B; margin: 0 0 5px 0;
+        font-size: 19px; font-weight: 800;
+        color: white; margin: 0 0 5px 0;
         letter-spacing: -0.4px;
     }}
-    .sec-desc {{ font-size: 12px; color: #94A3B8; margin: 0; line-height: 1.6; }}
+    .sec-desc {{ font-size: 12px; color: rgba(255,255,255,0.78); margin: 0; line-height: 1.6; }}
     .sec-meta {{
         text-align: center;
         flex-shrink: 0;
-        padding: 8px 18px;
-        background: #F8FAFC;
-        border-radius: 12px;
-        border: 1px solid #E2E8F0;
+        padding: 9px 20px;
+        background: rgba(255,255,255,0.96);
+        border-radius: 13px;
+        border: 1px solid rgba(255,255,255,0.5);
+        box-shadow: 0 6px 16px -6px rgba(0,0,0,0.3);
         position: relative; z-index: 1;
     }}
     .sec-meta-val {{
         font-family:'Space Grotesk',sans-serif!important;
-        font-size: 23px; font-weight: 700;
+        font-size: 24px; font-weight: 700;
         line-height: 1.1; margin-bottom: 2px; letter-spacing:-0.5px;
     }}
     .sec-meta-lab {{
         font-size: 9px; font-weight: 700;
-        color: #94A3B8;
+        color: #64748B;
         text-transform: uppercase; letter-spacing: 0.08em;
     }}
     .sec-tag {{
         font-size: 10px; font-weight: 700;
         color: white;
-        background: var(--sc, {COLOR_PRIMARY});
+        background: rgba(255,255,255,0.20);
+        border: 1px solid rgba(255,255,255,0.35);
         padding: 5px 14px; border-radius: 99px;
         letter-spacing: 0.06em; text-transform: uppercase;
         flex-shrink: 0; align-self: flex-start;
@@ -910,13 +909,12 @@ with st.container(key="hdrbanner"):
         """, unsafe_allow_html=True)
     with hmenu:
         st.markdown("<div class='menu-lbl'>⚡ Menú</div>", unsafe_allow_html=True)
-        hb1, hb2, hb3 = st.columns(3, gap="small")
-        with hb1:
-            if st.button("🏠 Inicio", key="hdr_home", use_container_width=True):
-                st.switch_page(_home_pg)
-        with hb2:
+        if st.button("🏠  Inicio", key="hdr_home", use_container_width=True):
+            st.switch_page(_home_pg)
+        mb1, mb2 = st.columns(2, gap="small")
+        with mb1:
             st.button("🎯 Adherencia", key="hdr_adh", use_container_width=True, type="primary")
-        with hb3:
+        with mb2:
             if st.button("📊 Ocupación", key="hdr_ocu", use_container_width=True):
                 st.switch_page(_ocu_pg)
 
