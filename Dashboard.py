@@ -56,15 +56,17 @@ def home_content():
         """, unsafe_allow_html=True)
         st.markdown("""
         <div class='sbf'>
-            <div class='sbf-rule'></div>
-            <div class='sbf-row'>
-                <div class='sbf-avatar'>GC</div>
-                <div class='sbf-info'>
-                    <div class='sbf-name'>Guillermo Calderón</div>
-                    <div class='sbf-role'>Analista WFM · Scala Learning</div>
+            <div class='sbf-card'>
+                <div class='sbf-glow'></div>
+                <div class='sbf-row'>
+                    <div class='sbf-avatar'>GC<span class='sbf-online'></span></div>
+                    <div class='sbf-info'>
+                        <div class='sbf-name'>Guillermo Calderón</div>
+                        <div class='sbf-role'>Analista WFM · Scala Learning</div>
+                    </div>
                 </div>
             </div>
-            <div class='sbf-credit'>Desarrollado por Workforce Management</div>
+            <div class='sbf-credit'><span class='sbf-spark'>⚡</span>Desarrollado por Workforce Management</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -73,6 +75,13 @@ def home_content():
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap');
         * {{ font-family: 'Inter', sans-serif !important; }}
+        /* restaurar la fuente de íconos Material (si no, sale el texto "keyboard_double_arrow_left") */
+        span[data-testid="stIconMaterial"],
+        [data-testid="stSidebarCollapseButton"] span,
+        [data-testid="collapsedControl"] span,
+        .material-symbols-rounded, .material-symbols-outlined, .material-icons {{
+            font-family: 'Material Symbols Rounded','Material Symbols Outlined','Material Icons' !important;
+        }}
 
         /* ══ FONDO GENERAL OSCURO + AURORA ══ */
         [data-testid="stAppViewContainer"] {{
@@ -97,8 +106,16 @@ def home_content():
         }}
         [data-testid="stAppViewContainer"] > .main {{ position: relative; z-index: 1; }}
 
-        div[data-testid="collapsedControl"] {{ background:transparent!important;border:none!important;box-shadow:none!important; }}
-        div[data-testid="collapsedControl"] * {{ color:rgba(255,255,255,0.6)!important; }}
+        /* botón para colapsar el sidebar: ícono limpio, sin texto crudo */
+        [data-testid="stSidebarCollapseButton"] button,
+        div[data-testid="collapsedControl"] button {{
+            background:rgba(255,255,255,0.06)!important;border:1px solid rgba(255,255,255,0.10)!important;
+            border-radius:10px!important;transition:all .2s ease!important; }}
+        [data-testid="stSidebarCollapseButton"] button:hover,
+        div[data-testid="collapsedControl"] button:hover {{
+            background:rgba(255,255,255,0.14)!important;border-color:rgba(56,189,248,0.4)!important; }}
+        [data-testid="stSidebarCollapseButton"] span,
+        div[data-testid="collapsedControl"] span {{ color:rgba(255,255,255,0.75)!important;font-size:20px!important; }}
         div[data-testid="stSidebarContent"] {{ width:100%!important;box-sizing:border-box!important;padding-right:0.75rem!important; }}
         div[data-testid="stSidebarContent"] > div {{ width:100%!important; }}
 
@@ -156,15 +173,28 @@ def home_content():
         .sbc-bar {{ position:absolute;bottom:0;left:0;right:0;height:3px;
                     background:linear-gradient(90deg,#38BDF8,#818CF8,#34D399,#F59E0B,#38BDF8);
                     background-size:300% 100%;animation:sbcBar 4s linear infinite; }}
-        .sbf {{ margin-top:28px;padding:0; }}
-        .sbf-rule {{ height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.12),transparent);margin-bottom:14px; }}
-        .sbf-row {{ display:flex;align-items:center;gap:10px;margin-bottom:10px; }}
-        .sbf-avatar {{ width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#38BDF8 0%,#818CF8 100%);
-                       display:flex;align-items:center;justify-content:center;font-size:13px!important;font-weight:900!important;
-                       color:white!important;flex-shrink:0;letter-spacing:0.5px;box-shadow:0 4px 14px rgba(56,189,248,0.35); }}
-        .sbf-name {{ font-size:11px!important;font-weight:700!important;color:rgba(255,255,255,0.68)!important;margin-bottom:2px!important; }}
-        .sbf-role {{ font-size:10px!important;color:rgba(255,255,255,0.28)!important; }}
-        .sbf-credit {{ font-size:9px!important;font-weight:600!important;color:rgba(255,255,255,0.18)!important;text-align:center;letter-spacing:0.06em; }}
+        .sbf {{ margin-top:26px;padding:0; }}
+        .sbf-card {{ position:relative;overflow:hidden;border-radius:16px;padding:14px 14px;
+            background:linear-gradient(150deg,rgba(56,189,248,0.10),rgba(129,140,248,0.06));
+            border:1px solid rgba(255,255,255,0.10);
+            box-shadow:inset 0 1px 0 rgba(255,255,255,0.08); }}
+        .sbf-glow {{ position:absolute;width:120px;height:120px;border-radius:50%;top:-50px;right:-40px;
+            background:radial-gradient(circle,rgba(56,189,248,0.20),transparent 70%);pointer-events:none; }}
+        .sbf-row {{ display:flex;align-items:center;gap:12px;position:relative;z-index:1; }}
+        .sbf-avatar {{ position:relative;width:42px;height:42px;border-radius:13px;
+                       background:linear-gradient(135deg,#38BDF8 0%,#818CF8 100%);
+                       display:flex;align-items:center;justify-content:center;font-size:14px!important;font-weight:900!important;
+                       color:white!important;flex-shrink:0;letter-spacing:0.5px;
+                       box-shadow:0 6px 18px rgba(56,189,248,0.45),inset 0 1px 0 rgba(255,255,255,0.3); }}
+        .sbf-online {{ position:absolute;bottom:-2px;right:-2px;width:12px;height:12px;border-radius:50%;
+            background:#34D399;border:2.5px solid #1c0636;box-shadow:0 0 8px rgba(52,211,153,0.8);
+            animation:sbcPulse 2s ease-in-out infinite; }}
+        .sbf-name {{ font-size:12px!important;font-weight:700!important;color:rgba(255,255,255,0.92)!important;margin-bottom:3px!important; }}
+        .sbf-role {{ font-size:10px!important;color:rgba(255,255,255,0.42)!important;line-height:1.3; }}
+        .sbf-credit {{ display:flex;align-items:center;justify-content:center;gap:5px;
+            margin-top:12px;font-size:9px!important;font-weight:600!important;
+            color:rgba(255,255,255,0.30)!important;text-align:center;letter-spacing:0.06em; }}
+        .sbf-spark {{ font-size:10px; }}
 
         /* ══════════ HERO ══════════ */
         .hero {{
@@ -266,6 +296,24 @@ def home_content():
             display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;
             background:var(--icobg);color:var(--accent-solid);border:1px solid var(--glow,rgba(255,255,255,0.12)); }}
 
+        /* divisor + bloque inferior dentro de la tarjeta */
+        .mod-div {{ height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.12),transparent);
+            margin:0 0 16px;position:relative;z-index:1; }}
+        .mod-foot {{ display:flex;align-items:flex-end;justify-content:space-between;gap:14px;
+            margin-bottom:22px;position:relative;z-index:1; }}
+        /* chips KPI */
+        .mod-chips {{ display:flex;flex-direction:column;gap:7px; }}
+        .mchip {{ display:inline-flex;align-items:center;gap:6px;align-self:flex-start;
+            font-size:10.5px;font-weight:700;padding:5px 10px;border-radius:8px;
+            background:var(--icobg);color:rgba(255,255,255,0.82);
+            border:1px solid var(--glow,rgba(255,255,255,0.12)); }}
+        .mchip b {{ color:var(--accent-solid);font-weight:800; }}
+        /* mini sparkline de barras */
+        .mspark {{ display:flex;align-items:flex-end;gap:4px;height:46px;padding:0 2px; }}
+        .mspark span {{ width:7px;border-radius:4px;background:var(--accent);
+            opacity:.55;transform-origin:bottom;transition:transform .4s cubic-bezier(.2,.8,.2,1),opacity .3s ease; }}
+        .mod:hover .mspark span {{ opacity:.95;transform:scaleY(1.18); }}
+
         /* ══ BUTTONS ══ */
         div[data-testid="stButton"] > button {{
             border-radius:14px!important;font-weight:700!important;font-size:14px!important;
@@ -302,8 +350,25 @@ def home_content():
         .stat-lbl {{ font-size:10px;font-weight:700;color:rgba(255,255,255,0.42);
             text-transform:uppercase;letter-spacing:0.10em; }}
 
-        /* nav links sidebar */
-        [data-testid="stSidebarNavLink"] {{ border-radius:10px!important;margin:2px 0!important; }}
+        /* ══ MENÚ DE NAVEGACIÓN (sidebar) ══ */
+        [data-testid="stSidebarNav"] {{ padding-top:4px!important; }}
+        [data-testid="stSidebarNav"] > ul {{ gap:5px!important; }}
+        [data-testid="stSidebarNavLink"] {{
+            border-radius:12px!important; padding:10px 13px!important; margin:3px 4px!important;
+            border:1px solid transparent!important;
+            transition:background .2s ease,border-color .2s ease,transform .2s ease!important; }}
+        [data-testid="stSidebarNavLink"]:hover {{
+            background:rgba(255,255,255,0.07)!important;
+            border-color:rgba(255,255,255,0.10)!important; transform:translateX(3px); }}
+        [data-testid="stSidebarNavLink"] span {{ font-size:13.5px!important;font-weight:600!important;
+            color:rgba(255,255,255,0.66)!important; }}
+        /* página activa */
+        [data-testid="stSidebarNavLink"][aria-current="page"] {{
+            background:linear-gradient(135deg,rgba(56,189,248,0.22),rgba(129,140,248,0.15))!important;
+            border-color:rgba(56,189,248,0.38)!important;
+            box-shadow:0 6px 20px -6px rgba(56,189,248,0.5),inset 0 1px 0 rgba(255,255,255,0.10)!important; }}
+        [data-testid="stSidebarNavLink"][aria-current="page"] span {{
+            color:#fff!important;font-weight:700!important; }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -366,6 +431,19 @@ def home_content():
                 <div class='mfeat'><span class='mfeat-ck'>✓</span>Ranking y comparativo por supervisor</div>
                 <div class='mfeat'><span class='mfeat-ck'>✓</span>Tablas de planificación y excesos</div>
             </div>
+            <div class='mod-div'></div>
+            <div class='mod-foot'>
+                <div class='mod-chips'>
+                    <span class='mchip'>🎯 Meta&nbsp;<b>90%</b></span>
+                    <span class='mchip'>📊 <b>4</b>&nbsp;vistas</span>
+                </div>
+                <div class='mspark'>
+                    <span style='height:38%'></span><span style='height:62%'></span>
+                    <span style='height:48%'></span><span style='height:78%'></span>
+                    <span style='height:58%'></span><span style='height:90%'></span>
+                    <span style='height:70%'></span><span style='height:100%'></span>
+                </div>
+            </div>
         </div>
         """, unsafe_allow_html=True)
         if st.button("🎯  Abrir módulo de Adherencia →", key="btn_adh",
@@ -397,6 +475,19 @@ def home_content():
                 <div class='mfeat'><span class='mfeat-ck'>✓</span>Cobertura y nivel de servicio</div>
                 <div class='mfeat'><span class='mfeat-ck'>✓</span>Próximamente disponible</div>
             </div>
+            <div class='mod-div'></div>
+            <div class='mod-foot'>
+                <div class='mod-chips'>
+                    <span class='mchip'>⏳ <b>Q3</b>&nbsp;2026</span>
+                    <span class='mchip'>🧮 <b>3</b>&nbsp;métricas</span>
+                </div>
+                <div class='mspark'>
+                    <span style='height:55%'></span><span style='height:35%'></span>
+                    <span style='height:72%'></span><span style='height:50%'></span>
+                    <span style='height:85%'></span><span style='height:62%'></span>
+                    <span style='height:95%'></span><span style='height:74%'></span>
+                </div>
+            </div>
         </div>
         """, unsafe_allow_html=True)
         if st.button("📊  Ver módulo de Ocupación →", key="btn_ocu",
@@ -422,9 +513,9 @@ def home_content():
             <div class='stat-lbl'>Módulos</div>
         </div>
         <div class='stat' style='--sc:#FBBF24'>
-            <div class='stat-ico'>🌎</div>
-            <div class='stat-val'>COL</div>
-            <div class='stat-lbl'>País</div>
+            <div class='stat-ico'>🤝</div>
+            <div class='stat-val' style='font-size:22px'>Alianza</div>
+            <div class='stat-lbl'>Uniminuto</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
