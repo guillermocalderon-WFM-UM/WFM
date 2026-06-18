@@ -299,7 +299,7 @@ st.markdown(f"""
     /* ══ HEADER · "Aurora Glass Deck" (estilo brand card · sin cuadrícula) ══ */
     .st-key-hdrbanner {{
         position:relative; overflow:hidden; isolation:isolate;
-        border-radius:20px; padding:16px 26px 18px; margin-bottom:16px;
+        border-radius:20px; padding:18px 28px 20px; margin-bottom:16px;
         border:1px solid rgba(255,255,255,0.12);
         background:
             linear-gradient(145deg, rgba(56,189,248,0.13) 0%, rgba(129,140,248,0.10) 55%, rgba(52,211,153,0.07) 100%),
@@ -314,11 +314,6 @@ st.markdown(f"""
             radial-gradient(240px 240px at 50% 165%, rgba(129,140,248,0.22), transparent 70%),
             radial-gradient(200px 200px at 100% 140%, rgba(52,211,153,0.14), transparent 70%);
     }}
-    /* barra de acento azul animada, anclada al fondo del banner (confiable) */
-    .st-key-hdrbanner::after {{
-        content:""; position:absolute; bottom:0; left:0; right:0; height:3px; z-index:1; pointer-events:none;
-        background:linear-gradient(90deg, transparent, #38BDF8 22%, #60A5FA 42%, #818CF8 58%, #38BDF8 80%, transparent);
-        background-size:220% 100%; animation:hbBar 5s linear infinite; }}
     .hb-head {{ position:relative; z-index:2; }}
     .hb-top {{ display:flex; align-items:center; flex-wrap:wrap; gap:8px; }}
     .hb-eyebrow {{
@@ -336,8 +331,8 @@ st.markdown(f"""
     .hb-live i {{ position:relative; width:6px; height:6px; border-radius:50%; background:#34D399; font-style:normal; }}
     .hb-live i::after {{ content:""; position:absolute; inset:-3px; border-radius:50%;
         border:1px solid rgba(52,211,153,.6); animation:hbRadar 1.8s ease-out infinite; }}
-    .hb-title {{ margin:9px 0 0; padding:0; font-family:'Space Grotesk','Inter',sans-serif;
-        font-size:27px; font-weight:700; line-height:1.05; letter-spacing:-.015em;
+    .hb-title {{ margin:9px 0 2px; padding:0; font-family:'Space Grotesk',sans-serif !important;
+        font-size:28px; font-weight:700; line-height:1.08; letter-spacing:-.015em;
         display:inline-block; position:relative;
         background:linear-gradient(92deg,#7DD3FC,#38BDF8,#60A5FA);
         background-size:200% auto;
@@ -356,11 +351,8 @@ st.markdown(f"""
     /* navegación · grilla 2×2 a la derecha */
     .st-key-hdrbanner [data-testid="stHorizontalBlock"] {{ gap:8px !important; }}
     .st-key-hdrbanner [data-testid="stVerticalBlock"] {{ gap:8px !important; }}
-    .menu-cap {{ display:flex; align-items:center; gap:7px;
-        font-family:'Space Grotesk','Inter',sans-serif; font-size:9.5px; font-weight:800;
-        letter-spacing:.18em; text-transform:uppercase; color:rgba(199,210,254,0.55); margin:0 0 4px; }}
-    .menu-cap::after {{ content:''; flex:1; height:1px;
-        background:linear-gradient(90deg, rgba(129,140,248,0.30), transparent); }}
+    .menu-cap {{ font-family:'Inter',sans-serif; font-size:9.5px; font-weight:800;
+        letter-spacing:.18em; text-transform:uppercase; color:rgba(199,210,254,0.55); margin:0 0 7px; }}
     .st-key-hdrbanner [data-testid="stButton"] > button {{
         position:relative; z-index:2; width:100%; overflow:hidden;
         font-family:'Space Grotesk','Inter',sans-serif !important; font-size:12.5px !important; font-weight:600 !important;
