@@ -900,11 +900,11 @@ _home_pg = st.Page("home.py", title="Inicio", icon="🏠", default=True)
 _ocu_pg  = st.Page("pages/2_Ocupacion.py", title="Ocupación", icon="📊")
 
 with st.container(key="hdrbanner"):
-    htitle, hmenu, _hsp = st.columns([2.5, 1.35, 0.35], vertical_alignment="center")
+    htitle, hmenu = st.columns([2.0, 2.0], vertical_alignment="center")
     with htitle:
         st.markdown(f"""
         <div class='hb-eyebrow'><span class='hb-dot'></span>Centro de Control · Uniminuto 2026</div>
-        <div class='hb-title'>Tablero de <span class='g'>Adherencia</span></div>
+        <div class='hb-title'>Tablero de Seguimiento</div>
         <div class='hb-sub'>📅 <b>{rango}</b> &nbsp;·&nbsp; 👤 {filtro_txt}</div>
         """, unsafe_allow_html=True)
     with hmenu:

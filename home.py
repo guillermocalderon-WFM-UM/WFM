@@ -74,11 +74,11 @@ st.markdown(f"""
     /* ══ FONDO GENERAL OSCURO + AURORA ══ */
     [data-testid="stAppViewContainer"] {{
         background:
-            radial-gradient(ellipse 90% 60% at 8% -5%,  rgba(14,165,233,0.18) 0%, transparent 55%),
-            radial-gradient(ellipse 80% 55% at 100% 0%, rgba(129,140,248,0.20) 0%, transparent 55%),
-            radial-gradient(ellipse 70% 60% at 85% 100%, rgba(52,211,153,0.10) 0%, transparent 55%),
-            radial-gradient(ellipse 60% 50% at 0% 100%, rgba(139,92,246,0.14) 0%, transparent 55%),
-            linear-gradient(160deg, #0B0518 0%, #14082b 45%, #0A0414 100%);
+            radial-gradient(ellipse 110% 70% at 8% -10%,  rgba(14,165,233,0.15) 0%, transparent 60%),
+            radial-gradient(ellipse 100% 65% at 100% 0%,  rgba(99,102,241,0.15) 0%, transparent 60%),
+            radial-gradient(ellipse 90% 70% at 85% 105%,  rgba(52,211,153,0.08) 0%, transparent 60%),
+            radial-gradient(ellipse 80% 60% at 0% 100%,   rgba(99,102,241,0.07) 0%, transparent 60%),
+            linear-gradient(160deg, #0A0813 0%, #0F0B20 45%, #08060F 100%);
         background-attachment: fixed;
     }}
     [data-testid="stHeader"] {{ background: transparent !important; }}
@@ -118,9 +118,10 @@ st.markdown(f"""
     }}
     div[data-testid="stSidebarContent"] * {{ color: white !important; }}
 
-    /* ══ Scala arriba + footer anclado al fondo del sidebar ══ */
-    [data-testid="stSidebarHeader"] {{ padding-top:0.6rem!important; padding-bottom:0!important; }}
+    /* ══ Scala bien arriba + footer anclado al fondo del sidebar ══ */
+    [data-testid="stSidebarHeader"] {{ padding-top:0.1rem!important; padding-bottom:0!important; min-height:0!important; }}
     [data-testid="stSidebarUserContent"] {{ padding-top:0!important; }}
+    section[data-testid="stSidebar"] .block-container {{ padding-top:0.5rem!important; }}
     section[data-testid="stSidebar"] > div:first-child {{
         display:flex!important; flex-direction:column!important; min-height:100vh!important; }}
     [data-testid="stSidebarUserContent"] {{
@@ -194,8 +195,8 @@ st.markdown(f"""
 
     /* ══════════ HERO ══════════ */
     .hero {{
-        position:relative; border-radius:30px; overflow:hidden;
-        padding:78px 56px 70px; text-align:center; margin-bottom:30px;
+        position:relative; border-radius:28px; overflow:hidden;
+        padding:48px 50px 44px; text-align:center; margin-bottom:28px;
         background:
             linear-gradient(135deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.015) 100%);
         border:1px solid rgba(255,255,255,0.10);
@@ -226,8 +227,8 @@ st.markdown(f"""
     .hero-badge-dot::after {{ content:'';position:absolute;inset:0;border-radius:50%;background:#34D399; }}
     .hero-badge-dot::before {{ content:'';position:absolute;inset:0;border-radius:50%;border:2px solid #34D399;animation:ring 1.8s ease-out infinite; }}
     .hero-title {{ font-family:'Space Grotesk',sans-serif!important;
-        font-size:62px;font-weight:700;color:white;margin:0 0 18px;
-        letter-spacing:-2px;line-height:1.04;text-shadow:0 4px 40px rgba(0,0,0,0.4); }}
+        font-size:48px;font-weight:700;color:white;margin:0 0 14px;
+        letter-spacing:-1.6px;line-height:1.05;text-shadow:0 4px 40px rgba(0,0,0,0.4); }}
     .hero-title .grad {{ background:linear-gradient(90deg,#38BDF8 0%,#818CF8 35%,#34D399 70%,#38BDF8 100%);
         background-size:220% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;
         background-clip:text;animation:shimmer 4s linear infinite; }}
@@ -335,13 +336,27 @@ st.markdown(f"""
     /* ══ Ocultar el menú automático del sidebar ══ */
     [data-testid="stSidebarNav"] {{ display:none !important; }}
 
-    /* ══ HERO · franja de estado ══ */
-    .hero-meta {{ display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;margin-top:6px; }}
-    .hmeta {{ display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:rgba(255,255,255,0.62); }}
-    .hmeta b {{ color:#fff;font-weight:800; }}
-    .hmeta-dot {{ width:8px;height:8px;border-radius:50%;box-shadow:0 0 10px currentColor;
-        animation:sbcPulse 1.8s ease-in-out infinite; }}
-    .hmeta-sep {{ width:1px;height:15px;background:rgba(255,255,255,0.15); }}
+    /* ══ HERO · tarjetas de estado (más objetos visuales) ══ */
+    .hero-cards {{ display:flex;justify-content:center;gap:13px;flex-wrap:wrap;margin-top:6px; }}
+    .hcard {{ display:flex;align-items:center;gap:11px;
+        background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);
+        border-radius:14px;padding:11px 17px;backdrop-filter:blur(6px);
+        transition:transform .22s ease,border-color .22s ease,background .22s ease; }}
+    .hcard:hover {{ transform:translateY(-3px);border-color:rgba(56,189,248,0.45);background:rgba(255,255,255,0.10); }}
+    .hcard-ico {{ width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;
+        font-size:18px;flex-shrink:0;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.14); }}
+    .hcard-txt {{ text-align:left;line-height:1.2; }}
+    .hcard-lbl {{ font-size:9px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:rgba(255,255,255,0.45); }}
+    .hcard-val {{ font-size:14px;font-weight:800;color:white;margin-top:2px; }}
+    .hcard-val .dot {{ display:inline-block;width:7px;height:7px;border-radius:50%;background:#34D399;
+        box-shadow:0 0 8px #34D399;margin-right:5px;animation:sbcPulse 1.8s ease-in-out infinite; }}
+    /* chips decorativos flotantes */
+    .hero-float {{ position:absolute;z-index:1;width:48px;height:48px;border-radius:14px;
+        display:flex;align-items:center;justify-content:center;font-size:22px;
+        background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);
+        backdrop-filter:blur(4px);opacity:0.65;animation:float 4.2s ease-in-out infinite; }}
+    .hf1 {{ top:34px;left:42px; }}
+    .hf2 {{ bottom:38px;right:50px;animation-delay:1.4s; }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -351,6 +366,8 @@ st.markdown("""
     <div class='hero-aurora ha1'></div>
     <div class='hero-aurora ha2'></div>
     <div class='hero-aurora ha3'></div>
+    <div class='hero-float hf1'>📊</div>
+    <div class='hero-float hf2'>🎯</div>
     <div class='hero-inner'>
         <div class='hero-badge'>
             <span class='hero-badge-dot'></span>
@@ -364,14 +381,15 @@ st.markdown("""
             Monitorea <b style='color:rgba(255,255,255,0.85)'>adherencia</b>,
             <b style='color:rgba(255,255,255,0.85)'>ocupación</b> y desempeño operativo en tiempo real.
         </div>
-        <div class='hero-meta'>
-            <span class='hmeta'><span class='hmeta-dot' style='background:#34D399;color:#34D399'></span>Sistema en línea</span>
-            <span class='hmeta-sep'></span>
-            <span class='hmeta'>🎯 Meta de adherencia&nbsp;<b>90%</b></span>
-            <span class='hmeta-sep'></span>
-            <span class='hmeta'>👥 Seguimiento por&nbsp;<b>equipo</b></span>
-            <span class='hmeta-sep'></span>
-            <span class='hmeta'>📅 Período&nbsp;<b>2026</b></span>
+        <div class='hero-cards'>
+            <div class='hcard'><div class='hcard-ico'>🟢</div><div class='hcard-txt'>
+                <div class='hcard-lbl'>Estado</div><div class='hcard-val'><span class='dot'></span>En línea</div></div></div>
+            <div class='hcard'><div class='hcard-ico'>👥</div><div class='hcard-txt'>
+                <div class='hcard-lbl'>Seguimiento</div><div class='hcard-val'>Por equipo</div></div></div>
+            <div class='hcard'><div class='hcard-ico'>📅</div><div class='hcard-txt'>
+                <div class='hcard-lbl'>Período</div><div class='hcard-val'>2026</div></div></div>
+            <div class='hcard'><div class='hcard-ico'>🤝</div><div class='hcard-txt'>
+                <div class='hcard-lbl'>Alianza</div><div class='hcard-val'>Uniminuto</div></div></div>
         </div>
     </div>
 </div>
