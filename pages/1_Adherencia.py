@@ -893,9 +893,7 @@ adh_color = COLOR_SUCCESS if adh_global >= 0.90 else (COLOR_WARNING if adh_globa
 # ENCABEZADO
 # ─────────────────────────────────────────────
 rango = f"{fecha_ini.strftime('%d/%m/%Y')} – {fecha_fin.strftime('%d/%m/%Y')}"
-filtro_txt = (f"{'Todos los supervisores' if sup_sel == 'Todos' else sup_sel} · "
-              f"{'Todos los expertos' if exp_sel == 'Todos' else exp_sel} · "
-              f"{'Todas las campañas' if camp_sel == 'Todas' else camp_sel}")
+filtro_txt = (f"{'Detalle por supervisor y experto.' if camp_sel == 'Todas' else camp_sel}")
 _home_pg = st.Page("home.py", title="Inicio", icon="🏠", default=True)
 _ocu_pg  = st.Page("pages/2_Ocupacion.py", title="Ocupación", icon="📊")
 
@@ -904,7 +902,7 @@ with st.container(key="hdrbanner"):
     with htitle:
         st.markdown(f"""
         <div class='hb-eyebrow'><span class='hb-dot'></span>Centro de Control · Uniminuto 2026</div>
-        <div class='hb-title'>Tablero de Seguimiento</div>
+        <div class='hb-title'>Módulo de adherencia</div>
         <div class='hb-sub'>📅 <b>{rango}</b> &nbsp;·&nbsp; 👤 {filtro_txt}</div>
         """, unsafe_allow_html=True)
     with hmenu:
