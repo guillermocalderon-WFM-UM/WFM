@@ -855,8 +855,7 @@ rango = f"{fecha_ini.strftime('%d/%m/%Y')} – {fecha_fin.strftime('%d/%m/%Y')}"
 filtro_txt = (f"{'Todos los supervisores' if sup_sel == 'Todos' else sup_sel} · "
               f"{'Todos los expertos' if exp_sel == 'Todos' else exp_sel} · "
               f"{'Todas las campañas' if camp_sel == 'Todas' else camp_sel}")
-from nav import home_content
-_home_pg = st.Page(home_content, title="Inicio", icon="🏠", default=True)
+_home_pg = st.Page("home.py", title="Inicio", icon="🏠", default=True)
 _ocu_pg  = st.Page("pages/2_Ocupacion.py", title="Ocupación", icon="📊")
 
 with st.container(key="hdrbanner"):
