@@ -350,39 +350,44 @@ def home_content():
         .stat-lbl {{ font-size:10px;font-weight:700;color:rgba(255,255,255,0.42);
             text-transform:uppercase;letter-spacing:0.10em; }}
 
-        /* ══ ORDEN: tarjeta Scala arriba → menú → footer ══ */
-        section[data-testid="stSidebar"] > div:first-child,
-        [data-testid="stSidebarContent"] {{
-            display:flex!important; flex-direction:column!important; }}
-        [data-testid="stSidebarHeader"] {{ order:0!important; }}
-        [data-testid="stSidebarNav"]    {{ order:2!important; }}
-        [data-testid="stSidebarUserContent"] {{ display:contents!important; }}
-        [data-testid="stSidebarUserContent"] > div {{ display:contents!important; }}
-        [data-testid="stSidebarUserContent"] [data-testid="stElementContainer"]:nth-of-type(1),
-        [data-testid="stSidebarUserContent"] .element-container:nth-of-type(1) {{ order:1!important; }}
-        [data-testid="stSidebarUserContent"] [data-testid="stElementContainer"]:nth-of-type(2),
-        [data-testid="stSidebarUserContent"] .element-container:nth-of-type(2) {{ order:3!important; }}
+        /* ══ Ocultar el menú automático del sidebar (ahora vive en el área principal) ══ */
+        [data-testid="stSidebarNav"] {{ display:none !important; }}
 
-        /* ══ MENÚ DE NAVEGACIÓN (sidebar) — compacto ══ */
-        [data-testid="stSidebarNav"] {{ padding-top:0!important;margin-bottom:8px!important; }}
-        [data-testid="stSidebarNav"] > ul {{ gap:0!important;padding:0!important; }}
-        [data-testid="stSidebarNav"] li {{ margin:0!important;padding:0!important; }}
-        [data-testid="stSidebarNavLink"] {{
-            border-radius:11px!important; padding:8px 13px!important; margin:2px 4px!important;
-            min-height:0!important; border:1px solid transparent!important;
-            transition:background .2s ease,border-color .2s ease,transform .2s ease!important; }}
-        [data-testid="stSidebarNavLink"]:hover {{
-            background:rgba(255,255,255,0.07)!important;
-            border-color:rgba(255,255,255,0.10)!important; transform:translateX(3px); }}
-        [data-testid="stSidebarNavLink"] span {{ font-size:13.5px!important;font-weight:600!important;
-            color:rgba(255,255,255,0.66)!important; }}
-        /* página activa */
-        [data-testid="stSidebarNavLink"][aria-current="page"] {{
-            background:linear-gradient(135deg,rgba(56,189,248,0.22),rgba(129,140,248,0.15))!important;
-            border-color:rgba(56,189,248,0.38)!important;
-            box-shadow:0 6px 20px -6px rgba(56,189,248,0.5),inset 0 1px 0 rgba(255,255,255,0.10)!important; }}
-        [data-testid="stSidebarNavLink"][aria-current="page"] span {{
-            color:#fff!important;font-weight:700!important; }}
+        /* ══ HERO · franja de estado (reemplaza los pills) ══ */
+        .hero-meta {{ display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;margin-top:6px; }}
+        .hmeta {{ display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:rgba(255,255,255,0.62); }}
+        .hmeta b {{ color:#fff;font-weight:800; }}
+        .hmeta-dot {{ width:8px;height:8px;border-radius:50%;box-shadow:0 0 10px currentColor;
+            animation:sbcPulse 1.8s ease-in-out infinite; }}
+        .hmeta-sep {{ width:1px;height:15px;background:rgba(255,255,255,0.15); }}
+
+        /* ══ NAV LAUNCHER · pestañas en el área principal ══ */
+        .qnav-head {{ display:flex;align-items:center;gap:11px;margin:32px 0 14px;
+            font-size:11px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;
+            color:rgba(255,255,255,0.48); }}
+        .qnav-head::after {{ content:'';flex:1;height:1px;
+            background:linear-gradient(90deg,rgba(255,255,255,0.14),transparent); }}
+        .qnav-tag {{ font-size:9.5px;padding:3px 10px;border-radius:99px;letter-spacing:0.05em;
+            background:rgba(56,189,248,0.15);border:1px solid rgba(56,189,248,0.30);color:#7dd3fc; }}
+        .qtab-active {{ height:54px;display:flex;align-items:center;justify-content:center;gap:9px;
+            border-radius:15px;font-size:14.5px;font-weight:800;color:#fff;
+            background:linear-gradient(135deg,rgba(56,189,248,0.28),rgba(129,140,248,0.20));
+            border:1px solid rgba(56,189,248,0.45);
+            box-shadow:0 10px 28px -10px rgba(56,189,248,0.65),inset 0 1px 0 rgba(255,255,255,0.14); }}
+        .qtab-active .qdot {{ width:8px;height:8px;border-radius:50%;background:#34D399;
+            box-shadow:0 0 8px rgba(52,211,153,0.9);animation:sbcPulse 1.8s ease-in-out infinite; }}
+        /* botones de la barra de navegación */
+        [class*="st-key-qnav"] [data-testid="stButton"] > button {{
+            height:54px!important;border-radius:15px!important;
+            background:rgba(255,255,255,0.05)!important;
+            border:1px solid rgba(255,255,255,0.13)!important;
+            color:rgba(255,255,255,0.80)!important;font-size:14.5px!important;font-weight:700!important;
+            box-shadow:inset 0 1px 0 rgba(255,255,255,0.06)!important;
+            transition:transform .2s ease,background .2s ease,border-color .2s ease,box-shadow .2s ease!important; }}
+        [class*="st-key-qnav"] [data-testid="stButton"] > button:hover {{
+            background:rgba(255,255,255,0.11)!important;border-color:rgba(56,189,248,0.45)!important;
+            color:#fff!important;transform:translateY(-2px)!important;
+            box-shadow:0 12px 28px -10px rgba(56,189,248,0.55)!important; }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -405,18 +410,37 @@ def home_content():
                 Monitorea <b style='color:rgba(255,255,255,0.85)'>adherencia</b>,
                 <b style='color:rgba(255,255,255,0.85)'>ocupación</b> y desempeño operativo en tiempo real.
             </div>
-            <div class='hero-pills'>
-                <span class='hpill'>⚡ Tiempo real</span>
-                <span class='hpill'>🎯 Meta de adherencia 90%</span>
-                <span class='hpill'>👥 Seguimiento por equipo</span>
-                <span class='hpill'>📈 Tendencias históricas</span>
+            <div class='hero-meta'>
+                <span class='hmeta'><span class='hmeta-dot' style='background:#34D399;color:#34D399'></span>Sistema en línea</span>
+                <span class='hmeta-sep'></span>
+                <span class='hmeta'>🎯 Meta de adherencia&nbsp;<b>90%</b></span>
+                <span class='hmeta-sep'></span>
+                <span class='hmeta'>👥 Seguimiento por&nbsp;<b>equipo</b></span>
+                <span class='hmeta-sep'></span>
+                <span class='hmeta'>📅 Período&nbsp;<b>2026</b></span>
             </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
+    # ── NAVEGACIÓN (pestañas en el área principal) ──
+    st.markdown(
+        "<div class='qnav-head'>⚡ Navegación &nbsp;<span class='qnav-tag'>3 secciones</span></div>",
+        unsafe_allow_html=True)
+    with st.container(key="qnav"):
+        qc1, qc2, qc3 = st.columns(3, gap="medium", vertical_alignment="center")
+        with qc1:
+            st.markdown("<div class='qtab-active'><span class='qdot'></span>Inicio</div>",
+                        unsafe_allow_html=True)
+        with qc2:
+            if st.button("🎯  Adherencia", key="nav_adh", use_container_width=True):
+                st.switch_page(adh_pg)
+        with qc3:
+            if st.button("📊  Ocupación", key="nav_ocu", use_container_width=True):
+                st.switch_page(ocu_pg)
+
     # ── MÓDULOS ──────────────────────────────
-    st.markdown("<div class='sec-lbl'>Módulos disponibles</div>", unsafe_allow_html=True)
+    st.markdown("<div class='sec-lbl'>Explora los módulos</div>", unsafe_allow_html=True)
 
     col1, col2 = st.columns(2, gap="large")
 
