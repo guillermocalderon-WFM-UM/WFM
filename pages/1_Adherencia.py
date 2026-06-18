@@ -334,9 +334,9 @@ st.markdown(f"""
     .st-key-hdrbanner [data-testid="stButton"] > button {{
         background: rgba(255,255,255,0.08) !important;
         border: 1px solid rgba(255,255,255,0.18) !important;
-        color: rgba(255,255,255,0.92) !important; border-radius: 10px !important;
-        font-size: 11px !important; font-weight: 700 !important;
-        height: 34px !important; min-height: 34px !important; padding: 0 6px !important;
+        color: rgba(255,255,255,0.92) !important; border-radius: 11px !important;
+        font-size: 11.5px !important; font-weight: 700 !important; white-space: nowrap !important;
+        height: 40px !important; min-height: 40px !important; padding: 0 8px !important;
         box-shadow: inset 0 1px 0 rgba(255,255,255,0.06) !important;
         transition: transform .2s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease !important;
     }}
@@ -904,7 +904,7 @@ _home_pg = st.Page("home.py", title="Inicio", icon="🏠", default=True)
 _ocu_pg  = st.Page("pages/2_Ocupacion.py", title="Ocupación", icon="📊")
 
 with st.container(key="hdrbanner"):
-    htitle, hmenu, _hsp = st.columns([2.1, 1.2, 0.7], vertical_alignment="center")
+    htitle, hmenu, _hsp = st.columns([1.55, 1.75, 0.7], vertical_alignment="center")
     with htitle:
         st.markdown(f"""
         <div class='hb-eyebrow'><span class='hb-dot'></span>Centro de Control · Uniminuto 2026</div>

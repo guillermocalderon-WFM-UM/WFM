@@ -133,7 +133,7 @@ st.markdown(f"""
     [data-testid="stSidebarUserContent"] [data-testid="stVerticalBlock"] {{
         flex:1 1 auto!important; display:flex!important; flex-direction:column!important; }}
     [data-testid="stSidebarUserContent"] [data-testid="stElementContainer"]:last-of-type {{
-        margin-top:auto!important; }}
+        margin-top:auto!important; margin-bottom:32px!important; }}
 
     /* ══ ANIMATIONS ══ */
     @keyframes sbcBar {{ 0% {{ background-position:0% 0%; }} 100% {{ background-position:200% 0%; }} }}
@@ -150,7 +150,7 @@ st.markdown(f"""
     @keyframes ring {{ 0% {{ transform:scale(.85); opacity:.55; }} 100% {{ transform:scale(1.7); opacity:0; }} }}
 
     /* ══ BRAND CARD (sidebar) ══ */
-    .sbc {{ position:relative;border-radius:20px;overflow:hidden;margin:0 0 20px;padding:20px 18px 18px;
+    .sbc {{ position:relative;border-radius:20px;overflow:hidden;margin:-18px 0 20px;padding:20px 18px 18px;
             background:linear-gradient(145deg,rgba(56,189,248,0.12) 0%,rgba(129,140,248,0.09) 55%,rgba(52,211,153,0.07) 100%),rgba(255,255,255,0.04);
             border:1px solid rgba(255,255,255,0.12); }}
     .sbc-orb {{ position:absolute;border-radius:50%;pointer-events:none; }}
