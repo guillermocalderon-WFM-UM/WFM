@@ -127,7 +127,7 @@ def home_content():
                 radial-gradient(ellipse at 0% 0%,    rgba(56,189,248,0.16) 0%,  transparent 42%),
                 radial-gradient(ellipse at 100% 100%, rgba(129,140,248,0.18) 0%, transparent 42%),
                 radial-gradient(ellipse at 50% 55%,   rgba(52,211,153,0.08) 0%,  transparent 38%),
-                linear-gradient(170deg, #1c0636 0%, #28053F 50%, #18022b 100%);
+                linear-gradient(175deg, #0C0720 0%, #130A2B 52%, #0A0616 100%);
             border-right: 1px solid rgba(255,255,255,0.06);
         }}
         div[data-testid="stSidebarContent"] * {{ color: white !important; }}
@@ -187,7 +187,7 @@ def home_content():
                        color:white!important;flex-shrink:0;letter-spacing:0.5px;
                        box-shadow:0 6px 18px rgba(56,189,248,0.45),inset 0 1px 0 rgba(255,255,255,0.3); }}
         .sbf-online {{ position:absolute;bottom:-2px;right:-2px;width:12px;height:12px;border-radius:50%;
-            background:#34D399;border:2.5px solid #1c0636;box-shadow:0 0 8px rgba(52,211,153,0.8);
+            background:#34D399;border:2.5px solid #130A2B;box-shadow:0 0 8px rgba(52,211,153,0.8);
             animation:sbcPulse 2s ease-in-out infinite; }}
         .sbf-name {{ font-size:12px!important;font-weight:700!important;color:rgba(255,255,255,0.92)!important;margin-bottom:3px!important; }}
         .sbf-role {{ font-size:10px!important;color:rgba(255,255,255,0.42)!important;line-height:1.3; }}
@@ -350,12 +350,26 @@ def home_content():
         .stat-lbl {{ font-size:10px;font-weight:700;color:rgba(255,255,255,0.42);
             text-transform:uppercase;letter-spacing:0.10em; }}
 
-        /* ══ MENÚ DE NAVEGACIÓN (sidebar) ══ */
-        [data-testid="stSidebarNav"] {{ padding-top:4px!important; }}
-        [data-testid="stSidebarNav"] > ul {{ gap:5px!important; }}
+        /* ══ ORDEN: tarjeta Scala arriba → menú → footer ══ */
+        section[data-testid="stSidebar"] > div:first-child,
+        [data-testid="stSidebarContent"] {{
+            display:flex!important; flex-direction:column!important; }}
+        [data-testid="stSidebarHeader"] {{ order:0!important; }}
+        [data-testid="stSidebarNav"]    {{ order:2!important; }}
+        [data-testid="stSidebarUserContent"] {{ display:contents!important; }}
+        [data-testid="stSidebarUserContent"] > div {{ display:contents!important; }}
+        [data-testid="stSidebarUserContent"] [data-testid="stElementContainer"]:nth-of-type(1),
+        [data-testid="stSidebarUserContent"] .element-container:nth-of-type(1) {{ order:1!important; }}
+        [data-testid="stSidebarUserContent"] [data-testid="stElementContainer"]:nth-of-type(2),
+        [data-testid="stSidebarUserContent"] .element-container:nth-of-type(2) {{ order:3!important; }}
+
+        /* ══ MENÚ DE NAVEGACIÓN (sidebar) — compacto ══ */
+        [data-testid="stSidebarNav"] {{ padding-top:0!important;margin-bottom:8px!important; }}
+        [data-testid="stSidebarNav"] > ul {{ gap:0!important;padding:0!important; }}
+        [data-testid="stSidebarNav"] li {{ margin:0!important;padding:0!important; }}
         [data-testid="stSidebarNavLink"] {{
-            border-radius:12px!important; padding:10px 13px!important; margin:3px 4px!important;
-            border:1px solid transparent!important;
+            border-radius:11px!important; padding:8px 13px!important; margin:2px 4px!important;
+            min-height:0!important; border:1px solid transparent!important;
             transition:background .2s ease,border-color .2s ease,transform .2s ease!important; }}
         [data-testid="stSidebarNavLink"]:hover {{
             background:rgba(255,255,255,0.07)!important;
