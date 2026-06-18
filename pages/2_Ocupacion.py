@@ -2,13 +2,6 @@ import streamlit as st
 import base64
 import os
 
-st.set_page_config(
-    page_title="Ocupación – WFM Uniminuto",
-    page_icon="📊",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
 COLOR_PRIMARY = "#28053F"
 COLOR_ACCENT  = "#0EA5E9"
 COLOR_BG      = "#F0F4F8"

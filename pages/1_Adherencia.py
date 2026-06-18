@@ -10,13 +10,6 @@ import base64
 # ─────────────────────────────────────────────
 # CONFIGURACIÓN
 # ─────────────────────────────────────────────
-st.set_page_config(
-    page_title="Adherencia – WFM Uniminuto",
-    page_icon="🎯",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
 SUPERVISOR_COLORS = px.colors.qualitative.Bold
 
 # ─────────────────────────────────────────────
