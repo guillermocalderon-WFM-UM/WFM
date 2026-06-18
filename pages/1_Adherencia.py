@@ -181,15 +181,17 @@ with st.sidebar:
 
     st.markdown("""
     <div class='sbf'>
-        <div class='sbf-rule'></div>
-        <div class='sbf-row'>
-            <div class='sbf-avatar'>GC</div>
-            <div class='sbf-info'>
-                <div class='sbf-name'>Guillermo Calderón</div>
-                <div class='sbf-role'>Analista WFM · Scala Learning</div>
+        <div class='sbf-card'>
+            <div class='sbf-glow'></div>
+            <div class='sbf-row'>
+                <div class='sbf-avatar'>GC<span class='sbf-online'></span></div>
+                <div class='sbf-info'>
+                    <div class='sbf-name'>Guillermo Calderón</div>
+                    <div class='sbf-role'>Analista WFM · Scala Learning</div>
+                </div>
             </div>
         </div>
-        <div class='sbf-credit'>Desarrollado por Workforce Management</div>
+        <div class='sbf-credit'><span class='sbf-spark'>⚡</span>Desarrollado por Workforce Management</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -502,18 +504,30 @@ st.markdown(f"""
         color: white !important;
     }}
 
-    /* ══ SIDEBAR BASE ══ */
+    /* ══ SIDEBAR BASE · mismo fondo de diseño que el hero ══ */
     section[data-testid="stSidebar"] > div:first-child {{
         background:
-            url("data:image/svg+xml,%3Csvg width='52' height='52' viewBox='0 0 52 52' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M26 0 L52 26 L26 52 L0 26 Z' fill='none' stroke='rgba(255,255,255,0.028)' stroke-width='1'/%3E%3C/svg%3E"),
-            repeating-linear-gradient(-60deg, rgba(255,255,255,0.018) 0px, rgba(255,255,255,0.018) 1px, transparent 1px, transparent 14px),
-            radial-gradient(ellipse at 0% 0%,    rgba(56,189,248,0.16) 0%,  transparent 42%),
-            radial-gradient(ellipse at 100% 100%, rgba(129,140,248,0.18) 0%, transparent 42%),
-            radial-gradient(ellipse at 50% 55%,   rgba(52,211,153,0.08) 0%,  transparent 38%),
-            linear-gradient(170deg, #1c0636 0%, #28053F 50%, #18022b 100%);
-        border-right: 1px solid rgba(255,255,255,0.06);
+            linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px),
+            radial-gradient(ellipse 95% 42% at 8% 0%,    rgba(14,165,233,0.30) 0%, transparent 55%),
+            radial-gradient(ellipse 90% 42% at 100% 26%, rgba(129,140,248,0.28) 0%, transparent 55%),
+            radial-gradient(ellipse 85% 42% at 50% 102%, rgba(52,211,153,0.15) 0%, transparent 55%),
+            linear-gradient(160deg, #0B0518 0%, #14082b 45%, #0A0414 100%);
+        background-size: 46px 46px, 46px 46px, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+        border-right: 1px solid rgba(255,255,255,0.07);
     }}
     div[data-testid="stSidebarContent"] * {{ color: white !important; }}
+
+    /* ══ Scala arriba + footer anclado al fondo del sidebar ══ */
+    [data-testid="stSidebarHeader"] {{ padding-top:0.6rem!important; padding-bottom:0!important; }}
+    [data-testid="stSidebarUserContent"] {{ padding-top:0!important; }}
+    section[data-testid="stSidebar"] > div:first-child {{
+        display:flex!important; flex-direction:column!important; min-height:100vh!important; }}
+    [data-testid="stSidebarUserContent"] {{
+        flex:1 1 auto!important; display:flex!important; flex-direction:column!important; }}
+    [data-testid="stSidebarUserContent"] > div {{ flex:1 1 auto!important; display:flex!important; flex-direction:column!important; }}
+    [data-testid="stSidebarUserContent"] [data-testid="stElementContainer"]:last-of-type {{
+        margin-top:auto!important; }}
     div[data-testid="stSidebarContent"] hr {{
         border-color: rgba(255,255,255,0.08);
         margin-top: 4px !important; margin-bottom: 4px !important;
@@ -540,7 +554,7 @@ st.markdown(f"""
         position: relative;
         border-radius: 20px;
         overflow: hidden;
-        margin: 6px 0 26px;
+        margin: 0 0 20px;
         padding: 20px 18px 18px;
         background:
             linear-gradient(145deg,
@@ -718,41 +732,28 @@ st.markdown(f"""
     }}
 
     /* ══ FOOTER ══ */
-    .sbf {{
-        margin-top: 28px;
-        padding: 0;
-    }}
-    .sbf-rule {{
-        height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
-        margin-bottom: 14px;
-    }}
-    .sbf-row {{
-        display: flex; align-items: center; gap: 10px;
-        margin-bottom: 10px;
-    }}
-    .sbf-avatar {{
-        width: 38px; height: 38px;
-        border-radius: 11px;
-        background: linear-gradient(135deg, #38BDF8 0%, #818CF8 100%);
-        display: flex; align-items: center; justify-content: center;
-        font-size: 13px !important; font-weight: 900 !important;
-        color: white !important; flex-shrink: 0; letter-spacing: 0.5px;
-        box-shadow: 0 4px 14px rgba(56,189,248,0.35);
-    }}
-    .sbf-name {{
-        font-size: 11px !important; font-weight: 700 !important;
-        color: rgba(255,255,255,0.68) !important; margin-bottom: 2px !important;
-    }}
-    .sbf-role {{
-        font-size: 10px !important;
-        color: rgba(255,255,255,0.28) !important;
-    }}
-    .sbf-credit {{
-        font-size: 9px !important; font-weight: 600 !important;
-        color: rgba(255,255,255,0.18) !important;
-        text-align: center; letter-spacing: 0.06em;
-    }}
+    .sbf {{ margin-top: 26px; padding: 0; }}
+    .sbf-card {{ position:relative;overflow:hidden;border-radius:16px;padding:14px 14px;
+        background:linear-gradient(150deg,rgba(56,189,248,0.10),rgba(129,140,248,0.06));
+        border:1px solid rgba(255,255,255,0.10);
+        box-shadow:inset 0 1px 0 rgba(255,255,255,0.08); }}
+    .sbf-glow {{ position:absolute;width:120px;height:120px;border-radius:50%;top:-50px;right:-40px;
+        background:radial-gradient(circle,rgba(56,189,248,0.20),transparent 70%);pointer-events:none; }}
+    .sbf-row {{ display:flex;align-items:center;gap:12px;position:relative;z-index:1; }}
+    .sbf-avatar {{ position:relative;width:42px;height:42px;border-radius:13px;
+        background:linear-gradient(135deg,#38BDF8 0%,#818CF8 100%);
+        display:flex;align-items:center;justify-content:center;font-size:14px!important;font-weight:900!important;
+        color:white!important;flex-shrink:0;letter-spacing:0.5px;
+        box-shadow:0 6px 18px rgba(56,189,248,0.45),inset 0 1px 0 rgba(255,255,255,0.3); }}
+    .sbf-online {{ position:absolute;bottom:-2px;right:-2px;width:12px;height:12px;border-radius:50%;
+        background:#34D399;border:2.5px solid #130A2B;box-shadow:0 0 8px rgba(52,211,153,0.8);
+        animation:sbcPulse 2s ease-in-out infinite; }}
+    .sbf-name {{ font-size:12px!important;font-weight:700!important;color:rgba(255,255,255,0.92)!important;margin-bottom:3px!important; }}
+    .sbf-role {{ font-size:10px!important;color:rgba(255,255,255,0.42)!important;line-height:1.3; }}
+    .sbf-credit {{ display:flex;align-items:center;justify-content:center;gap:5px;
+        margin-top:12px;font-size:9px!important;font-weight:600!important;
+        color:rgba(255,255,255,0.30)!important;text-align:center;letter-spacing:0.06em; }}
+    .sbf-spark {{ font-size:10px; }}
 </style>
 """, unsafe_allow_html=True)
 

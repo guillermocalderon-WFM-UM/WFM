@@ -133,12 +133,14 @@ def home_content():
         }}
         div[data-testid="stSidebarContent"] * {{ color: white !important; }}
 
-        /* ══ footer anclado al fondo del sidebar ══ */
+        /* ══ Scala arriba + footer anclado al fondo del sidebar ══ */
+        [data-testid="stSidebarHeader"] {{ padding-top:0.6rem!important; padding-bottom:0!important; }}
+        [data-testid="stSidebarUserContent"] {{ padding-top:0!important; }}
         section[data-testid="stSidebar"] > div:first-child {{
-            display:flex!important; flex-direction:column!important; min-height:100%!important; }}
+            display:flex!important; flex-direction:column!important; min-height:100vh!important; }}
         [data-testid="stSidebarUserContent"] {{
             flex:1 1 auto!important; display:flex!important; flex-direction:column!important; }}
-        [data-testid="stSidebarUserContent"] > div {{ flex:1 1 auto!important; }}
+        [data-testid="stSidebarUserContent"] > div {{ flex:1 1 auto!important; display:flex!important; flex-direction:column!important; }}
         [data-testid="stSidebarUserContent"] [data-testid="stElementContainer"]:last-of-type {{
             margin-top:auto!important; }}
 
@@ -158,7 +160,7 @@ def home_content():
         @keyframes ring {{ 0% {{ transform:scale(.85); opacity:.55; }} 100% {{ transform:scale(1.7); opacity:0; }} }}
 
         /* ══ BRAND CARD (sidebar) ══ */
-        .sbc {{ position:relative;border-radius:20px;overflow:hidden;margin:6px 0 26px;padding:20px 18px 18px;
+        .sbc {{ position:relative;border-radius:20px;overflow:hidden;margin:0 0 20px;padding:20px 18px 18px;
                 background:linear-gradient(145deg,rgba(56,189,248,0.12) 0%,rgba(129,140,248,0.09) 55%,rgba(52,211,153,0.07) 100%),rgba(255,255,255,0.04);
                 border:1px solid rgba(255,255,255,0.12); }}
         .sbc-orb {{ position:absolute;border-radius:50%;pointer-events:none; }}
