@@ -11,6 +11,7 @@ st.set_page_config(
 home_pg = st.Page("home.py",               title="Inicio",     icon="🏠", default=True)
 adh_pg  = st.Page("pages/1_Adherencia.py", title="Adherencia", icon="🎯")
 ocu_pg  = st.Page("pages/2_Ocupacion.py",  title="Ocupación",  icon="📊")
+nov_pg  = st.Page("pages/3_Novedades.py",  title="Novedades",  icon="📢")
 
-pg = st.navigation([home_pg, adh_pg, ocu_pg])
+pg = st.navigation([home_pg, adh_pg, ocu_pg, nov_pg])
 pg.run()

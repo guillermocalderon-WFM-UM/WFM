@@ -7,6 +7,7 @@ COLOR_ACCENT  = "#0EA5E9"
 # objetos de página (mismos parámetros que en Dashboard.py → switch_page funciona)
 adh_pg = st.Page("pages/1_Adherencia.py", title="Adherencia", icon="🎯")
 ocu_pg = st.Page("pages/2_Ocupacion.py",  title="Ocupación",  icon="📊")
+nov_pg = st.Page("pages/3_Novedades.py",  title="Novedades",  icon="📢")
 
 # ── Logo base64 ──────────────────────────
 _LOGO_PATH = "logo-scala-learning-transformacion-digital-universidades.webp"
@@ -118,15 +119,19 @@ st.markdown(f"""
     }}
     div[data-testid="stSidebarContent"] * {{ color: white !important; }}
 
-    /* ══ Scala bien arriba + footer anclado al fondo del sidebar ══ */
+    /* ══ Scala bien arriba + footer pegado al fondo del sidebar ══ */
     [data-testid="stSidebarHeader"] {{ padding-top:0.1rem!important; padding-bottom:0!important; min-height:0!important; }}
-    [data-testid="stSidebarUserContent"] {{ padding-top:0!important; }}
-    section[data-testid="stSidebar"] .block-container {{ padding-top:0.5rem!important; }}
-    section[data-testid="stSidebar"] > div:first-child {{
+    section[data-testid="stSidebar"] .block-container {{ padding-top:0.5rem!important; padding-bottom:0.8rem!important; }}
+    /* toda la cadena del sidebar a altura completa para poder anclar abajo */
+    section[data-testid="stSidebar"] > div:first-child,
+    [data-testid="stSidebarContent"] {{
         display:flex!important; flex-direction:column!important; min-height:100vh!important; }}
     [data-testid="stSidebarUserContent"] {{
+        flex:1 1 auto!important; display:flex!important; flex-direction:column!important;
+        padding-top:0!important; padding-bottom:0!important; }}
+    [data-testid="stSidebarUserContent"] > div,
+    [data-testid="stSidebarUserContent"] [data-testid="stVerticalBlock"] {{
         flex:1 1 auto!important; display:flex!important; flex-direction:column!important; }}
-    [data-testid="stSidebarUserContent"] > div {{ flex:1 1 auto!important; display:flex!important; flex-direction:column!important; }}
     [data-testid="stSidebarUserContent"] [data-testid="stElementContainer"]:last-of-type {{
         margin-top:auto!important; }}
 
@@ -350,13 +355,6 @@ st.markdown(f"""
     .hcard-val {{ font-size:14px;font-weight:800;color:white;margin-top:2px; }}
     .hcard-val .dot {{ display:inline-block;width:7px;height:7px;border-radius:50%;background:#34D399;
         box-shadow:0 0 8px #34D399;margin-right:5px;animation:sbcPulse 1.8s ease-in-out infinite; }}
-    /* chips decorativos flotantes */
-    .hero-float {{ position:absolute;z-index:1;width:48px;height:48px;border-radius:14px;
-        display:flex;align-items:center;justify-content:center;font-size:22px;
-        background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);
-        backdrop-filter:blur(4px);opacity:0.65;animation:float 4.2s ease-in-out infinite; }}
-    .hf1 {{ top:34px;left:42px; }}
-    .hf2 {{ bottom:38px;right:50px;animation-delay:1.4s; }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -366,8 +364,6 @@ st.markdown("""
     <div class='hero-aurora ha1'></div>
     <div class='hero-aurora ha2'></div>
     <div class='hero-aurora ha3'></div>
-    <div class='hero-float hf1'>📊</div>
-    <div class='hero-float hf2'>🎯</div>
     <div class='hero-inner'>
         <div class='hero-badge'>
             <span class='hero-badge-dot'></span>
@@ -398,7 +394,7 @@ st.markdown("""
 # ── MÓDULOS ──────────────────────────────
 st.markdown("<div class='sec-lbl'>Módulos disponibles</div>", unsafe_allow_html=True)
 
-col1, col2 = st.columns(2, gap="large")
+col1, col2, col3 = st.columns(3, gap="large")
 
 with col1:
     st.markdown("""
@@ -488,6 +484,50 @@ with col2:
                  use_container_width=True, type="secondary"):
         st.switch_page(ocu_pg)
 
+with col3:
+    st.markdown("""
+    <div class='mod' style='
+        --accent:linear-gradient(90deg,#F59E0B,#FB923C);
+        --accent-solid:#FBBF24;
+        --glow:rgba(245,158,11,0.55);
+        --icobg:linear-gradient(135deg,rgba(245,158,11,0.22),rgba(251,146,60,0.10));'>
+        <div class='mod-glow'></div>
+        <div class='mod-head'>
+            <div class='mod-ico'>📢</div>
+            <span class='mod-badge' style='background:rgba(245,158,11,0.14);color:#FBBF24;border:1px solid rgba(245,158,11,0.30);'>
+                <span class='mod-badge-dot' style='background:#FBBF24'></span>En Desarrollo
+            </span>
+        </div>
+        <div class='mod-title'>Novedades</div>
+        <div class='mod-desc'>
+            Comunicados, anuncios y registro de cambios del tablero.
+            Mantente al día con las últimas actualizaciones del equipo Workforce Management.
+        </div>
+        <div class='mod-feats'>
+            <div class='mfeat'><span class='mfeat-ck'>✓</span>Anuncios y comunicados del equipo</div>
+            <div class='mfeat'><span class='mfeat-ck'>✓</span>Registro de cambios del tablero</div>
+            <div class='mfeat'><span class='mfeat-ck'>✓</span>Alertas y recordatorios</div>
+            <div class='mfeat'><span class='mfeat-ck'>✓</span>Próximamente disponible</div>
+        </div>
+        <div class='mod-div'></div>
+        <div class='mod-foot'>
+            <div class='mod-chips'>
+                <span class='mchip'>🆕 <b>v1.0</b></span>
+                <span class='mchip'>📅 <b>2026</b></span>
+            </div>
+            <div class='mspark'>
+                <span style='height:45%'></span><span style='height:70%'></span>
+                <span style='height:55%'></span><span style='height:82%'></span>
+                <span style='height:64%'></span><span style='height:92%'></span>
+                <span style='height:76%'></span><span style='height:100%'></span>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    if st.button("📢  Ver Novedades →", key="btn_nov",
+                 use_container_width=True, type="secondary"):
+        st.switch_page(nov_pg)
+
 # ── STATS ─────────────────────────────────
 st.markdown("""
 <div class='stats'>
@@ -503,7 +543,7 @@ st.markdown("""
     </div>
     <div class='stat' style='--sc:#A78BFA'>
         <div class='stat-ico'>🧩</div>
-        <div class='stat-val'>2</div>
+        <div class='stat-val'>3</div>
         <div class='stat-lbl'>Módulos</div>
     </div>
     <div class='stat' style='--sc:#FBBF24'>
