@@ -119,18 +119,28 @@ def home_content():
         div[data-testid="stSidebarContent"] {{ width:100%!important;box-sizing:border-box!important;padding-right:0.75rem!important; }}
         div[data-testid="stSidebarContent"] > div {{ width:100%!important; }}
 
-        /* ══ SIDEBAR ══ */
+        /* ══ SIDEBAR · mismo fondo de diseño que el hero ══ */
         section[data-testid="stSidebar"] > div:first-child {{
             background:
-                url("data:image/svg+xml,%3Csvg width='52' height='52' viewBox='0 0 52 52' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M26 0 L52 26 L26 52 L0 26 Z' fill='none' stroke='rgba(255,255,255,0.028)' stroke-width='1'/%3E%3C/svg%3E"),
-                repeating-linear-gradient(-60deg, rgba(255,255,255,0.018) 0px, rgba(255,255,255,0.018) 1px, transparent 1px, transparent 14px),
-                radial-gradient(ellipse at 0% 0%,    rgba(56,189,248,0.16) 0%,  transparent 42%),
-                radial-gradient(ellipse at 100% 100%, rgba(129,140,248,0.18) 0%, transparent 42%),
-                radial-gradient(ellipse at 50% 55%,   rgba(52,211,153,0.08) 0%,  transparent 38%),
-                linear-gradient(175deg, #0C0720 0%, #130A2B 52%, #0A0616 100%);
-            border-right: 1px solid rgba(255,255,255,0.06);
+                linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px),
+                radial-gradient(ellipse 95% 42% at 8% 0%,    rgba(14,165,233,0.30) 0%, transparent 55%),
+                radial-gradient(ellipse 90% 42% at 100% 26%, rgba(129,140,248,0.28) 0%, transparent 55%),
+                radial-gradient(ellipse 85% 42% at 50% 102%, rgba(52,211,153,0.15) 0%, transparent 55%),
+                linear-gradient(160deg, #0B0518 0%, #14082b 45%, #0A0414 100%);
+            background-size: 46px 46px, 46px 46px, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+            border-right: 1px solid rgba(255,255,255,0.07);
         }}
         div[data-testid="stSidebarContent"] * {{ color: white !important; }}
+
+        /* ══ footer anclado al fondo del sidebar ══ */
+        section[data-testid="stSidebar"] > div:first-child {{
+            display:flex!important; flex-direction:column!important; min-height:100%!important; }}
+        [data-testid="stSidebarUserContent"] {{
+            flex:1 1 auto!important; display:flex!important; flex-direction:column!important; }}
+        [data-testid="stSidebarUserContent"] > div {{ flex:1 1 auto!important; }}
+        [data-testid="stSidebarUserContent"] [data-testid="stElementContainer"]:last-of-type {{
+            margin-top:auto!important; }}
 
         /* ══ ANIMATIONS ══ */
         @keyframes sbcBar {{ 0% {{ background-position:0% 0%; }} 100% {{ background-position:200% 0%; }} }}
@@ -361,33 +371,6 @@ def home_content():
             animation:sbcPulse 1.8s ease-in-out infinite; }}
         .hmeta-sep {{ width:1px;height:15px;background:rgba(255,255,255,0.15); }}
 
-        /* ══ NAV LAUNCHER · pestañas en el área principal ══ */
-        .qnav-head {{ display:flex;align-items:center;gap:11px;margin:32px 0 14px;
-            font-size:11px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;
-            color:rgba(255,255,255,0.48); }}
-        .qnav-head::after {{ content:'';flex:1;height:1px;
-            background:linear-gradient(90deg,rgba(255,255,255,0.14),transparent); }}
-        .qnav-tag {{ font-size:9.5px;padding:3px 10px;border-radius:99px;letter-spacing:0.05em;
-            background:rgba(56,189,248,0.15);border:1px solid rgba(56,189,248,0.30);color:#7dd3fc; }}
-        .qtab-active {{ height:54px;display:flex;align-items:center;justify-content:center;gap:9px;
-            border-radius:15px;font-size:14.5px;font-weight:800;color:#fff;
-            background:linear-gradient(135deg,rgba(56,189,248,0.28),rgba(129,140,248,0.20));
-            border:1px solid rgba(56,189,248,0.45);
-            box-shadow:0 10px 28px -10px rgba(56,189,248,0.65),inset 0 1px 0 rgba(255,255,255,0.14); }}
-        .qtab-active .qdot {{ width:8px;height:8px;border-radius:50%;background:#34D399;
-            box-shadow:0 0 8px rgba(52,211,153,0.9);animation:sbcPulse 1.8s ease-in-out infinite; }}
-        /* botones de la barra de navegación */
-        [class*="st-key-qnav"] [data-testid="stButton"] > button {{
-            height:54px!important;border-radius:15px!important;
-            background:rgba(255,255,255,0.05)!important;
-            border:1px solid rgba(255,255,255,0.13)!important;
-            color:rgba(255,255,255,0.80)!important;font-size:14.5px!important;font-weight:700!important;
-            box-shadow:inset 0 1px 0 rgba(255,255,255,0.06)!important;
-            transition:transform .2s ease,background .2s ease,border-color .2s ease,box-shadow .2s ease!important; }}
-        [class*="st-key-qnav"] [data-testid="stButton"] > button:hover {{
-            background:rgba(255,255,255,0.11)!important;border-color:rgba(56,189,248,0.45)!important;
-            color:#fff!important;transform:translateY(-2px)!important;
-            box-shadow:0 12px 28px -10px rgba(56,189,248,0.55)!important; }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -423,24 +406,8 @@ def home_content():
     </div>
     """, unsafe_allow_html=True)
 
-    # ── NAVEGACIÓN (pestañas en el área principal) ──
-    st.markdown(
-        "<div class='qnav-head'>⚡ Navegación &nbsp;<span class='qnav-tag'>3 secciones</span></div>",
-        unsafe_allow_html=True)
-    with st.container(key="qnav"):
-        qc1, qc2, qc3 = st.columns(3, gap="medium", vertical_alignment="center")
-        with qc1:
-            st.markdown("<div class='qtab-active'><span class='qdot'></span>Inicio</div>",
-                        unsafe_allow_html=True)
-        with qc2:
-            if st.button("🎯  Adherencia", key="nav_adh", use_container_width=True):
-                st.switch_page(adh_pg)
-        with qc3:
-            if st.button("📊  Ocupación", key="nav_ocu", use_container_width=True):
-                st.switch_page(ocu_pg)
-
     # ── MÓDULOS ──────────────────────────────
-    st.markdown("<div class='sec-lbl'>Explora los módulos</div>", unsafe_allow_html=True)
+    st.markdown("<div class='sec-lbl'>Módulos disponibles</div>", unsafe_allow_html=True)
 
     col1, col2 = st.columns(2, gap="large")
 
