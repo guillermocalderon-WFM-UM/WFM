@@ -296,125 +296,109 @@ st.markdown(f"""
         font-size: 12px; font-weight: 700; color: white;
         white-space: nowrap; letter-spacing: 0.02em;
     }}
-    /* ══ HEADER · "Aurora Control Deck" (data-driven / LIVE) ══ */
+    /* ══ HEADER · "Aurora Deck" compacto (data / LIVE) ══ */
     .st-key-hdrbanner {{
         position:relative; overflow:hidden; isolation:isolate;
-        border-radius:22px; padding:24px 30px 20px; margin-bottom:18px;
-        border:1px solid rgba(129,140,248,0.20);
+        border-radius:18px; padding:14px 24px; margin-bottom:16px;
+        border:1px solid rgba(129,140,248,0.18);
         background:
-            radial-gradient(ellipse 70% 130% at 2% -15%,  rgba(14,165,233,0.34), transparent 60%),
-            radial-gradient(ellipse 65% 130% at 100% 120%, rgba(129,140,248,0.34), transparent 60%),
-            radial-gradient(ellipse 55% 110% at 72% 130%,  rgba(52,211,153,0.16), transparent 60%),
+            radial-gradient(ellipse 70% 130% at 2% -15%,  rgba(14,165,233,0.30), transparent 60%),
+            radial-gradient(ellipse 65% 130% at 100% 120%, rgba(129,140,248,0.30), transparent 60%),
+            radial-gradient(ellipse 55% 110% at 72% 130%,  rgba(52,211,153,0.13), transparent 60%),
             linear-gradient(155deg, #0B0518, #14082b 50%, #0A0414);
-        box-shadow: 0 18px 50px -22px rgba(8,3,24,0.9), inset 0 1px 0 rgba(255,255,255,0.05);
+        box-shadow: 0 14px 40px -22px rgba(8,3,24,0.9), inset 0 1px 0 rgba(255,255,255,0.05);
     }}
     /* textura: retícula HUD + barras-stream (data-viz) */
     .st-key-hdrbanner::before {{
         content:""; position:absolute; inset:0; z-index:-2;
         background-image:
-            linear-gradient(rgba(129,140,248,0.05) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(129,140,248,0.05) 1px, transparent 1px),
-            repeating-linear-gradient(90deg, rgba(56,189,248,0.10) 0 2px, transparent 2px 13px);
-        background-size:34px 34px, 34px 34px, 13px 100%;
+            linear-gradient(rgba(129,140,248,0.045) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(129,140,248,0.045) 1px, transparent 1px),
+            repeating-linear-gradient(90deg, rgba(56,189,248,0.09) 0 2px, transparent 2px 13px);
+        background-size:32px 32px, 32px 32px, 13px 100%;
         background-position:0 0, 0 0, left bottom;
         background-repeat:repeat, repeat, repeat-x;
-        -webkit-mask-image:radial-gradient(ellipse 90% 130% at 28% 0%, #000 35%, transparent 78%);
-                mask-image:radial-gradient(ellipse 90% 130% at 28% 0%, #000 35%, transparent 78%);
-        opacity:.65;
+        -webkit-mask-image:radial-gradient(ellipse 95% 130% at 25% 0%, #000 30%, transparent 75%);
+                mask-image:radial-gradient(ellipse 95% 130% at 25% 0%, #000 30%, transparent 75%);
+        opacity:.55;
     }}
-    /* watermark gigante del ícono */
+    /* watermark del ícono */
     .st-key-hdrbanner::after {{
-        content:"🎯"; position:absolute; right:-26px; top:50%; transform:translateY(-50%);
-        z-index:-1; font-size:190px; line-height:1; opacity:.08;
-        filter:blur(1.5px) saturate(1.2); pointer-events:none;
-        -webkit-mask-image:linear-gradient(90deg, transparent, #000 58%);
-                mask-image:linear-gradient(90deg, transparent, #000 58%);
+        content:"🎯"; position:absolute; right:-20px; top:50%; transform:translateY(-50%);
+        z-index:-1; font-size:140px; line-height:1; opacity:.06;
+        filter:blur(1px); pointer-events:none;
+        -webkit-mask-image:linear-gradient(90deg, transparent, #000 62%);
+                mask-image:linear-gradient(90deg, transparent, #000 62%);
         animation:hbFloat 9s ease-in-out infinite;
     }}
-    /* borde de luz animado */
-    .hb-border {{
-        position:absolute; inset:0; border-radius:22px; padding:1px; pointer-events:none; z-index:3;
-        background:linear-gradient(120deg, rgba(56,189,248,0) 18%, rgba(56,189,248,.9) 33%, rgba(129,140,248,.95) 48%, rgba(52,211,153,.55) 63%, rgba(129,140,248,0) 80%);
-        background-size:300% 100%;
-        -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-        -webkit-mask-composite:xor;
-                mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-                mask-composite:exclude;
-        animation:hbBorder 7s linear infinite;
-    }}
-    /* barra escáner superior */
+    /* línea superior con glow (segura, sin mask-composite) */
     .hb-scan {{
-        position:absolute; top:0; left:0; right:0; height:3px; border-radius:22px 22px 0 0; z-index:4;
-        background:linear-gradient(90deg, transparent 0%, #38BDF8 18%, #818CF8 42%, #34D399 60%, #818CF8 78%, transparent 100%);
-        background-size:220% 100%; animation:hbScan 5.5s linear infinite;
+        position:absolute; top:0; left:0; right:0; height:2px; z-index:3;
+        background:linear-gradient(90deg, transparent, #38BDF8 20%, #818CF8 45%, #34D399 62%, transparent 90%);
+        background-size:220% 100%; animation:hbScan 6s linear infinite;
     }}
     .hb-head {{ position:relative; z-index:2; }}
     .hb-top {{ display:flex; align-items:center; flex-wrap:wrap; gap:8px; }}
     .hb-eyebrow {{
-        display:inline-flex; align-items:center; gap:8px;
-        font-family:'Space Grotesk','Inter',sans-serif; font-size:11px; font-weight:700;
-        letter-spacing:.16em; text-transform:uppercase; color:#C7D2FE;
-        padding:5px 12px; border-radius:999px; border:1px solid rgba(129,140,248,0.28);
-        background:linear-gradient(180deg, rgba(56,189,248,0.10), rgba(129,140,248,0.06));
-        backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
-    }}
-    .hb-dot {{ width:8px; height:8px; border-radius:50%; background:#34D399;
+        display:inline-flex; align-items:center; gap:7px;
+        font-family:'Space Grotesk','Inter',sans-serif; font-size:9.5px; font-weight:700;
+        letter-spacing:.14em; text-transform:uppercase; color:#C7D2FE;
+        padding:4px 11px; border-radius:999px; border:1px solid rgba(129,140,248,0.26);
+        background:rgba(129,140,248,0.08); }}
+    .hb-dot {{ width:7px; height:7px; border-radius:50%; background:#34D399;
         box-shadow:0 0 0 0 rgba(52,211,153,0.55); animation:hbPulse 1.8s ease-out infinite; }}
-    .hb-live {{ display:inline-flex; align-items:center; gap:7px;
-        font-family:'Space Grotesk','Inter',sans-serif; font-size:10px; font-weight:700; letter-spacing:.18em;
-        color:#7DE3C3; padding:4px 10px; border-radius:999px;
-        background:rgba(52,211,153,.08); border:1px solid rgba(52,211,153,.30); }}
-    .hb-live i {{ position:relative; width:7px; height:7px; border-radius:50%; background:#34D399; font-style:normal; }}
+    .hb-live {{ display:inline-flex; align-items:center; gap:6px;
+        font-family:'Space Grotesk','Inter',sans-serif; font-size:9px; font-weight:700; letter-spacing:.16em;
+        color:#7DE3C3; padding:3px 9px; border-radius:999px;
+        background:rgba(52,211,153,.08); border:1px solid rgba(52,211,153,.28); }}
+    .hb-live i {{ position:relative; width:6px; height:6px; border-radius:50%; background:#34D399; font-style:normal; }}
     .hb-live i::after {{ content:""; position:absolute; inset:-3px; border-radius:50%;
         border:1px solid rgba(52,211,153,.6); animation:hbRadar 1.8s ease-out infinite; }}
-    .hb-title {{ margin:11px 0 0; padding:0; font-family:'Space Grotesk','Inter',sans-serif;
-        font-size:30px; font-weight:700; line-height:1.08; letter-spacing:-.015em; color:#F4F5FF;
-        display:inline-flex; align-items:center; gap:12px; position:relative; }}
-    .hb-title .hb-ic {{ font-size:26px; filter:drop-shadow(0 2px 10px rgba(56,189,248,0.5)); }}
+    .hb-title {{ margin:7px 0 0; padding:0; font-family:'Space Grotesk','Inter',sans-serif;
+        font-size:25px; font-weight:700; line-height:1.05; letter-spacing:-.01em; color:#F4F5FF;
+        display:inline-flex; align-items:center; gap:10px; position:relative; }}
+    .hb-title .hb-ic {{ font-size:22px; filter:drop-shadow(0 2px 8px rgba(56,189,248,0.5)); }}
     .hb-title .hb-grad {{ position:relative;
         background:linear-gradient(92deg, #38BDF8, #818CF8);
         -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent; }}
-    .hb-title .hb-grad::after {{ content:""; position:absolute; left:0; right:0; bottom:-6px; height:3px; border-radius:3px;
+    .hb-title .hb-grad::after {{ content:""; position:absolute; left:0; right:0; bottom:-3px; height:2px; border-radius:2px;
         background:linear-gradient(90deg, #38BDF8, #818CF8, transparent);
-        transform-origin:left; animation:hbUnderline 1.1s cubic-bezier(.2,.7,.2,1) .15s both; }}
-    .hb-meta {{ display:flex; flex-wrap:wrap; gap:9px; margin-top:14px; }}
-    .hb-chip {{ display:inline-flex; align-items:center; gap:7px;
-        font-family:'Inter',sans-serif; font-size:12.5px; font-weight:500; color:#D9DEF7;
-        padding:6px 13px; border-radius:11px; border:1px solid rgba(255,255,255,0.10);
-        background:rgba(255,255,255,0.045); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
-        box-shadow:inset 0 1px 0 rgba(255,255,255,0.06); }}
+        transform-origin:left; animation:hbUnderline 1s cubic-bezier(.2,.7,.2,1) .15s both; }}
+    .hb-meta {{ display:flex; flex-wrap:wrap; gap:8px; margin-top:9px; }}
+    .hb-chip {{ display:inline-flex; align-items:center; gap:6px;
+        font-family:'Inter',sans-serif; font-size:11.5px; font-weight:500; color:#D9DEF7;
+        padding:5px 11px; border-radius:9px; border:1px solid rgba(255,255,255,0.10);
+        background:rgba(255,255,255,0.04); }}
     .hb-chip b {{ color:#fff; font-weight:700; }}
 
-    /* navegación · botones a la izquierda, compactos */
-    .st-key-hdrbanner [data-testid="stHorizontalBlock"] {{ gap:9px !important; margin-top:16px; justify-content:flex-start; }}
+    /* navegación · botones compactos a la izquierda */
+    .st-key-hdrbanner [data-testid="stHorizontalBlock"] {{ gap:8px !important; margin-top:12px; justify-content:flex-start; }}
     .st-key-hdrbanner [data-testid="column"],
     .st-key-hdrbanner [data-testid="stColumn"] {{ flex:0 0 auto !important; width:auto !important; min-width:0 !important; }}
     .st-key-hdrbanner [data-testid="stButton"] > button {{
         position:relative; z-index:2; width:auto;
-        font-family:'Space Grotesk','Inter',sans-serif !important; font-size:13px !important; font-weight:600 !important; letter-spacing:.01em;
-        color:#C7D0F0 !important; padding:8px 16px !important; border-radius:11px !important; height:auto !important; min-height:0 !important;
-        border:1px solid rgba(255,255,255,0.10) !important; background:rgba(255,255,255,0.045) !important;
-        backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); white-space:nowrap !important;
+        font-family:'Space Grotesk','Inter',sans-serif !important; font-size:12px !important; font-weight:600 !important;
+        color:#C7D0F0 !important; padding:6px 13px !important; border-radius:9px !important; height:auto !important; min-height:0 !important;
+        border:1px solid rgba(255,255,255,0.10) !important; background:rgba(255,255,255,0.04) !important; white-space:nowrap !important;
         box-shadow:inset 0 1px 0 rgba(255,255,255,0.05) !important;
-        transition:transform .18s ease, background .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease !important;
+        transition:transform .18s ease, background .18s ease, border-color .18s ease, color .18s ease !important;
     }}
     .st-key-hdrbanner [data-testid="stButton"] > button:hover {{
-        color:#F4F6FF !important; border-color:rgba(129,140,248,0.55) !important; background:rgba(129,140,248,0.14) !important;
-        transform:translateY(-1px) !important; box-shadow:0 6px 18px -8px rgba(56,189,248,0.5) !important; }}
+        color:#F4F6FF !important; border-color:rgba(129,140,248,0.5) !important; background:rgba(129,140,248,0.13) !important;
+        transform:translateY(-1px) !important; }}
     .st-key-hdrbanner [data-testid="stButton"] > button[kind="primary"] {{
-        color:#FFFFFF !important; font-weight:700 !important; border:1px solid transparent !important;
-        background:linear-gradient(#160a30,#160a30) padding-box, linear-gradient(92deg, #38BDF8, #818CF8) border-box !important;
-        box-shadow:0 0 0 1px rgba(56,189,248,.25), 0 8px 22px -10px rgba(56,189,248,.8) !important; }}
+        color:#fff !important; font-weight:700 !important; border:1px solid rgba(56,189,248,0.55) !important;
+        background:linear-gradient(92deg, rgba(56,189,248,0.32), rgba(129,140,248,0.30)) !important;
+        box-shadow:0 6px 18px -8px rgba(56,189,248,0.7) !important; }}
     .st-key-hdrbanner [data-testid="stButton"] > button[kind="primary"]:hover {{
-        color:#FFFFFF !important; transform:translateY(-1px) !important;
-        box-shadow:0 0 0 1px rgba(56,189,248,.4), 0 10px 26px -10px rgba(129,140,248,.9) !important; }}
+        transform:translateY(-1px) !important;
+        background:linear-gradient(92deg, rgba(56,189,248,0.42), rgba(129,140,248,0.38)) !important; }}
 
     /* keyframes del header */
     @keyframes hbScan {{ 0% {{ background-position:120% 0; }} 100% {{ background-position:-120% 0; }} }}
-    @keyframes hbBorder {{ to {{ background-position:300% 0; }} }}
-    @keyframes hbFloat {{ 0%,100% {{ transform:translateY(-50%) rotate(-3deg); }} 50% {{ transform:translateY(-54%) rotate(3deg); }} }}
-    @keyframes hbPulse {{ 0% {{ box-shadow:0 0 0 0 rgba(52,211,153,0.55); }} 70% {{ box-shadow:0 0 0 7px rgba(52,211,153,0); }} 100% {{ box-shadow:0 0 0 0 rgba(52,211,153,0); }} }}
-    @keyframes hbRadar {{ 0% {{ transform:scale(.6); opacity:1; }} 100% {{ transform:scale(2.4); opacity:0; }} }}
+    @keyframes hbFloat {{ 0%,100% {{ transform:translateY(-50%) rotate(-3deg); }} 50% {{ transform:translateY(-53%) rotate(3deg); }} }}
+    @keyframes hbPulse {{ 0% {{ box-shadow:0 0 0 0 rgba(52,211,153,0.55); }} 70% {{ box-shadow:0 0 0 6px rgba(52,211,153,0); }} 100% {{ box-shadow:0 0 0 0 rgba(52,211,153,0); }} }}
+    @keyframes hbRadar {{ 0% {{ transform:scale(.6); opacity:1; }} 100% {{ transform:scale(2.3); opacity:0; }} }}
     @keyframes hbUnderline {{ from {{ transform:scaleX(0); opacity:0; }} to {{ transform:scaleX(1); opacity:1; }} }}
 
     /* ── KPI cards ── */
@@ -972,7 +956,6 @@ _nov_pg  = st.Page("pages/3_Novedades.py", title="Novedades", icon="📢")
 with st.container(key="hdrbanner"):
     st.markdown(f"""
     <span class='hb-scan'></span>
-    <span class='hb-border'></span>
     <div class='hb-head'>
         <div class='hb-top'>
             <span class='hb-eyebrow'><span class='hb-dot'></span>Centro de Control · Uniminuto 2026</span>
