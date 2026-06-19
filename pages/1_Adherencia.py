@@ -6,11 +6,26 @@ from plotly.subplots import make_subplots
 import glob
 import os
 import base64
+import io
 
 # ─────────────────────────────────────────────
 # CONFIGURACIÓN
 # ─────────────────────────────────────────────
 SUPERVISOR_COLORS = px.colors.qualitative.Bold
+
+def df_descarga(df, nombre_archivo, **kwargs):
+    st.dataframe(df, **kwargs)
+    buf = io.BytesIO()
+    df.to_excel(buf, index=False, engine="openpyxl")
+    buf.seek(0)
+    st.download_button(
+        label="⬇️ Descargar Excel",
+        data=buf,
+        file_name=nombre_archivo,
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        use_container_width=True,
+        key=f"dl_{nombre_archivo}",
+    )
 
 # ─────────────────────────────────────────────
 # CARGA Y PREPARACIÓN DE DATOS
@@ -1233,7 +1248,7 @@ with c_gauge:
     tabla_sup["ADH"] = tabla_sup["ADH"].apply(lambda x: f"{x:.1%}")
     tabla_sup["Supervisor"] = tabla_sup["Supervisor"].apply(lambda n: " ".join(n.split()[:2]))
     tabla_sup.columns = ["Supervisor","ADH%","Agentes","Ausentes","Tardes"]
-    st.dataframe(tabla_sup, use_container_width=True, hide_index=True, height=400)
+    df_descarga(tabla_sup, "comparativo_supervisores.xlsx", use_container_width=True, hide_index=True, height=400)
 
 # ─────────────────────────────────────────────
 # TENDENCIA + DISTRIBUCIÓN LLEGADAS
@@ -1425,8 +1440,9 @@ t1_show = (
          "T. Programado", "Fuera de ADH", "ADH Aplicada"]
     ].sort_values(["Fecha", "Agente"]).reset_index(drop=True)
 )
-st.dataframe(
+df_descarga(
     t1_show,
+    "detalle_adherencia.xlsx",
     column_config={
         "Adherencia %": st.column_config.ProgressColumn(
             "Adherencia %", format="%.1f%%", min_value=0, max_value=100
@@ -1466,8 +1482,9 @@ t2["Fecha"] = t2["Fecha"].dt.strftime("%d/%m/%Y")
 for c in plan_disponibles:
     t2[c] = t2[c].apply(fmt_plan)
 
-st.dataframe(
+df_descarga(
     t2.sort_values(["Fecha", "Agente"]).reset_index(drop=True),
+    "planificacion.xlsx",
     use_container_width=True, hide_index=True, height=350
 )
 
@@ -1500,6 +1517,6 @@ if exc_min_disp:
 
 cols_t3 = ["Fecha", "Agente", "Supervisor", "Campaña"] + exc_fmt_cols + (["Total excesos"] if exc_min_disp else [])
 t3_show = t3[cols_t3].sort_values(["Fecha", "Agente"]).reset_index(drop=True)
-st.dataframe(t3_show, use_container_width=True, hide_index=True, height=350)
+df_descarga(t3_show, "estados_excesos.xlsx", use_container_width=True, hide_index=True, height=350)
 
 st.caption(f"📋 {dff['Nombre'].nunique()} agentes · {len(dff)} registros en el período seleccionado")

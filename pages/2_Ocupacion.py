@@ -5,11 +5,26 @@ import plotly.express as px
 import glob
 import os
 import base64
+import io
 
 # ─────────────────────────────────────────────
 # CONFIGURACIÓN
 # ─────────────────────────────────────────────
 SUPERVISOR_COLORS = px.colors.qualitative.Bold
+
+def df_descarga(df, nombre_archivo, **kwargs):
+    st.dataframe(df, **kwargs)
+    buf = io.BytesIO()
+    df.to_excel(buf, index=False, engine="openpyxl")
+    buf.seek(0)
+    st.download_button(
+        label="⬇️ Descargar Excel",
+        data=buf,
+        file_name=nombre_archivo,
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        use_container_width=True,
+        key=f"dl_{nombre_archivo}",
+    )
 ORDEN_MESES = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO",
                "JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"]
 COLOR_PRIMARY = "#28053F"
@@ -799,7 +814,7 @@ tbl_ocu_disp = {
 }
 if "Ajuste_s"   in tbl_ocu.columns: tbl_ocu_disp["Ajuste"]          = tbl_ocu["Ajuste_s"].map(seg_a_hhmmss)
 if "Llamadas_s" in tbl_ocu.columns: tbl_ocu_disp["Tiempo Llamadas"] = tbl_ocu["Llamadas_s"].map(seg_a_hhmmss)
-st.dataframe(pd.DataFrame(tbl_ocu_disp), use_container_width=True, hide_index=True)
+df_descarga(pd.DataFrame(tbl_ocu_disp), "ocupacion_detalle.xlsx", use_container_width=True, hide_index=True)
 
 # ─────────────────────────────────────────────
 # SECCIÓN 2 · CONTACTO
@@ -900,7 +915,7 @@ tbl_cont_disp = {
 }
 if "Disponible_s" in tbl_cont.columns: tbl_cont_disp["Disponible"]      = tbl_cont["Disponible_s"].map(seg_a_hhmmss)
 if "Llamadas_s"   in tbl_cont.columns: tbl_cont_disp["Tiempo Llamadas"] = tbl_cont["Llamadas_s"].map(seg_a_hhmmss)
-st.dataframe(pd.DataFrame(tbl_cont_disp), use_container_width=True, hide_index=True)
+df_descarga(pd.DataFrame(tbl_cont_disp), "contacto_detalle.xlsx", use_container_width=True, hide_index=True)
 
 # ─────────────────────────────────────────────
 # SECCIÓN 3 · LLAMADAS
@@ -1005,7 +1020,7 @@ if "Abandonadas" in tbl_call.columns and "Llamadas" in tbl_call.columns:
         tbl_call["Abandonadas"] / tbl_call["Llamadas"].replace(0, float("nan"))
     ).map(lambda x: f"{x:.1%}" if pd.notna(x) else "—")
 
-st.dataframe(pd.DataFrame(tbl_call_disp), use_container_width=True, hide_index=True)
+df_descarga(pd.DataFrame(tbl_call_disp), "llamadas_detalle.xlsx", use_container_width=True, hide_index=True)
 
 # ─────────────────────────────────────────────
 # RESUMEN POR SUPERVISOR
@@ -1046,10 +1061,11 @@ with col_tbl:
         tbl_sup_disp["% Abandono"] = tbl_sup["PctAbandono"].map(
             lambda x: f"{x:.1%}" if pd.notna(x) else "—"
         )
-    st.dataframe(pd.DataFrame(tbl_sup_disp), use_container_width=True, hide_index=True)
+    df_descarga(pd.DataFrame(tbl_sup_disp), "resumen_supervisores.xlsx", use_container_width=True, hide_index=True)
 
 with col_pie:
     if "Llamadas" in tbl_sup.columns:
+        _pie_h = max(370, len(tbl_sup) * 42 + 60)
         fig_pie = go.Figure(go.Pie(
             labels=tbl_sup["Supervisor"].apply(lambda n: " ".join(n.split()[:2])),
             values=tbl_sup["Llamadas"],
@@ -1063,7 +1079,7 @@ with col_pie:
             hovertemplate="<b>%{label}</b><br>Llamadas: %{value:,}<br>%{percent}<extra></extra>",
         ))
         fig_pie.update_layout(
-            height=370, margin=dict(l=0, r=0, t=10, b=10),
+            height=_pie_h, margin=dict(l=0, r=0, t=10, b=10),
             paper_bgcolor="rgba(0,0,0,0)",
             legend=dict(
                 orientation="v", x=1.02, y=0.5,
