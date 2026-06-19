@@ -214,11 +214,12 @@ st.markdown(f"""
         background: rgba(255,255,255,0.08) !important;
         border: 1px solid rgba(255,255,255,0.18) !important;
         color: rgba(255,255,255,0.92) !important; border-radius: 9px !important;
-        font-size: 10.5px !important; font-weight: 700 !important;
-        height: 32px !important; min-height: 32px !important; padding: 0 6px !important;
+        font-size: 11px !important; font-weight: 700 !important; white-space: nowrap !important;
+        height: 32px !important; min-height: 32px !important; padding: 0 8px !important;
         box-shadow: inset 0 1px 0 rgba(255,255,255,0.06) !important;
         transition: transform .2s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease !important;
     }}
+    .st-key-hdrbanner [data-testid="stButton"] > button p {{ white-space:nowrap !important; margin:0 !important; }}
     .st-key-hdrbanner [data-testid="stButton"] > button:hover {{
         background: rgba(255,255,255,0.16) !important;
         border-color: rgba(56,189,248,0.5) !important; transform: translateY(-2px) !important;
@@ -298,7 +299,7 @@ with st.container(key="hdrbanner"):
     </div>
     <div class='nav-lbl'>⚡ Navegación</div>
     """, unsafe_allow_html=True)
-    nb1, nb2, nb3, nb4, _nsp = st.columns([1.0, 1.35, 1.3, 1.3, 4.05], vertical_alignment="center")
+    nb1, nb2, nb3, nb4, _nsp = st.columns([1.0, 1.35, 1.3, 1.35, 1.6], vertical_alignment="center")
     with nb1:
         if st.button("🏠 Inicio", key="hdr_home", use_container_width=True):
             st.switch_page(_home_pg)
