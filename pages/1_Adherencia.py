@@ -376,34 +376,41 @@ st.markdown(f"""
     .hb-stats .hb-stat:last-child .hb-sv {{ color:#7DD3FC; text-shadow:0 0 10px rgba(56,189,248,0.32); }}
     .hb-stats .hb-stat:last-child .hb-sl {{ color:rgba(125,211,252,0.60); }}
 
-    /* navegación · grilla 2×2 a la derecha */
+    /* navegación · fila de botones pequeños con detalle (igual que Ocupación/Novedades) */
     .st-key-hdrbanner [data-testid="stHorizontalBlock"] {{ gap:8px !important; }}
-    .st-key-hdrbanner [data-testid="stVerticalBlock"] {{ gap:8px !important; }}
-    .menu-cap {{ font-family:'Inter',sans-serif; font-size:9.5px; font-weight:800;
-        letter-spacing:.18em; text-transform:uppercase; color:rgba(199,210,254,0.55); margin:0 0 7px; }}
+    .st-key-hdrbanner [data-testid="stVerticalBlock"] {{ gap:0.5rem !important; }}
+    .menu-cap {{ font-family:'Inter',sans-serif; font-size:9px; font-weight:800;
+        letter-spacing:.16em; text-transform:uppercase; color:rgba(199,210,254,0.55); margin:14px 0 8px; }}
     .st-key-hdrbanner [data-testid="stButton"] > button {{
-        position:relative; z-index:2; width:100%; overflow:hidden;
-        font-family:'Space Grotesk','Inter',sans-serif !important; font-size:12.5px !important; font-weight:600 !important;
-        color:#CBD3F2 !important; padding:10px 14px !important; border-radius:12px !important; height:auto !important; min-height:0 !important;
-        border:1px solid rgba(255,255,255,0.12) !important; white-space:nowrap !important;
-        background:linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03)) !important;
-        box-shadow:inset 0 1px 0 rgba(255,255,255,0.09) !important;
-        transition:transform .2s ease, background .2s ease, border-color .2s ease, color .2s ease, box-shadow .2s ease !important;
+        position:relative; z-index:2; overflow:hidden; white-space:nowrap !important;
+        color:#CBD3F2 !important; border-radius:9px !important;
+        font-size:10px !important; font-weight:700 !important;
+        height:32px !important; min-height:32px !important; padding:0 11px !important;
+        border:1px solid rgba(255,255,255,0.12) !important; border-top-color:rgba(255,255,255,0.18) !important;
+        background:linear-gradient(180deg, rgba(255,255,255,0.085), rgba(255,255,255,0.025)) !important;
+        box-shadow:inset 0 1px 0 rgba(255,255,255,0.10), inset 0 -2px 6px -2px rgba(0,0,0,0.35), 0 4px 12px -8px rgba(8,3,24,0.60) !important;
+        transition:transform .16s ease, box-shadow .16s ease, background .16s ease, border-color .16s ease, color .16s ease !important;
     }}
+    .st-key-hdrbanner [data-testid="stButton"] > button p {{ white-space:nowrap !important; margin:0 !important; }}
     .st-key-hdrbanner [data-testid="stButton"] > button:hover {{
-        color:#FFFFFF !important; border-color:rgba(129,140,248,0.6) !important;
-        background:linear-gradient(180deg, rgba(129,140,248,0.20), rgba(56,189,248,0.10)) !important;
-        transform:translateY(-2px) !important; box-shadow:0 10px 22px -10px rgba(56,189,248,0.6) !important; }}
+        color:#EAF2FF !important; transform:translateY(-1px) !important;
+        border-color:rgba(125,211,252,0.42) !important;
+        background:linear-gradient(180deg, rgba(125,211,252,0.15), rgba(255,255,255,0.04)) !important;
+        box-shadow:inset 0 1px 0 rgba(255,255,255,0.16), 0 8px 20px -10px rgba(56,189,248,0.38) !important; }}
+    .st-key-hdrbanner [data-testid="stButton"] > button:active {{
+        transform:translateY(0) !important; box-shadow:inset 0 2px 5px rgba(0,0,0,0.48) !important; }}
     .st-key-hdrbanner [data-testid="stButton"] > button[kind="primary"] {{
-        color:#fff !important; font-weight:700 !important; border:1px solid rgba(56,189,248,0.65) !important;
-        background:linear-gradient(135deg, rgba(56,189,248,0.40), rgba(129,140,248,0.32)) !important;
-        box-shadow:0 10px 24px -10px rgba(56,189,248,0.85), inset 0 1px 0 rgba(255,255,255,0.20) !important; }}
-    .st-key-hdrbanner [data-testid="stButton"] > button[kind="primary"]::after {{
-        content:""; position:absolute; left:0; top:0; bottom:0; width:3px;
-        background:linear-gradient(#38BDF8,#818CF8); box-shadow:0 0 10px rgba(56,189,248,0.9); }}
+        color:#F4F9FF !important; padding-left:20px !important;
+        border:1px solid rgba(56,189,248,0.55) !important; border-top-color:rgba(186,225,255,0.62) !important;
+        background:linear-gradient(180deg, rgba(56,189,248,0.30), rgba(59,130,246,0.16)) !important;
+        box-shadow:inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -8px 14px -12px rgba(8,3,24,0.42), 0 8px 22px -10px rgba(56,189,248,0.50) !important; }}
+    .st-key-hdrbanner [data-testid="stButton"] > button[kind="primary"]::before {{
+        content:""; position:absolute; left:8px; top:50%; transform:translateY(-50%);
+        width:5px; height:5px; border-radius:50%; background:#7DD3FC; box-shadow:0 0 8px rgba(125,211,252,0.9); }}
     .st-key-hdrbanner [data-testid="stButton"] > button[kind="primary"]:hover {{
-        transform:translateY(-2px) !important;
-        background:linear-gradient(135deg, rgba(56,189,248,0.50), rgba(129,140,248,0.40)) !important; }}
+        transform:translateY(-1px) !important;
+        background:linear-gradient(180deg, rgba(56,189,248,0.36), rgba(59,130,246,0.20)) !important;
+        box-shadow:inset 0 1px 0 rgba(255,255,255,0.24), 0 10px 26px -10px rgba(56,189,248,0.58) !important; }}
 
     /* keyframes del header */
     @keyframes hbBar {{ 0% {{ background-position:0% 0; }} 100% {{ background-position:220% 0; }} }}
@@ -964,37 +971,33 @@ _ocu_pg  = st.Page("pages/2_Ocupacion.py", title="Ocupación", icon="📊")
 _nov_pg  = st.Page("pages/3_Novedades.py", title="Novedades", icon="📢")
 
 with st.container(key="hdrbanner"):
-    hleft, hright = st.columns([1.55, 1.05], vertical_alignment="center")
-    with hleft:
-        st.markdown(f"""
-        <div class='hb-head'>
-            <div class='hb-top'>
-                <span class='hb-eyebrow'><span class='hb-dot'></span>Centro de Control · Uniminuto 2026</span>
-            </div>
-            <h1 class='hb-title'>Módulo de Adherencia</h1>
-            <p class='hb-subtitle'>Detalle de adherencia por supervisor y experto</p>
-            <div class='hb-stats'>
-                <div class='hb-stat'><span class='hb-sv'>{rango}</span><span class='hb-sl'>Período</span></div>
-                <div class='hb-sep'></div>
-                <div class='hb-stat'><span class='hb-sv'>90%</span><span class='hb-sl'>Meta</span></div>
-            </div>
+    st.markdown(f"""
+    <div class='hb-head'>
+        <div class='hb-top'>
+            <span class='hb-eyebrow'><span class='hb-dot'></span>Centro de Control · Uniminuto 2026</span>
         </div>
-        """, unsafe_allow_html=True)
-    with hright:
-        st.markdown("<div class='menu-cap'>⚡ Navegación</div>", unsafe_allow_html=True)
-        g1a, g1b = st.columns(2, gap="small")
-        with g1a:
-            if st.button("🏠 Inicio", key="hdr_home", use_container_width=True):
-                st.switch_page(_home_pg)
-        with g1b:
-            st.button("🎯 Adherencia", key="hdr_adh", use_container_width=True, type="primary")
-        g2a, g2b = st.columns(2, gap="small")
-        with g2a:
-            if st.button("📊 Ocupación", key="hdr_ocu", use_container_width=True):
-                st.switch_page(_ocu_pg)
-        with g2b:
-            if st.button("📢 Novedades", key="hdr_nov", use_container_width=True):
-                st.switch_page(_nov_pg)
+        <h1 class='hb-title'>Módulo de Adherencia</h1>
+        <p class='hb-subtitle'>Detalle de adherencia por supervisor y experto</p>
+        <div class='hb-stats'>
+            <div class='hb-stat'><span class='hb-sv'>{rango}</span><span class='hb-sl'>Período</span></div>
+            <div class='hb-sep'></div>
+            <div class='hb-stat'><span class='hb-sv'>90%</span><span class='hb-sl'>Meta</span></div>
+        </div>
+        <div class='menu-cap'>⚡ Navegación</div>
+    </div>
+    """, unsafe_allow_html=True)
+    nb1, nb2, nb3, nb4, _nsp = st.columns([1.0, 1.35, 1.3, 1.35, 1.6], vertical_alignment="center")
+    with nb1:
+        if st.button("🏠 Inicio", key="hdr_home", use_container_width=True):
+            st.switch_page(_home_pg)
+    with nb2:
+        st.button("🎯 Adherencia", key="hdr_adh", use_container_width=True, type="primary")
+    with nb3:
+        if st.button("📊 Ocupación", key="hdr_ocu", use_container_width=True):
+            st.switch_page(_ocu_pg)
+    with nb4:
+        if st.button("📢 Novedades", key="hdr_nov", use_container_width=True):
+            st.switch_page(_nov_pg)
 
 # ─────────────────────────────────────────────
 # KPIs GLOBALES
