@@ -14,18 +14,20 @@ import io
 SUPERVISOR_COLORS = px.colors.qualitative.Bold
 
 def df_descarga(df, nombre_archivo, **kwargs):
+    _col_sp, _col_btn = st.columns([9, 1])
+    with _col_btn:
+        with st.popover("⋮", help="Opciones"):
+            buf = io.BytesIO()
+            df.to_excel(buf, index=False, engine="openpyxl")
+            buf.seek(0)
+            st.download_button(
+                label="📥 Descargar Excel",
+                data=buf,
+                file_name=nombre_archivo,
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                key=f"dl_{nombre_archivo}",
+            )
     st.dataframe(df, **kwargs)
-    buf = io.BytesIO()
-    df.to_excel(buf, index=False, engine="openpyxl")
-    buf.seek(0)
-    st.download_button(
-        label="⬇️ Descargar Excel",
-        data=buf,
-        file_name=nombre_archivo,
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        use_container_width=True,
-        key=f"dl_{nombre_archivo}",
-    )
 
 # ─────────────────────────────────────────────
 # CARGA Y PREPARACIÓN DE DATOS

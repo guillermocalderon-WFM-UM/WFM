@@ -13,18 +13,20 @@ import io
 SUPERVISOR_COLORS = px.colors.qualitative.Bold
 
 def df_descarga(df, nombre_archivo, **kwargs):
+    _col_sp, _col_btn = st.columns([9, 1])
+    with _col_btn:
+        with st.popover("⋮", help="Opciones"):
+            buf = io.BytesIO()
+            df.to_excel(buf, index=False, engine="openpyxl")
+            buf.seek(0)
+            st.download_button(
+                label="📥 Descargar Excel",
+                data=buf,
+                file_name=nombre_archivo,
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                key=f"dl_{nombre_archivo}",
+            )
     st.dataframe(df, **kwargs)
-    buf = io.BytesIO()
-    df.to_excel(buf, index=False, engine="openpyxl")
-    buf.seek(0)
-    st.download_button(
-        label="⬇️ Descargar Excel",
-        data=buf,
-        file_name=nombre_archivo,
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        use_container_width=True,
-        key=f"dl_{nombre_archivo}",
-    )
 ORDEN_MESES = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO",
                "JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"]
 COLOR_PRIMARY = "#28053F"
@@ -1065,7 +1067,7 @@ with col_tbl:
 
 with col_pie:
     if "Llamadas" in tbl_sup.columns:
-        _pie_h = max(370, len(tbl_sup) * 42 + 60)
+        _pie_h = min(max(350, len(tbl_sup) * 28 + 60), 450)
         fig_pie = go.Figure(go.Pie(
             labels=tbl_sup["Supervisor"].apply(lambda n: " ".join(n.split()[:2])),
             values=tbl_sup["Llamadas"],
