@@ -13,20 +13,21 @@ import io
 SUPERVISOR_COLORS = px.colors.qualitative.Bold
 
 def df_descarga(df, nombre_archivo, **kwargs):
-    _col_sp, _col_btn = st.columns([9, 1])
-    with _col_btn:
-        with st.popover("⋮", help="Opciones"):
-            buf = io.BytesIO()
-            df.to_excel(buf, index=False, engine="openpyxl")
-            buf.seek(0)
-            st.download_button(
-                label="📥 Descargar Excel",
-                data=buf,
-                file_name=nombre_archivo,
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                key=f"dl_{nombre_archivo}",
-            )
     st.dataframe(df, **kwargs)
+    buf = io.BytesIO()
+    df.to_excel(buf, index=False, engine="openpyxl")
+    b64 = base64.b64encode(buf.getvalue()).decode()
+    st.markdown(
+        f'<div style="text-align:right;margin-top:-6px;margin-bottom:8px">'
+        f'<a href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{b64}" '
+        f'download="{nombre_archivo}" '
+        f'style="font-size:0.72rem;color:rgba(255,255,255,0.35);text-decoration:none;'
+        f'letter-spacing:0.03em;transition:color .2s" '
+        f'onmouseover="this.style.color=\'rgba(255,255,255,0.75)\'" '
+        f'onmouseout="this.style.color=\'rgba(255,255,255,0.35)\'">'
+        f'↓ Exportar Excel</a></div>',
+        unsafe_allow_html=True,
+    )
 ORDEN_MESES = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO",
                "JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"]
 COLOR_PRIMARY = "#28053F"
