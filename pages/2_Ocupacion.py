@@ -725,9 +725,9 @@ st.markdown("""<div class='chart-hdr' style='--cc:#0EA5E9'>
 </div>""", unsafe_allow_html=True)
 
 fig_ocu = go.Figure()
-fig_ocu.add_hrect(y0=0,    y1=0.75, fillcolor="rgba(239,68,68,0.03)",   layer="below", line_width=0)
+fig_ocu.add_hrect(y0=0.50, y1=0.75, fillcolor="rgba(239,68,68,0.03)",   layer="below", line_width=0)
 fig_ocu.add_hrect(y0=0.75, y1=0.85, fillcolor="rgba(245,158,11,0.04)",  layer="below", line_width=0)
-fig_ocu.add_hrect(y0=0.85, y1=1.10, fillcolor="rgba(16,185,129,0.04)",  layer="below", line_width=0)
+fig_ocu.add_hrect(y0=0.85, y1=1.00, fillcolor="rgba(16,185,129,0.04)",  layer="below", line_width=0)
 
 for sup in sup_lista:
     sub = tend_ocu[tend_ocu["Supervisor"] == sup]
@@ -745,7 +745,7 @@ fig_ocu.add_hline(y=0.85, line_dash="dot", line_color="rgba(100,116,139,0.6)", l
 fig_ocu.update_layout(
     height=390, margin=dict(l=0, r=0, t=10, b=40),
     paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-    yaxis=dict(tickformat=".0%", gridcolor="rgba(255,255,255,0.08)", range=[0, 1.10], dtick=0.10,
+    yaxis=dict(tickformat=".0%", gridcolor="rgba(255,255,255,0.08)", range=[0.50, 1.00], dtick=0.04,
                tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.62)"), zeroline=False),
     xaxis=dict(gridcolor="rgba(0,0,0,0)", tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.62)"),
                range=[_ini_per, _n_per - 0.5],
@@ -771,21 +771,22 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 _agg_ocu = {"OcuAjuste": ("Ocupación Ajuste", "mean")}
-if "Ajuste_s"               in dff.columns: _agg_ocu["Ajuste_s"]  = ("Ajuste_s", "sum")
+if "Ajuste_s"               in dff.columns: _agg_ocu["Ajuste_s"]   = ("Ajuste_s", "sum")
 if "Tiempo Dur. Llamadas_s" in dff.columns: _agg_ocu["Llamadas_s"] = ("Tiempo Dur. Llamadas_s", "sum")
 
 tbl_ocu = (
-    dff.groupby(["Nombre","Supervisor"])
+    dff.groupby(["Fecha","Nombre","Supervisor"])
     .agg(**_agg_ocu)
     .reset_index()
-    .sort_values("OcuAjuste", ascending=False)
+    .sort_values(["Fecha","Nombre"])
 )
 tbl_ocu_disp = {
+    "Fecha":             tbl_ocu["Fecha"].dt.strftime("%d/%m/%Y"),
     "Experto":           tbl_ocu["Nombre"],
     "Supervisor":        tbl_ocu["Supervisor"],
     "Ocupación Ajuste":  tbl_ocu["OcuAjuste"].map(lambda x: f"{x:.1%}"),
 }
-if "Ajuste_s"  in tbl_ocu.columns: tbl_ocu_disp["Ajuste"]          = tbl_ocu["Ajuste_s"].map(seg_a_hhmmss)
+if "Ajuste_s"   in tbl_ocu.columns: tbl_ocu_disp["Ajuste"]          = tbl_ocu["Ajuste_s"].map(seg_a_hhmmss)
 if "Llamadas_s" in tbl_ocu.columns: tbl_ocu_disp["Tiempo Llamadas"] = tbl_ocu["Llamadas_s"].map(seg_a_hhmmss)
 st.dataframe(pd.DataFrame(tbl_ocu_disp), use_container_width=True, hide_index=True)
 
@@ -840,7 +841,7 @@ for sup in sup_lista:
 fig_cont.update_layout(
     height=390, margin=dict(l=0, r=0, t=10, b=40),
     paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-    yaxis=dict(tickformat=".0%", gridcolor="rgba(255,255,255,0.08)", range=[0, 1.05], dtick=0.10,
+    yaxis=dict(tickformat=".0%", gridcolor="rgba(255,255,255,0.08)", range=[0.50, 1.00], dtick=0.04,
                tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.62)"), zeroline=False),
     xaxis=dict(gridcolor="rgba(0,0,0,0)", tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.62)"),
                range=[_ini_per, _n_per - 0.5],
@@ -869,18 +870,19 @@ if "Disponible_s"           in dff.columns: _agg_cont["Disponible_s"] = ("Dispon
 if "Tiempo Dur. Llamadas_s" in dff.columns: _agg_cont["Llamadas_s"]   = ("Tiempo Dur. Llamadas_s", "sum")
 
 tbl_cont = (
-    dff.groupby(["Nombre","Supervisor"])
+    dff.groupby(["Fecha","Nombre","Supervisor"])
     .agg(**_agg_cont)
     .reset_index()
-    .sort_values("PctContacto", ascending=False)
+    .sort_values(["Fecha","Nombre"])
 )
 tbl_cont_disp = {
+    "Fecha":      tbl_cont["Fecha"].dt.strftime("%d/%m/%Y"),
     "Experto":    tbl_cont["Nombre"],
     "Supervisor": tbl_cont["Supervisor"],
     "% Contacto": tbl_cont["PctContacto"].map(lambda x: f"{x:.1%}"),
 }
-if "Disponible_s" in tbl_cont.columns: tbl_cont_disp["Disponible"]       = tbl_cont["Disponible_s"].map(seg_a_hhmmss)
-if "Llamadas_s"   in tbl_cont.columns: tbl_cont_disp["Tiempo Llamadas"]  = tbl_cont["Llamadas_s"].map(seg_a_hhmmss)
+if "Disponible_s" in tbl_cont.columns: tbl_cont_disp["Disponible"]      = tbl_cont["Disponible_s"].map(seg_a_hhmmss)
+if "Llamadas_s"   in tbl_cont.columns: tbl_cont_disp["Tiempo Llamadas"] = tbl_cont["Llamadas_s"].map(seg_a_hhmmss)
 st.dataframe(pd.DataFrame(tbl_cont_disp), use_container_width=True, hide_index=True)
 
 # ─────────────────────────────────────────────
@@ -941,6 +943,7 @@ fig_call.update_layout(
     yaxis=dict(gridcolor="rgba(255,255,255,0.08)",
                tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.62)"), zeroline=False),
     xaxis=dict(gridcolor="rgba(0,0,0,0)", tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.62)"),
+               rangeslider=dict(visible=True, thickness=0.08, bgcolor="rgba(255,255,255,0.05)"),
                tickangle=-30, showgrid=False),
     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0,
                 font=dict(size=10, family="Inter"), itemsizing="constant", bgcolor="rgba(0,0,0,0)"),
@@ -967,12 +970,16 @@ for col in ["Llamadas","Atendidas","Abandonadas","Canceladas"]:
         _agg_call[col] = (col, "sum")
 
 tbl_call = (
-    dff.groupby(["Nombre","Supervisor"])
+    dff.groupby(["Fecha","Nombre","Supervisor"])
     .agg(**_agg_call)
     .reset_index()
-    .sort_values("Llamadas" if "Llamadas" in _agg_call else list(_agg_call.keys())[0], ascending=False)
+    .sort_values(["Fecha","Nombre"])
 )
-tbl_call_disp = {"Experto": tbl_call["Nombre"], "Supervisor": tbl_call["Supervisor"]}
+tbl_call_disp = {
+    "Fecha":      tbl_call["Fecha"].dt.strftime("%d/%m/%Y"),
+    "Experto":    tbl_call["Nombre"],
+    "Supervisor": tbl_call["Supervisor"],
+}
 for col in ["Llamadas","Atendidas","Abandonadas","Canceladas"]:
     if col in tbl_call.columns:
         tbl_call_disp[col] = tbl_call[col].astype(int)
