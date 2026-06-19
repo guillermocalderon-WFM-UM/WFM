@@ -59,6 +59,17 @@ def cargar_datos(firma):
         if col in df.columns:
             df[col + "_s"] = pd.to_timedelta(df[col], errors="coerce").dt.total_seconds()
 
+    # Calcular métricas desde columnas de tiempo (más confiable que el Excel precalculado)
+    if "Ajuste_s" in df.columns and "Tiempo Efectivo_s" in df.columns:
+        df["Ocupación Ajuste"] = (
+            df["Ajuste_s"] / df["Tiempo Efectivo_s"].replace(0, float("nan"))
+        ).clip(upper=1.0)
+
+    if "Ajuste_s" in df.columns and "Disponible_s" in df.columns:
+        df["% Contacto"] = (
+            df["Ajuste_s"] / df["Disponible_s"].replace(0, float("nan"))
+        ).clip(upper=1.0)
+
     if "Semana" in df.columns:
         df["_semana_num"] = df["Semana"]
     df["Semana"]   = df["Fecha"].dt.to_period("W").apply(lambda p: f"Sem {p.start_time.strftime('%d/%m')}")
@@ -635,8 +646,8 @@ tot_llamadas = int(dff["Llamadas"].sum())     if "Llamadas"         in dff.colum
 tot_abandon  = int(dff["Abandonadas"].sum())  if "Abandonadas"      in dff.columns else 0
 pct_abandon  = tot_abandon / tot_llamadas     if tot_llamadas > 0 else 0.0
 
-ocu_color   = COLOR_SUCCESS if ocu_avg    >= 0.85 else (COLOR_WARNING if ocu_avg    >= 0.75 else COLOR_DANGER)
-cont_color  = COLOR_SUCCESS if cont_avg   >= 0.80 else (COLOR_WARNING if cont_avg   >= 0.60 else COLOR_DANGER)
+ocu_color   = COLOR_SUCCESS if ocu_avg  >= 0.90 else (COLOR_WARNING if ocu_avg  >= 0.80 else COLOR_DANGER)
+cont_color  = COLOR_SUCCESS if cont_avg >= 0.95 else (COLOR_WARNING if cont_avg >= 0.85 else COLOR_DANGER)
 aband_color = COLOR_DANGER  if pct_abandon >= 0.08 else (COLOR_WARNING if pct_abandon >= 0.05 else COLOR_SUCCESS)
 
 def kpi_bar(pct, color, max_val=100):
@@ -650,7 +661,7 @@ with k1:
         <div>
             <div class='kpi-label'>Ocupación Ajuste</div>
             <div class='kpi-value' style='color:{ocu_color}'>{ocu_avg:.1%}</div>
-            <div class='kpi-sub'>Meta referencial: 85%</div>
+            <div class='kpi-sub'>Meta: 90%</div>
         </div>
         {kpi_bar(ocu_avg * 100, ocu_color)}
     </div>""", unsafe_allow_html=True)
@@ -660,7 +671,7 @@ with k2:
         <div>
             <div class='kpi-label'>% Contacto</div>
             <div class='kpi-value' style='color:{cont_color}'>{cont_avg:.1%}</div>
-            <div class='kpi-sub'>{n_agentes} expertos en período</div>
+            <div class='kpi-sub'>Meta: 95%</div>
         </div>
         {kpi_bar(cont_avg * 100, cont_color)}
     </div>""", unsafe_allow_html=True)
@@ -725,9 +736,9 @@ st.markdown("""<div class='chart-hdr' style='--cc:#0EA5E9'>
 </div>""", unsafe_allow_html=True)
 
 fig_ocu = go.Figure()
-fig_ocu.add_hrect(y0=0.50, y1=0.75, fillcolor="rgba(239,68,68,0.03)",   layer="below", line_width=0)
-fig_ocu.add_hrect(y0=0.75, y1=0.85, fillcolor="rgba(245,158,11,0.04)",  layer="below", line_width=0)
-fig_ocu.add_hrect(y0=0.85, y1=1.00, fillcolor="rgba(16,185,129,0.04)",  layer="below", line_width=0)
+fig_ocu.add_hrect(y0=0.50, y1=0.80, fillcolor="rgba(239,68,68,0.03)",   layer="below", line_width=0)
+fig_ocu.add_hrect(y0=0.80, y1=0.90, fillcolor="rgba(245,158,11,0.04)",  layer="below", line_width=0)
+fig_ocu.add_hrect(y0=0.90, y1=1.00, fillcolor="rgba(16,185,129,0.04)",  layer="below", line_width=0)
 
 for sup in sup_lista:
     sub = tend_ocu[tend_ocu["Supervisor"] == sup]
@@ -739,8 +750,8 @@ for sup in sup_lista:
         marker=dict(size=6, color="white", line=dict(color=colores_sup[sup], width=2)),
         hovertemplate=f"<b>{nc}</b><br>%{{x}}: %{{y:.1%}}<extra></extra>"
     ))
-fig_ocu.add_hline(y=0.85, line_dash="dot", line_color="rgba(100,116,139,0.6)", line_width=1.5,
-                  annotation_text="Meta 85%", annotation_position="top right",
+fig_ocu.add_hline(y=0.90, line_dash="dot", line_color="rgba(100,116,139,0.6)", line_width=1.5,
+                  annotation_text="Meta 90%", annotation_position="top right",
                   annotation_font=dict(color="rgba(255,255,255,0.6)", size=10, family="Inter"))
 fig_ocu.update_layout(
     height=390, margin=dict(l=0, r=0, t=10, b=40),
@@ -826,6 +837,9 @@ st.markdown("""<div class='chart-hdr' style='--cc:#10B981'>
 </div>""", unsafe_allow_html=True)
 
 fig_cont = go.Figure()
+fig_cont.add_hrect(y0=0.50, y1=0.85, fillcolor="rgba(239,68,68,0.03)",  layer="below", line_width=0)
+fig_cont.add_hrect(y0=0.85, y1=0.95, fillcolor="rgba(245,158,11,0.04)", layer="below", line_width=0)
+fig_cont.add_hrect(y0=0.95, y1=1.00, fillcolor="rgba(16,185,129,0.04)", layer="below", line_width=0)
 for sup in sup_lista:
     sub = tend_cont[tend_cont["Supervisor"] == sup]
     if sub.empty:
@@ -838,6 +852,9 @@ for sup in sup_lista:
         marker=dict(size=6, color="white", line=dict(color=colores_sup.get(sup, "#34D399"), width=2)),
         hovertemplate=f"<b>{nc}</b><br>%{{x}}: %{{y:.1%}}<extra></extra>"
     ))
+fig_cont.add_hline(y=0.95, line_dash="dot", line_color="rgba(100,116,139,0.6)", line_width=1.5,
+                   annotation_text="Meta 95%", annotation_position="top right",
+                   annotation_font=dict(color="rgba(255,255,255,0.6)", size=10, family="Inter"))
 fig_cont.update_layout(
     height=390, margin=dict(l=0, r=0, t=10, b=40),
     paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
@@ -989,3 +1006,69 @@ if "Abandonadas" in tbl_call.columns and "Llamadas" in tbl_call.columns:
     ).map(lambda x: f"{x:.1%}" if pd.notna(x) else "—")
 
 st.dataframe(pd.DataFrame(tbl_call_disp), use_container_width=True, hide_index=True)
+
+# ─────────────────────────────────────────────
+# RESUMEN POR SUPERVISOR
+# ─────────────────────────────────────────────
+st.markdown("""
+<div class='chart-hdr' style='--cc:#8B5CF6;margin-top:28px'>
+    <span class='ch-icon'>👥</span>
+    <div class='ch-texts'>
+        <div class='ch-title'>Resumen por Supervisor</div>
+        <div class='ch-sub'>Llamadas totales, atendidas, abandonadas y distribución por equipo</div>
+    </div>
+    <span class='ch-tag' style='color:#8B5CF6'>Por equipo</span>
+</div>""", unsafe_allow_html=True)
+
+_agg_sup = {}
+for col in ["Llamadas","Atendidas","Abandonadas"]:
+    if col in dff.columns:
+        _agg_sup[col] = (col, "sum")
+
+tbl_sup = (
+    dff.groupby("Supervisor")
+    .agg(**_agg_sup)
+    .reset_index()
+    .sort_values("Llamadas", ascending=False)
+)
+if "Abandonadas" in tbl_sup.columns and "Llamadas" in tbl_sup.columns:
+    tbl_sup["PctAbandono"] = tbl_sup["Abandonadas"] / tbl_sup["Llamadas"].replace(0, float("nan"))
+
+col_tbl, col_pie = st.columns([1, 1])
+
+with col_tbl:
+    tbl_sup_disp = {"Supervisor": tbl_sup["Supervisor"]}
+    for col in ["Llamadas","Atendidas","Abandonadas"]:
+        if col in tbl_sup.columns:
+            tbl_sup_disp[col] = tbl_sup[col].astype(int)
+    if "PctAbandono" in tbl_sup.columns:
+        tbl_sup_disp["% Abandono"] = tbl_sup["PctAbandono"].map(
+            lambda x: f"{x:.1%}" if pd.notna(x) else "—"
+        )
+    st.dataframe(pd.DataFrame(tbl_sup_disp), use_container_width=True, hide_index=True)
+
+with col_pie:
+    if "Llamadas" in tbl_sup.columns:
+        fig_pie = go.Figure(go.Pie(
+            labels=tbl_sup["Supervisor"].apply(lambda n: " ".join(n.split()[:2])),
+            values=tbl_sup["Llamadas"],
+            hole=0.52,
+            marker=dict(
+                colors=[SUPERVISOR_COLORS[i % len(SUPERVISOR_COLORS)] for i in range(len(tbl_sup))],
+                line=dict(color="rgba(0,0,0,0.35)", width=2)
+            ),
+            textinfo="percent",
+            textfont=dict(size=11, family="Inter", color="white"),
+            hovertemplate="<b>%{label}</b><br>Llamadas: %{value:,}<br>%{percent}<extra></extra>",
+        ))
+        fig_pie.update_layout(
+            height=370, margin=dict(l=0, r=0, t=10, b=10),
+            paper_bgcolor="rgba(0,0,0,0)",
+            legend=dict(
+                orientation="v", x=1.02, y=0.5,
+                font=dict(size=10, family="Inter", color="rgba(255,255,255,0.75)"),
+                bgcolor="rgba(0,0,0,0)"
+            ),
+            font=dict(family="Inter", color="rgba(255,255,255,0.72)")
+        )
+        st.plotly_chart(fig_pie, use_container_width=True)
