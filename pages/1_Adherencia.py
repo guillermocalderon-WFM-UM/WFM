@@ -598,7 +598,7 @@ st.markdown(f"""
         color: white !important;
     }}
     div[data-testid="stDataFrame"] .ag-root-wrapper {{
-        background: rgba(10, 8, 22, 0.95) !important;
+        background: rgba(16, 13, 36, 0.90) !important;
         border: none !important;
     }}
     div[data-testid="stDataFrame"] .ag-body-viewport,
@@ -606,11 +606,11 @@ st.markdown(f"""
         background: transparent !important;
     }}
     div[data-testid="stDataFrame"] .ag-row {{
-        background: rgba(12, 9, 26, 0.85) !important;
+        background: rgba(16, 13, 36, 0.85) !important;
         border-color: rgba(255,255,255,0.045) !important;
     }}
     div[data-testid="stDataFrame"] .ag-row-odd {{
-        background: rgba(20, 15, 42, 0.75) !important;
+        background: rgba(22, 18, 48, 0.80) !important;
     }}
     div[data-testid="stDataFrame"] .ag-row:hover,
     div[data-testid="stDataFrame"] .ag-row-hover {{
