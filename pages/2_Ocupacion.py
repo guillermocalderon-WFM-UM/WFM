@@ -20,16 +20,17 @@ def _excel_bytes(df):
 
 def df_descarga(df, nombre_archivo, **kwargs):
     st.dataframe(df, **kwargs)
-    _, col_dl = st.columns([7, 3])
-    with col_dl:
-        st.download_button(
-            label="↓ Exportar Excel",
-            data=_excel_bytes(df),
-            file_name=nombre_archivo,
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            key=f"dl_{nombre_archivo}",
-            use_container_width=True,
-        )
+    b64 = base64.b64encode(_excel_bytes(df)).decode()
+    st.markdown(
+        f'<div style="text-align:right;margin-top:-6px;margin-bottom:8px">'
+        f'<a href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{b64}" '
+        f'download="{nombre_archivo}" '
+        f'style="font-size:0.72rem;color:rgba(255,255,255,0.35);text-decoration:none;letter-spacing:0.03em" '
+        f'onmouseover="this.style.color=\'rgba(255,255,255,0.75)\'" '
+        f'onmouseout="this.style.color=\'rgba(255,255,255,0.35)\'">'
+        f'↓ Exportar Excel</a></div>',
+        unsafe_allow_html=True,
+    )
 ORDEN_MESES = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO",
                "JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"]
 COLOR_PRIMARY = "#28053F"
@@ -1057,7 +1058,7 @@ if "Abandonadas" in tbl_sup.columns:
 
 col_tbl, col_pie = st.columns([1, 1])
 
-_sup_h = min(max(380, len(tbl_sup) * 35 + 38), 500)
+_sup_h = 380
 
 with col_tbl:
     tbl_sup_disp = {"Supervisor": tbl_sup["Supervisor"]}
