@@ -597,6 +597,42 @@ st.markdown(f"""
     div[data-testid="stDataFrame"] div[role="columnheader"] span {{
         color: white !important;
     }}
+    div[data-testid="stDataFrame"] .ag-root-wrapper {{
+        background: rgba(10, 8, 22, 0.95) !important;
+        border: none !important;
+    }}
+    div[data-testid="stDataFrame"] .ag-body-viewport,
+    div[data-testid="stDataFrame"] .ag-center-cols-viewport {{
+        background: transparent !important;
+    }}
+    div[data-testid="stDataFrame"] .ag-row {{
+        background: rgba(12, 9, 26, 0.85) !important;
+        border-color: rgba(255,255,255,0.045) !important;
+    }}
+    div[data-testid="stDataFrame"] .ag-row-odd {{
+        background: rgba(20, 15, 42, 0.75) !important;
+    }}
+    div[data-testid="stDataFrame"] .ag-row:hover,
+    div[data-testid="stDataFrame"] .ag-row-hover {{
+        background: rgba(14, 165, 233, 0.10) !important;
+    }}
+    div[data-testid="stDataFrame"] .ag-cell {{
+        color: rgba(225, 232, 250, 0.90) !important;
+        border-color: rgba(255,255,255,0.04) !important;
+    }}
+    div[data-testid="stDataFrame"] .ag-header {{
+        background: transparent !important;
+        border-bottom: 1px solid rgba(255,255,255,0.10) !important;
+    }}
+    div[data-testid="stDataFrame"] ::-webkit-scrollbar {{
+        width: 6px; height: 6px;
+    }}
+    div[data-testid="stDataFrame"] ::-webkit-scrollbar-track {{
+        background: rgba(255,255,255,0.04);
+    }}
+    div[data-testid="stDataFrame"] ::-webkit-scrollbar-thumb {{
+        background: rgba(56,189,248,0.35); border-radius: 99px;
+    }}
 
     /* ══ SIDEBAR BASE · mismo fondo de diseño que el hero (sin grid) ══ */
     section[data-testid="stSidebar"] > div:first-child {{

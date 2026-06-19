@@ -5,12 +5,16 @@ COLOR_PRIMARY = "#28053F"
 COLOR_ACCENT  = "#0EA5E9"
 
 _LOGO_PATH = "logo-scala-learning-transformacion-digital-universidades.webp"
-try:
-    with open(_LOGO_PATH, "rb") as _f:
-        _logo_b64 = base64.b64encode(_f.read()).decode()
-    _logo_src = f"data:image/webp;base64,{_logo_b64}"
-except FileNotFoundError:
-    _logo_src = ""
+
+@st.cache_data
+def _cargar_logo():
+    try:
+        with open(_LOGO_PATH, "rb") as _f:
+            return f"data:image/webp;base64,{base64.b64encode(_f.read()).decode()}"
+    except FileNotFoundError:
+        return ""
+
+_logo_src = _cargar_logo()
 
 # ── Sidebar ──────────────────────────────
 with st.sidebar:
