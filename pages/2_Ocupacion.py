@@ -1064,7 +1064,7 @@ with col_tbl:
         tbl_sup_disp["% Abandono"] = tbl_sup["PctAbandono"].map(
             lambda x: f"{x:.1%}" if pd.notna(x) else "—"
         )
-    df_descarga(pd.DataFrame(tbl_sup_disp), "resumen_supervisores.xlsx", use_container_width=True, hide_index=True)
+    st.dataframe(pd.DataFrame(tbl_sup_disp), use_container_width=True, hide_index=True)
 
 with col_pie:
     if "Llamadas" in tbl_sup.columns:

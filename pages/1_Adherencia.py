@@ -1251,7 +1251,7 @@ with c_gauge:
     tabla_sup["ADH"] = tabla_sup["ADH"].apply(lambda x: f"{x:.1%}")
     tabla_sup["Supervisor"] = tabla_sup["Supervisor"].apply(lambda n: " ".join(n.split()[:2]))
     tabla_sup.columns = ["Supervisor","ADH%","Agentes","Ausentes","Tardes"]
-    df_descarga(tabla_sup, "comparativo_supervisores.xlsx", use_container_width=True, hide_index=True, height=400)
+    st.dataframe(tabla_sup, use_container_width=True, hide_index=True, height=400)
 
 # ─────────────────────────────────────────────
 # TENDENCIA + DISTRIBUCIÓN LLEGADAS
