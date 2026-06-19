@@ -86,6 +86,24 @@ COLOR_DANGER  = "#EF4444"
 COLOR_BG      = "#F0F4F8"
 
 # ─────────────────────────────────────────────
+# TABLAS · estilo oscuro (celdas del grid combinan con el tema dark)
+# ─────────────────────────────────────────────
+def _dark_df(df):
+    return (
+        df.style
+        .set_properties(**{
+            "background-color": "#16122e",
+            "color": "#E3E8F7",
+            "border-color": "rgba(255,255,255,0.05)",
+        })
+        .set_table_styles([
+            {"selector": "th", "props": [("background-color", "#1b1240"),
+                                         ("color", "#FFFFFF"),
+                                         ("border-color", "rgba(255,255,255,0.06)")]},
+        ])
+    )
+
+# ─────────────────────────────────────────────
 # LOGO BASE64
 # ─────────────────────────────────────────────
 _LOGO_PATH = "logo-scala-learning-transformacion-digital-universidades.webp"
@@ -218,15 +236,17 @@ st.markdown(f"""
     /* ocultar el menú automático del sidebar */
     [data-testid="stSidebarNav"] {{ display:none !important; }}
 
-    /* ── Fondo claro con tinte suave (idea de diseño de la home) ── */
-    .main {{
+    /* ── Fondo OSCURO con aurora (dark-glass · estilo home) ── */
+    [data-testid="stAppViewContainer"], .main {{
         background:
-            radial-gradient(ellipse 55% 45% at 0% 0%,   rgba(14,165,233,0.07) 0%, transparent 55%),
-            radial-gradient(ellipse 50% 45% at 100% 6%, rgba(139,92,246,0.07) 0%, transparent 55%),
-            radial-gradient(ellipse 60% 50% at 90% 100%, rgba(52,211,153,0.05) 0%, transparent 55%),
-            #F4F7FB;
+            radial-gradient(ellipse 90% 55% at 6% -6%,  rgba(14,165,233,0.16) 0%, transparent 55%),
+            radial-gradient(ellipse 80% 55% at 100% 0%, rgba(99,102,241,0.17) 0%, transparent 55%),
+            radial-gradient(ellipse 75% 60% at 92% 100%, rgba(52,211,153,0.08) 0%, transparent 55%),
+            radial-gradient(ellipse 60% 50% at 0% 100%, rgba(99,102,241,0.07) 0%, transparent 55%),
+            linear-gradient(160deg, #0A0813 0%, #0F0B20 45%, #08060F 100%);
         background-attachment: fixed;
     }}
+    [data-testid="stHeader"] {{ background: transparent !important; }}
     .block-container {{ padding-top: 2rem; padding-bottom: 1rem; }}
 
     /* ── Botón colapsar/expandir sidebar: ícono limpio ── */
@@ -296,91 +316,38 @@ st.markdown(f"""
         font-size: 12px; font-weight: 700; color: white;
         white-space: nowrap; letter-spacing: 0.02em;
     }}
-    /* ══ HEADER · "Aurora Glass Deck" (estilo brand card · sin cuadrícula) ══ */
+    /* ── HEADER · banner (idéntico a Ocupación) ── */
     .st-key-hdrbanner {{
-        position:relative; overflow:hidden; isolation:isolate;
-        border-radius:20px; padding:18px 28px 20px; margin-bottom:16px;
-        border:1px solid rgba(255,255,255,0.11);
-        background: linear-gradient(150deg, #2b0b48 0%, #200838 52%, #150526 100%);
-        box-shadow:
-            0 1px 1px rgba(0,0,0,0.40),
-            0 6px 14px -8px rgba(8,3,24,0.70),
-            0 26px 60px -24px rgba(8,3,24,0.95),
-            0 2px 10px -6px rgba(56,189,248,0.16),
-            inset 0 1px 0 rgba(255,255,255,0.12),
-            inset 0 -1px 0 rgba(0,0,0,0.42),
-            inset 1px 0 0 rgba(255,255,255,0.04),
-            inset 0 -22px 40px -28px rgba(0,0,0,0.50);
-    }}
-    /* ambiente: toque azul (derecha) + halo morado superior + viñeta */
-    .st-key-hdrbanner::before {{
-        content:""; position:absolute; inset:0; z-index:-1; pointer-events:none;
+        position: relative; overflow: hidden;
         background:
-            radial-gradient(440px 250px at 82% 38%, rgba(56,189,248,0.20), transparent 60%),
-            radial-gradient(260px 180px at 88% 30%, rgba(96,165,250,0.10), transparent 62%),
-            radial-gradient(620px 300px at 26% -12%, rgba(167,139,250,0.15), transparent 62%),
-            radial-gradient(140% 120% at 50% 116%, rgba(7,2,18,0.50), transparent 60%);
-        animation:hbAmbient 11s ease-in-out infinite;
+            radial-gradient(ellipse 70% 130% at 2% -15%,  rgba(14,165,233,0.34) 0%, transparent 60%),
+            radial-gradient(ellipse 65% 130% at 100% 120%, rgba(129,140,248,0.34) 0%, transparent 60%),
+            radial-gradient(ellipse 55% 110% at 72% 130%,  rgba(52,211,153,0.16) 0%, transparent 60%),
+            linear-gradient(155deg, #0B0518 0%, #14082b 50%, #0A0414 100%);
+        border: 1px solid rgba(255,255,255,0.10);
+        border-radius: 20px; padding: 18px 30px; margin-bottom: 18px;
+        box-shadow: 0 18px 46px -18px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08);
     }}
-    /* sheen de vidrio superior (bajo el contenido) */
-    .st-key-hdrbanner::after {{
-        content:""; position:absolute; inset:0; z-index:0; pointer-events:none; border-radius:inherit;
-        background:
-            linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.015) 18%, transparent 38%),
-            radial-gradient(120% 60% at 78% -10%, rgba(255,255,255,0.05), transparent 60%);
-    }}
-    .hb-head {{ position:relative; z-index:2; }}
-    .hb-top {{ display:flex; align-items:center; flex-wrap:wrap; gap:8px; }}
-    .hb-eyebrow {{
-        display:inline-flex; align-items:center; gap:7px;
-        font-family:'Space Grotesk','Inter',sans-serif; font-size:9.5px; font-weight:700;
-        letter-spacing:.14em; text-transform:uppercase; color:#DBE4FF;
-        padding:4px 13px; border-radius:999px;
-        border:1px solid rgba(129,140,248,0.30); border-top-color:rgba(173,184,255,0.45);
-        background:linear-gradient(180deg, rgba(56,189,248,0.15), rgba(129,140,248,0.05));
-        box-shadow:inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -6px 10px -8px rgba(13,4,32,0.55), 0 4px 12px -8px rgba(56,189,248,0.28); }}
-    .hb-dot {{ width:7px; height:7px; border-radius:50%;
-        background:radial-gradient(circle at 35% 30%, #6EE7B7, #10B981 70%);
-        box-shadow:0 0 0 1px rgba(52,211,153,0.30), 0 0 8px rgba(52,211,153,0.60);
-        animation:hbPulse 1.8s ease-out infinite; }}
-    .hb-live {{ display:inline-flex; align-items:center; gap:6px;
-        font-family:'Space Grotesk','Inter',sans-serif; font-size:9px; font-weight:700; letter-spacing:.16em;
-        color:#7DE3C3; padding:3px 9px; border-radius:999px;
-        background:rgba(52,211,153,.10); border:1px solid rgba(52,211,153,.30); }}
-    .hb-live i {{ position:relative; width:6px; height:6px; border-radius:50%; background:#34D399; font-style:normal; }}
-    .hb-live i::after {{ content:""; position:absolute; inset:-3px; border-radius:50%;
-        border:1px solid rgba(52,211,153,.6); animation:hbRadar 1.8s ease-out infinite; }}
-    .hb-title {{ margin:9px 0 2px; padding:0; font-family:'Space Grotesk',sans-serif !important;
-        font-size:28px; font-weight:700; line-height:1.08; letter-spacing:-.015em;
-        display:inline-block; position:relative;
-        background:linear-gradient(92deg,#8FD8FF,#38BDF8,#60A5FA);
-        background-size:200% auto;
-        -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent;
-        filter:drop-shadow(0 1px 0 rgba(0,0,0,0.35)) drop-shadow(0 3px 14px rgba(56,189,248,0.18));
-        animation:hbShine 6s linear infinite; }}
-    .hb-subtitle {{ margin:6px 0 0; padding:0; font-family:'Inter',sans-serif;
-        font-size:13.5px; font-weight:500; color:rgba(255,255,255,0.85); line-height:1.4;
-        text-shadow:0 1px 2px rgba(0,0,0,0.35); }}
-    .hb-stats {{ display:inline-flex; align-items:center; margin-top:14px;
-        background:linear-gradient(180deg, rgba(255,255,255,0.045), rgba(0,0,0,0.10)), rgba(0,0,0,0.26);
-        border:1px solid rgba(255,255,255,0.08); border-radius:13px; padding:9px 4px;
-        box-shadow:inset 0 1px 3px rgba(0,0,0,0.42), inset 0 -1px 0 rgba(255,255,255,0.06), 0 6px 16px -10px rgba(8,3,24,0.65); }}
-    .hb-stat {{ padding:0 18px; text-align:center; }}
-    .hb-sv {{ display:block; font-family:'Space Grotesk',sans-serif !important;
-        font-size:14px; font-weight:700; color:#fff; line-height:1; margin-bottom:4px;
-        text-shadow:0 1px 0 rgba(0,0,0,0.40); }}
-    .hb-sl {{ display:block; font-size:8.5px; font-weight:700; letter-spacing:.14em;
-        text-transform:uppercase; color:rgba(255,255,255,0.48); }}
-    .hb-sep {{ width:1px; height:26px; flex-shrink:0;
-        background:linear-gradient(180deg, transparent, rgba(255,255,255,0.16) 50%, transparent); }}
-    .hb-stats .hb-stat:last-child .hb-sv {{ color:#7DD3FC; text-shadow:0 0 10px rgba(56,189,248,0.32); }}
-    .hb-stats .hb-stat:last-child .hb-sl {{ color:rgba(125,211,252,0.60); }}
-
-    /* navegación · fila de botones pequeños con detalle (igual que Ocupación/Novedades) */
-    .st-key-hdrbanner [data-testid="stHorizontalBlock"] {{ gap:8px !important; }}
-    .st-key-hdrbanner [data-testid="stVerticalBlock"] {{ gap:0.5rem !important; }}
-    .menu-cap {{ font-family:'Inter',sans-serif; font-size:9px; font-weight:800;
-        letter-spacing:.16em; text-transform:uppercase; color:rgba(199,210,254,0.55); margin:14px 0 8px; }}
+    .hb-eyebrow {{ display:inline-flex;align-items:center;gap:8px;
+        background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.16);
+        border-radius:99px;padding:5px 13px;margin-bottom:11px;
+        font-size:10px;font-weight:700;color:rgba(255,255,255,0.78);
+        letter-spacing:0.12em;text-transform:uppercase; }}
+    .hb-dot {{ width:7px;height:7px;border-radius:50%;background:#34D399;
+        box-shadow:0 0 9px #34D399;animation:sbcPulse 1.8s ease-in-out infinite; }}
+    .hb-title {{ font-family:'Space Grotesk',sans-serif!important;
+        font-size:29px;font-weight:700;color:white;margin:0 0 9px;
+        letter-spacing:-0.8px;line-height:1.05; }}
+    .hb-sub {{ font-size:13px;color:rgba(255,255,255,0.62);margin:0;line-height:1.5; }}
+    .hb-sub b {{ color:rgba(255,255,255,0.92);font-weight:700; }}
+    .hb-meta {{ display:flex;flex-wrap:wrap;gap:8px;margin:0 0 2px; }}
+    .hb-chip {{ display:inline-flex;align-items:center;gap:6px;
+        background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.13);
+        border-radius:9px;padding:5px 11px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.74); }}
+    .hb-chip b {{ color:#fff;font-weight:700; }}
+    .nav-lbl {{ font-size:9px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;
+        color:rgba(255,255,255,0.40);margin:3px 0 7px; }}
+    .st-key-hdrbanner [data-testid="stVerticalBlock"] {{ gap: 0.5rem !important; }}
     .st-key-hdrbanner [data-testid="stButton"] > button {{
         position:relative; z-index:2; overflow:hidden; white-space:nowrap !important;
         color:#CBD3F2 !important; border-radius:9px !important;
@@ -418,57 +385,59 @@ st.markdown(f"""
     @keyframes hbPulse {{ 0% {{ box-shadow:0 0 0 0 rgba(52,211,153,0.55); }} 70% {{ box-shadow:0 0 0 6px rgba(52,211,153,0); }} 100% {{ box-shadow:0 0 0 0 rgba(52,211,153,0); }} }}
     @keyframes hbRadar {{ 0% {{ transform:scale(.6); opacity:1; }} 100% {{ transform:scale(2.3); opacity:0; }} }}
 
-    /* ── KPI cards ── */
+    /* ── KPI cards · vidrio oscuro ── */
     .kpi-card {{
-        background: white;
+        background: linear-gradient(160deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 100%);
         border-radius: 20px;
         padding: 22px 22px 18px;
-        box-shadow: 0 10px 34px rgba(15,23,42,0.08);
+        box-shadow: 0 20px 44px -18px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.08);
+        backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
         position: relative;
         overflow: hidden;
         min-height: 148px;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        border: 1px solid rgba(0,0,0,0.04);
-        transition: transform 0.22s ease, box-shadow 0.22s ease;
+        border: 1px solid rgba(255,255,255,0.10);
+        transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
         cursor: default;
     }}
     .kpi-card:hover {{
-        transform: translateY(-5px);
-        box-shadow: 0 14px 44px rgba(0,0,0,0.15);
+        transform: translateY(-6px);
+        border-color: var(--kc, {COLOR_ACCENT});
+        box-shadow: 0 30px 60px -22px rgba(0,0,0,0.8), 0 0 36px -12px var(--kc, {COLOR_ACCENT}), inset 0 1px 0 rgba(255,255,255,0.10);
     }}
     .kpi-card::before {{
         content: '';
         position: absolute;
         top: 0; left: 0; right: 0;
-        height: 5px;
+        height: 4px;
         background: var(--kc, {COLOR_PRIMARY});
-        border-radius: 18px 18px 0 0;
+        box-shadow: 0 0 18px -2px var(--kc, {COLOR_PRIMARY});
     }}
     .kpi-card::after {{
         content: '';
         position: absolute;
-        top: -28px; right: -28px;
-        width: 90px; height: 90px;
-        background: var(--kc, {COLOR_PRIMARY});
-        opacity: 0.08;
+        top: -40px; right: -40px;
+        width: 120px; height: 120px;
+        background: radial-gradient(circle, var(--kc, {COLOR_PRIMARY}), transparent 70%);
+        opacity: 0.22;
         border-radius: 50%;
     }}
     .kpi-bg-icon {{
         position: absolute;
-        bottom: 14px; right: 18px;
-        font-size: 44px;
-        opacity: 0.09;
+        bottom: 12px; right: 16px;
+        font-size: 46px;
+        opacity: 0.10;
         line-height: 1;
         pointer-events: none;
         z-index: 0;
     }}
-    .kpi-label {{ font-size: 10px; color: #94A3B8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; position: relative; z-index: 1; }}
-    .kpi-value {{ font-family:'Space Grotesk',sans-serif!important; font-size: 33px; font-weight: 700; line-height: 1.1; margin: 10px 0 4px; position: relative; z-index: 1; letter-spacing:-0.5px; }}
-    .kpi-sub   {{ font-size: 11px; color: #CBD5E1; position: relative; z-index: 1; }}
-    .kpi-bar-wrap {{ background: #F1F5F9; border-radius: 99px; height: 5px; margin-top: 12px; overflow: hidden; position: relative; z-index: 1; }}
-    .kpi-bar-fill {{ height: 5px; border-radius: 99px; }}
+    .kpi-label {{ font-size: 10px; color: rgba(255,255,255,0.50); font-weight: 700; text-transform: uppercase; letter-spacing: 0.10em; position: relative; z-index: 1; }}
+    .kpi-value {{ font-family:'Space Grotesk',sans-serif!important; font-size: 34px; font-weight: 700; line-height: 1.1; margin: 10px 0 4px; position: relative; z-index: 1; letter-spacing:-0.5px; text-shadow:0 2px 16px rgba(0,0,0,0.4); }}
+    .kpi-sub   {{ font-size: 11px; color: rgba(255,255,255,0.42); position: relative; z-index: 1; }}
+    .kpi-bar-wrap {{ background: rgba(255,255,255,0.09); border-radius: 99px; height: 5px; margin-top: 12px; overflow: hidden; position: relative; z-index: 1; }}
+    .kpi-bar-fill {{ height: 5px; border-radius: 99px; box-shadow:0 0 10px -1px currentColor; }}
 
     /* ── Section header · banner con degradado de color ── */
     .sec-header {{
@@ -553,33 +522,33 @@ st.markdown(f"""
         position: relative; z-index: 1;
     }}
 
-    /* ── Chart mini-headers ── */
+    /* ── Chart mini-headers · vidrio oscuro ── */
     .chart-hdr {{
         display: flex;
         align-items: center;
         gap: 12px;
         padding: 12px 16px;
-        background: #ffffff;
+        background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.025));
         border-radius: 14px;
-        border: 1px solid rgba(0,0,0,0.05);
+        border: 1px solid rgba(255,255,255,0.10);
         border-left: 4px solid var(--cc, {COLOR_ACCENT});
-        box-shadow: 0 5px 18px rgba(15,23,42,0.05);
+        box-shadow: 0 8px 22px -10px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06);
         margin-bottom: 12px;
     }}
     .ch-icon {{ font-size: 18px; line-height: 1; flex-shrink: 0;
         width: 36px; height: 36px; border-radius: 10px;
         display: flex; align-items: center; justify-content: center;
-        background: #F1F5F9; border: 1px solid rgba(0,0,0,0.04); }}
+        background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); }}
     .ch-texts {{ flex: 1; min-width: 0; }}
-    .ch-title {{ font-size: 13px; font-weight: 800; color: #1E293B; margin: 0 0 1px; letter-spacing:-0.2px; }}
-    .ch-sub {{ font-size: 10.5px; color: #94A3B8; margin: 0; }}
+    .ch-title {{ font-size: 13px; font-weight: 800; color: #F1F4FF; margin: 0 0 1px; letter-spacing:-0.2px; }}
+    .ch-sub {{ font-size: 10.5px; color: rgba(255,255,255,0.45); margin: 0; }}
     .ch-tag {{
         margin-left: auto;
         font-size: 9px; font-weight: 700;
         color: var(--cc, {COLOR_ACCENT});
-        background: white;
-        border: 1px solid #E2E8F0;
-        padding: 2px 8px; border-radius: 99px;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.14);
+        padding: 3px 9px; border-radius: 99px;
         letter-spacing: 0.05em; flex-shrink: 0;
         text-transform: uppercase;
     }}
@@ -622,25 +591,25 @@ st.markdown(f"""
         position: relative; z-index: 1;
     }}
 
-    /* ── Plotly chart: card styling ── */
+    /* ── Plotly chart: tarjeta de vidrio oscuro ── */
     div[data-testid="stPlotlyChart"] {{
-        background: white !important;
+        background: linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015)) !important;
         border-radius: 18px !important;
-        box-shadow: 0 10px 30px rgba(15,23,42,0.07) !important;
-        border: 1px solid rgba(0,0,0,0.04) !important;
+        box-shadow: 0 16px 38px -16px rgba(0,0,0,0.65) !important;
+        border: 1px solid rgba(255,255,255,0.09) !important;
         overflow: hidden !important;
         padding: 10px !important;
     }}
 
-    /* ── Tablas: contenedor redondeado + encabezado con degradado ── */
+    /* ── Tablas: contenedor de vidrio oscuro + encabezado degradado ── */
     div[data-testid="stDataFrame"] {{
         border-radius: 16px !important;
         overflow: hidden !important;
-        box-shadow: 0 10px 30px rgba(15,23,42,0.07) !important;
-        border: 1px solid rgba(0,0,0,0.05) !important;
+        box-shadow: 0 16px 38px -16px rgba(0,0,0,0.65) !important;
+        border: 1px solid rgba(255,255,255,0.10) !important;
     }}
     div[data-testid="stDataFrame"] div[role="columnheader"] {{
-        background: linear-gradient(135deg, {COLOR_PRIMARY} 0%, #0EA5E9 100%) !important;
+        background: linear-gradient(135deg, #1b1240 0%, #0EA5E9 100%) !important;
         color: white !important; font-weight: 700 !important;
     }}
     div[data-testid="stDataFrame"] div[role="columnheader"] span {{
@@ -972,19 +941,13 @@ _nov_pg  = st.Page("pages/3_Novedades.py", title="Novedades", icon="📢")
 
 with st.container(key="hdrbanner"):
     st.markdown(f"""
-    <div class='hb-head'>
-        <div class='hb-top'>
-            <span class='hb-eyebrow'><span class='hb-dot'></span>Centro de Control · Uniminuto 2026</span>
-        </div>
-        <h1 class='hb-title'>Módulo de Adherencia</h1>
-        <p class='hb-subtitle'>Detalle de adherencia por supervisor y experto</p>
-        <div class='hb-stats'>
-            <div class='hb-stat'><span class='hb-sv'>{rango}</span><span class='hb-sl'>Período</span></div>
-            <div class='hb-sep'></div>
-            <div class='hb-stat'><span class='hb-sv'>90%</span><span class='hb-sl'>Meta</span></div>
-        </div>
-        <div class='menu-cap'>⚡ Navegación</div>
+    <div class='hb-eyebrow'><span class='hb-dot'></span>Centro de Control · Uniminuto 2026</div>
+    <div class='hb-title'>Módulo de Adherencia</div>
+    <div class='hb-meta'>
+        <span class='hb-chip'>📅 <b>{rango}</b></span>
+        <span class='hb-chip'>🎯 Meta <b>90%</b></span>
     </div>
+    <div class='nav-lbl'>⚡ Navegación</div>
     """, unsafe_allow_html=True)
     nb1, nb2, nb3, nb4, _nsp = st.columns([1.0, 1.35, 1.3, 1.35, 1.6], vertical_alignment="center")
     with nb1:
@@ -1022,7 +985,7 @@ with k2:
         <div class='kpi-bg-icon'>👥</div>
         <div>
             <div class='kpi-label'>Expertos</div>
-            <div class='kpi-value' style='color:{COLOR_PRIMARY}'>{total_agentes}</div>
+            <div class='kpi-value' style='color:#7DD3FC'>{total_agentes}</div>
             <div class='kpi-sub'>{total_registros} registros</div>
         </div>
         {kpi_bar(total_registros, COLOR_ACCENT, max(total_registros, 1))}
@@ -1113,7 +1076,7 @@ with c1:
         marker=dict(size=10, color="white", line=dict(color=COLOR_ACCENT, width=2.5)),
         text=tend["ADH"].apply(lambda x: f"{x:.0%}"),
         textposition="top center",
-        textfont=dict(size=9, color=COLOR_PRIMARY, family="Inter", weight=700),
+        textfont=dict(size=9, color="#CBD3F2", family="Inter", weight=700),
         hovertemplate="%{x}<br><b>ADH: %{y:.1%}</b><extra></extra>"
     ))
     fig_tend.add_hline(y=0.90, line_dash="dot", line_color=COLOR_SUCCESS, line_width=1.5,
@@ -1123,20 +1086,20 @@ with c1:
     _ini_tend = max(-0.5, _n_tend - 15 - 0.5)
     fig_tend.update_layout(
         height=370, margin=dict(l=0, r=10, t=24, b=40),
-        paper_bgcolor="white", plot_bgcolor="white",
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
         yaxis=dict(
-            tickformat=".0%", gridcolor="#F1F5F9",
+            tickformat=".0%", gridcolor="rgba(255,255,255,0.08)",
             range=[0.60, 1.01], dtick=0.04,
-            tickfont=dict(size=10, family="Inter"),
+            tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.62)"),
             zeroline=False, showgrid=True
         ),
         xaxis=dict(
-            gridcolor="rgba(0,0,0,0)", tickfont=dict(size=10, family="Inter"),
+            gridcolor="rgba(0,0,0,0)", tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.62)"),
             range=[_ini_tend, _n_tend - 0.5],
-            rangeslider=dict(visible=True, thickness=0.08, bgcolor="#F8FAFC"),
+            rangeslider=dict(visible=True, thickness=0.08, bgcolor="rgba(255,255,255,0.05)"),
             tickangle=-30, showgrid=False
         ),
-        font=dict(family="Inter", size=11), showlegend=False
+        font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)"), showlegend=False
     )
     st.plotly_chart(fig_tend, use_container_width=True)
 
@@ -1179,10 +1142,10 @@ with c2:
     )
     fig_pie.update_layout(
         height=320, margin=dict(l=0, r=0, t=24, b=0),
-        paper_bgcolor="white", showlegend=True,
+        paper_bgcolor="rgba(0,0,0,0)", showlegend=True,
         legend=dict(orientation="v", yanchor="middle", y=0.5, xanchor="left", x=1.0,
                     font=dict(size=10, family="Inter"), itemsizing="constant"),
-        font=dict(family="Inter", size=11)
+        font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)")
     )
     st.plotly_chart(fig_pie, use_container_width=True)
 
@@ -1244,7 +1207,7 @@ with c_bar:
     fig_bar.add_vrect(x0=0.90, x1=1.02, fillcolor="rgba(16,185,129,0.06)", layer="below", line_width=0)
     fig_bar.add_trace(go.Bar(
         x=[1.0] * n_sup, y=sup_short["Supervisor"], orientation="h",
-        marker=dict(color="rgba(226,232,240,0.9)", line=dict(width=0)),
+        marker=dict(color="rgba(255,255,255,0.07)", line=dict(width=0)),
         showlegend=False, hoverinfo="skip", width=0.55
     ))
     fig_bar.add_trace(go.Bar(
@@ -1253,22 +1216,22 @@ with c_bar:
         text=sup_stats["ADH"].apply(lambda x: f"{x:.1%}"),
         textposition="outside",
         constraintext="none",
-        textfont=dict(size=11, color=COLOR_PRIMARY, family="Inter"),
+        textfont=dict(size=11, color="#CBD3F2", family="Inter"),
         hovertemplate="<b>%{y}</b><br>Adherencia: %{x:.1%}<extra></extra>",
         width=0.55
     ))
-    fig_bar.add_vline(x=0.90, line_dash="dot", line_color=COLOR_PRIMARY, line_width=1.5,
+    fig_bar.add_vline(x=0.90, line_dash="dot", line_color="rgba(125,211,252,0.75)", line_width=1.5,
                       annotation_text="Meta 90%",
-                      annotation_font=dict(size=10, color=COLOR_PRIMARY),
+                      annotation_font=dict(size=10, color="#7DD3FC"),
                       annotation_position="top left")
     fig_bar.update_layout(
         barmode="overlay", height=400,
         margin=dict(l=0, r=55, t=20, b=0),
-        paper_bgcolor="white", plot_bgcolor="white",
-        xaxis=dict(tickformat=".0%", range=[0, 1.10], gridcolor="#F1F5F9",
-                   showgrid=True, tickfont=dict(size=10, family="Inter")),
-        yaxis=dict(gridcolor="rgba(0,0,0,0)", tickfont=dict(size=11, family="Inter")),
-        showlegend=False, font=dict(family="Inter", size=11)
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+        xaxis=dict(tickformat=".0%", range=[0, 1.10], gridcolor="rgba(255,255,255,0.08)",
+                   showgrid=True, tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.62)")),
+        yaxis=dict(gridcolor="rgba(0,0,0,0)", tickfont=dict(size=11, family="Inter", color="rgba(255,255,255,0.75)")),
+        showlegend=False, font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)")
     )
     st.plotly_chart(fig_bar, use_container_width=True)
 
@@ -1287,7 +1250,7 @@ with c_gauge:
     tabla_sup["ADH"] = tabla_sup["ADH"].apply(lambda x: f"{x:.1%}")
     tabla_sup["Supervisor"] = tabla_sup["Supervisor"].apply(lambda n: " ".join(n.split()[:2]))
     tabla_sup.columns = ["Supervisor","ADH%","Agentes","Ausentes","Tardes"]
-    st.dataframe(tabla_sup, use_container_width=True, hide_index=True, height=400)
+    st.dataframe(_dark_df(tabla_sup), use_container_width=True, hide_index=True, height=400)
 
 # ─────────────────────────────────────────────
 # GRÁFICAS POR SUPERVISOR (TENDENCIA)
@@ -1347,24 +1310,24 @@ for sup in sup_lista:
     ))
 fig_sup.add_hline(y=0.90, line_dash="dot", line_color="rgba(100,116,139,0.6)", line_width=1.5,
                   annotation_text="Meta 90%", annotation_position="top right",
-                  annotation_font=dict(color="#64748B", size=10, family="Inter"))
+                  annotation_font=dict(color="rgba(255,255,255,0.6)", size=10, family="Inter"))
 
 _periodos_sup = _periodo_sorted
 _n_sup_per    = len(_periodos_sup)
 _ini_sup      = max(-0.5, _n_sup_per - 15 - 0.5)
 fig_sup.update_layout(
     height=390, margin=dict(l=0, r=0, t=10, b=40),
-    paper_bgcolor="white", plot_bgcolor="white",
+    paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
     yaxis=dict(
-        tickformat=".0%", gridcolor="#F1F5F9",
+        tickformat=".0%", gridcolor="rgba(255,255,255,0.08)",
         range=[0.60, 1.05], dtick=0.05,
-        tickfont=dict(size=10, family="Inter"),
+        tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.62)"),
         zeroline=False
     ),
     xaxis=dict(
-        gridcolor="rgba(0,0,0,0)", tickfont=dict(size=10, family="Inter"),
+        gridcolor="rgba(0,0,0,0)", tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.62)"),
         range=[_ini_sup, _n_sup_per - 0.5],
-        rangeslider=dict(visible=True, thickness=0.08, bgcolor="#F8FAFC"),
+        rangeslider=dict(visible=True, thickness=0.08, bgcolor="rgba(255,255,255,0.05)"),
         tickangle=-30, showgrid=False
     ),
     legend=dict(
@@ -1372,7 +1335,7 @@ fig_sup.update_layout(
         font=dict(size=10, family="Inter"),
         itemsizing="constant", bgcolor="rgba(0,0,0,0)"
     ),
-    font=dict(family="Inter", size=11)
+    font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)")
 )
 st.plotly_chart(fig_sup, use_container_width=True)
 
@@ -1439,7 +1402,7 @@ t1_show = (
     ].sort_values(["Fecha", "Agente"]).reset_index(drop=True)
 )
 st.dataframe(
-    t1_show,
+    _dark_df(t1_show),
     column_config={
         "Adherencia %": st.column_config.ProgressColumn(
             "Adherencia %", format="%.1f%%", min_value=0, max_value=100
@@ -1480,7 +1443,7 @@ for c in plan_disponibles:
     t2[c] = t2[c].apply(fmt_plan)
 
 st.dataframe(
-    t2.sort_values(["Fecha", "Agente"]).reset_index(drop=True),
+    _dark_df(t2.sort_values(["Fecha", "Agente"]).reset_index(drop=True)),
     use_container_width=True, hide_index=True, height=350
 )
 
@@ -1513,6 +1476,6 @@ if exc_min_disp:
 
 cols_t3 = ["Fecha", "Agente", "Supervisor", "Campaña"] + exc_fmt_cols + (["Total excesos"] if exc_min_disp else [])
 t3_show = t3[cols_t3].sort_values(["Fecha", "Agente"]).reset_index(drop=True)
-st.dataframe(t3_show, use_container_width=True, hide_index=True, height=350)
+st.dataframe(_dark_df(t3_show), use_container_width=True, hide_index=True, height=350)
 
 st.caption(f"📋 {dff['Nombre'].nunique()} agentes · {len(dff)} registros en el período seleccionado")
