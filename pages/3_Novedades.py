@@ -187,35 +187,35 @@ st.markdown(f"""
             radial-gradient(ellipse 55% 110% at 72% 130%,  rgba(245,158,11,0.16) 0%, transparent 60%),
             linear-gradient(155deg, #0B0518 0%, #14082b 50%, #0A0414 100%);
         border: 1px solid rgba(255,255,255,0.10);
-        border-radius: 24px; padding: 36px 42px; margin-bottom: 26px;
-        box-shadow: 0 24px 60px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.08);
+        border-radius: 20px; padding: 18px 30px; margin-bottom: 18px;
+        box-shadow: 0 18px 46px -18px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08);
     }}
-    .hb-eyebrow {{ display:inline-flex;align-items:center;gap:9px;
+    .hb-eyebrow {{ display:inline-flex;align-items:center;gap:8px;
         background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.16);
-        border-radius:99px;padding:6px 15px;margin-bottom:16px;
-        font-size:10.5px;font-weight:700;color:rgba(255,255,255,0.78);
+        border-radius:99px;padding:5px 13px;margin-bottom:11px;
+        font-size:10px;font-weight:700;color:rgba(255,255,255,0.78);
         letter-spacing:0.12em;text-transform:uppercase; }}
     .hb-dot {{ width:7px;height:7px;border-radius:50%;background:#34D399;
         box-shadow:0 0 9px #34D399;animation:sbcPulse 1.8s ease-in-out infinite; }}
     .hb-title {{ font-family:'Space Grotesk',sans-serif!important;
-        font-size:38px;font-weight:700;color:white;margin:0 0 12px;
-        letter-spacing:-1.2px;line-height:1.04; }}
-    .hb-sub {{ font-size:13.5px;color:rgba(255,255,255,0.62);margin:0;line-height:1.55; }}
+        font-size:29px;font-weight:700;color:white;margin:0 0 9px;
+        letter-spacing:-0.8px;line-height:1.05; }}
+    .hb-sub {{ font-size:13px;color:rgba(255,255,255,0.62);margin:0;line-height:1.5; }}
     .hb-sub b {{ color:rgba(255,255,255,0.92);font-weight:700; }}
-    .hb-meta {{ display:flex;flex-wrap:wrap;gap:9px;margin:0 0 4px; }}
-    .hb-chip {{ display:inline-flex;align-items:center;gap:7px;
+    .hb-meta {{ display:flex;flex-wrap:wrap;gap:8px;margin:0 0 2px; }}
+    .hb-chip {{ display:inline-flex;align-items:center;gap:6px;
         background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.13);
-        border-radius:10px;padding:7px 13px;font-size:12px;font-weight:600;color:rgba(255,255,255,0.74); }}
+        border-radius:9px;padding:5px 11px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.74); }}
     .hb-chip b {{ color:#fff;font-weight:700; }}
-    .nav-lbl {{ font-size:9.5px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;
-        color:rgba(255,255,255,0.40);margin:4px 0 8px; }}
-    .st-key-hdrbanner [data-testid="stVerticalBlock"] {{ gap: 0.55rem !important; }}
+    .nav-lbl {{ font-size:9px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;
+        color:rgba(255,255,255,0.40);margin:3px 0 7px; }}
+    .st-key-hdrbanner [data-testid="stVerticalBlock"] {{ gap: 0.5rem !important; }}
     .st-key-hdrbanner [data-testid="stButton"] > button {{
         background: rgba(255,255,255,0.08) !important;
         border: 1px solid rgba(255,255,255,0.18) !important;
-        color: rgba(255,255,255,0.92) !important; border-radius: 10px !important;
-        font-size: 11px !important; font-weight: 700 !important;
-        height: 34px !important; min-height: 34px !important; padding: 0 6px !important;
+        color: rgba(255,255,255,0.92) !important; border-radius: 9px !important;
+        font-size: 10.5px !important; font-weight: 700 !important;
+        height: 32px !important; min-height: 32px !important; padding: 0 6px !important;
         box-shadow: inset 0 1px 0 rgba(255,255,255,0.06) !important;
         transition: transform .2s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease !important;
     }}
