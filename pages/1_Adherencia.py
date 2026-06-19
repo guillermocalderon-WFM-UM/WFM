@@ -1040,6 +1040,196 @@ with k5:
     </div>""", unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────
+# GRÁFICAS POR SUPERVISOR (TENDENCIA)
+# ─────────────────────────────────────────────
+st.markdown(f"""
+<div class='sec-header' style='--sc:#8B5CF6'>
+    <div class='sec-wash'></div>
+    <div class='sec-icon' style='background:linear-gradient(135deg,rgba(139,92,246,0.20),rgba(139,92,246,0.06))'>📉</div>
+    <div class='sec-text'>
+        <div class='sec-title'>Tendencia por Supervisor</div>
+        <div class='sec-desc'>Comparación de la evolución de adherencia de cada supervisor a lo largo del período.</div>
+    </div>
+    <div class='sec-meta'>
+        <div class='sec-meta-val' style='color:#8B5CF6'>{n_supervisores}</div>
+        <div class='sec-meta-lab'>Equipos</div>
+    </div>
+    <span class='sec-tag' style='background:#8B5CF6'>Evolución</span>
+</div>
+""", unsafe_allow_html=True)
+
+tend_sup = (
+    dff_validos
+    .groupby(["_periodo","Supervisor"])
+    .apply(lambda g: g["adh_s"].sum() / g["prog_s"].sum() if g["prog_s"].sum() > 0 else 0)
+    .reset_index(name="ADH")
+)
+tend_sup["_ord"] = tend_sup["_periodo"].map(_periodo_rank)
+tend_sup = tend_sup.sort_values(["Supervisor","_ord"]).drop(columns="_ord")
+
+sup_lista = sorted(tend_sup["Supervisor"].unique())
+colores_sup = {s: SUPERVISOR_COLORS[i % len(SUPERVISOR_COLORS)] for i, s in enumerate(sup_lista)}
+
+st.markdown("""<div class='chart-hdr' style='--cc:#8B5CF6'>
+    <span class='ch-icon'>📉</span>
+    <div class='ch-texts'>
+        <div class='ch-title'>Adherencia por Supervisor en el Tiempo</div>
+        <div class='ch-sub'>Cada línea representa un supervisor · Meta 90%</div>
+    </div>
+    <span class='ch-tag' style='color:#8B5CF6'>Multi-línea</span>
+</div>""", unsafe_allow_html=True)
+
+fig_sup = go.Figure()
+fig_sup.add_hrect(y0=0.60, y1=0.80, fillcolor="rgba(239,68,68,0.03)",  layer="below", line_width=0)
+fig_sup.add_hrect(y0=0.80, y1=0.90, fillcolor="rgba(245,158,11,0.04)", layer="below", line_width=0)
+fig_sup.add_hrect(y0=0.90, y1=1.05, fillcolor="rgba(16,185,129,0.04)", layer="below", line_width=0)
+
+for sup in sup_lista:
+    sub = tend_sup[tend_sup["Supervisor"] == sup]
+    nombre_corto = " ".join(sup.split()[:2])
+    fig_sup.add_trace(go.Scatter(
+        x=sub["_periodo"], y=sub["ADH"],
+        name=nombre_corto,
+        mode="lines+markers",
+        line=dict(color=colores_sup[sup], width=2, shape="spline"),
+        marker=dict(size=6, color="white", line=dict(color=colores_sup[sup], width=2)),
+        hovertemplate=f"<b>{nombre_corto}</b><br>%{{x}}: %{{y:.1%}}<extra></extra>"
+    ))
+fig_sup.add_hline(y=0.90, line_dash="dot", line_color="rgba(100,116,139,0.6)", line_width=1.5,
+                  annotation_text="Meta 90%", annotation_position="top right",
+                  annotation_font=dict(color="rgba(255,255,255,0.6)", size=10, family="Inter"))
+
+_periodos_sup = _periodo_sorted
+_n_sup_per    = len(_periodos_sup)
+_ini_sup      = max(-0.5, _n_sup_per - 15 - 0.5)
+fig_sup.update_layout(
+    height=390, margin=dict(l=0, r=0, t=10, b=40),
+    paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+    yaxis=dict(
+        tickformat=".0%", gridcolor="rgba(255,255,255,0.08)",
+        range=[0.60, 1.05], dtick=0.05,
+        tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.62)"),
+        zeroline=False
+    ),
+    xaxis=dict(
+        gridcolor="rgba(0,0,0,0)", tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.62)"),
+        range=[_ini_sup, _n_sup_per - 0.5],
+        rangeslider=dict(visible=True, thickness=0.08, bgcolor="rgba(255,255,255,0.05)"),
+        tickangle=-30, showgrid=False
+    ),
+    legend=dict(
+        orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0,
+        font=dict(size=10, family="Inter"),
+        itemsizing="constant", bgcolor="rgba(0,0,0,0)"
+    ),
+    font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)")
+)
+st.plotly_chart(fig_sup, use_container_width=True)
+
+# ─────────────────────────────────────────────
+# COMPARATIVO POR SUPERVISOR
+# ─────────────────────────────────────────────
+st.markdown(f"""
+<div class='sec-header' style='--sc:{COLOR_PRIMARY}; background:radial-gradient(ellipse 95% 60% at 6% 0%, rgba(14,165,233,0.30) 0%, transparent 55%), radial-gradient(ellipse 90% 70% at 100% 120%, rgba(129,140,248,0.32) 0%, transparent 55%), radial-gradient(ellipse 80% 70% at 55% 130%, rgba(52,211,153,0.14) 0%, transparent 55%), linear-gradient(150deg, #0B0518 0%, #1a0b34 50%, #0A0414 100%)'>
+    <div class='sec-wash'></div>
+    <div class='sec-icon' style='background:linear-gradient(135deg,rgba(40,5,63,0.20),rgba(40,5,63,0.06))'>👥</div>
+    <div class='sec-text'>
+        <div class='sec-title'>Comparativo por Supervisor</div>
+        <div class='sec-desc'>Adherencia consolidada por equipo: verde ≥ 90%, amarillo ≥ 80%, rojo &lt; 80%.</div>
+    </div>
+    <div class='sec-meta'>
+        <div class='sec-meta-val' style='color:{COLOR_PRIMARY}'>{n_supervisores}</div>
+        <div class='sec-meta-lab'>Supervisores</div>
+    </div>
+    <span class='sec-tag'>Equipos</span>
+</div>
+""", unsafe_allow_html=True)
+
+sup_stats = (
+    dff_validos.groupby("Supervisor")
+    .apply(lambda g: pd.Series({
+        "ADH":      g["adh_s"].sum() / g["prog_s"].sum() if g["prog_s"].sum() > 0 else 0,
+        "Agentes":  g["Nombre"].nunique(),
+        "Registros": len(g)
+    }))
+    .reset_index()
+    .sort_values("ADH", ascending=True)
+)
+
+aus_sup   = dff[dff["Validador Llegada"] == "Ausente"].groupby("Supervisor").size().reset_index(name="Ausentes")
+tarde_sup = dff[dff["Validador Llegada"] == "Llegada tarde"].groupby("Supervisor").size().reset_index(name="Tardes")
+sup_stats = sup_stats.merge(aus_sup, on="Supervisor", how="left").merge(tarde_sup, on="Supervisor", how="left")
+sup_stats["Ausentes"] = sup_stats["Ausentes"].fillna(0).astype(int)
+sup_stats["Tardes"]   = sup_stats["Tardes"].fillna(0).astype(int)
+
+c_bar, c_gauge = st.columns([3, 2])
+
+with c_bar:
+    st.markdown(f"""<div class='chart-hdr' style='--cc:{COLOR_PRIMARY}'>
+        <span class='ch-icon'>📊</span>
+        <div class='ch-texts'>
+            <div class='ch-title'>Adherencia por Supervisor</div>
+            <div class='ch-sub'>Menor a mayor · Zona verde = meta cumplida</div>
+        </div>
+        <span class='ch-tag'>Barras</span>
+    </div>""", unsafe_allow_html=True)
+    sup_stats["Color"] = sup_stats["ADH"].apply(
+        lambda x: COLOR_SUCCESS if x >= 0.90 else (COLOR_WARNING if x >= 0.80 else COLOR_DANGER)
+    )
+    sup_short = sup_stats.copy()
+    sup_short["Supervisor"] = sup_short["Supervisor"].apply(lambda n: " ".join(n.split()[:2]))
+    n_sup = len(sup_stats)
+
+    fig_bar = go.Figure()
+    fig_bar.add_vrect(x0=0.90, x1=1.02, fillcolor="rgba(16,185,129,0.06)", layer="below", line_width=0)
+    fig_bar.add_trace(go.Bar(
+        x=[1.0] * n_sup, y=sup_short["Supervisor"], orientation="h",
+        marker=dict(color="rgba(255,255,255,0.07)", line=dict(width=0)),
+        showlegend=False, hoverinfo="skip", width=0.55
+    ))
+    fig_bar.add_trace(go.Bar(
+        x=sup_stats["ADH"], y=sup_short["Supervisor"], orientation="h",
+        marker=dict(color=sup_stats["Color"], line=dict(width=0)),
+        text=sup_stats["ADH"].apply(lambda x: f"{x:.1%}"),
+        textposition="outside",
+        constraintext="none",
+        textfont=dict(size=11, color="#CBD3F2", family="Inter"),
+        hovertemplate="<b>%{y}</b><br>Adherencia: %{x:.1%}<extra></extra>",
+        width=0.55
+    ))
+    fig_bar.add_vline(x=0.90, line_dash="dot", line_color="rgba(125,211,252,0.75)", line_width=1.5,
+                      annotation_text="Meta 90%",
+                      annotation_font=dict(size=10, color="#7DD3FC"),
+                      annotation_position="top left")
+    fig_bar.update_layout(
+        barmode="overlay", height=400,
+        margin=dict(l=0, r=55, t=20, b=0),
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+        xaxis=dict(tickformat=".0%", range=[0, 1.10], gridcolor="rgba(255,255,255,0.08)",
+                   showgrid=True, tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.62)")),
+        yaxis=dict(gridcolor="rgba(0,0,0,0)", tickfont=dict(size=11, family="Inter", color="rgba(255,255,255,0.75)")),
+        showlegend=False, font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)")
+    )
+    st.plotly_chart(fig_bar, use_container_width=True)
+
+with c_gauge:
+    st.markdown("""<div class='tbl-hdr' style='background:linear-gradient(135deg,#28053F 0%,#0EA5E9 100%)'>
+        <span class='tbl-hdr-icon'>🏆</span>
+        <div class='tbl-hdr-body'>
+            <div class='tbl-hdr-title'>Ranking Supervisores</div>
+            <div class='tbl-hdr-desc'>Adherencia, agentes, ausencias y tardanzas</div>
+        </div>
+        <span class='tbl-hdr-badge'>Resumen</span>
+    </div>""", unsafe_allow_html=True)
+    tabla_sup = sup_stats.sort_values("ADH", ascending=False)[
+        ["Supervisor","ADH","Agentes","Ausentes","Tardes"]
+    ].copy()
+    tabla_sup["ADH"] = tabla_sup["ADH"].apply(lambda x: f"{x:.1%}")
+    tabla_sup["Supervisor"] = tabla_sup["Supervisor"].apply(lambda n: " ".join(n.split()[:2]))
+    tabla_sup.columns = ["Supervisor","ADH%","Agentes","Ausentes","Tardes"]
+    st.dataframe(tabla_sup, use_container_width=True, hide_index=True, height=400)
+
+# ─────────────────────────────────────────────
 # TENDENCIA + DISTRIBUCIÓN LLEGADAS
 # ─────────────────────────────────────────────
 st.markdown(f"""
@@ -1159,203 +1349,13 @@ with c2:
         showarrow=False, align="center"
     )
     fig_pie.update_layout(
-        height=320, margin=dict(l=0, r=0, t=24, b=0),
+        height=370, margin=dict(l=0, r=0, t=24, b=0),
         paper_bgcolor="rgba(0,0,0,0)", showlegend=True,
         legend=dict(orientation="v", yanchor="middle", y=0.5, xanchor="left", x=1.0,
                     font=dict(size=10, family="Inter"), itemsizing="constant"),
         font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)")
     )
     st.plotly_chart(fig_pie, use_container_width=True)
-
-# ─────────────────────────────────────────────
-# COMPARATIVO POR SUPERVISOR
-# ─────────────────────────────────────────────
-st.markdown(f"""
-<div class='sec-header' style='--sc:{COLOR_PRIMARY}; background:radial-gradient(ellipse 95% 60% at 6% 0%, rgba(14,165,233,0.30) 0%, transparent 55%), radial-gradient(ellipse 90% 70% at 100% 120%, rgba(129,140,248,0.32) 0%, transparent 55%), radial-gradient(ellipse 80% 70% at 55% 130%, rgba(52,211,153,0.14) 0%, transparent 55%), linear-gradient(150deg, #0B0518 0%, #1a0b34 50%, #0A0414 100%)'>
-    <div class='sec-wash'></div>
-    <div class='sec-icon' style='background:linear-gradient(135deg,rgba(40,5,63,0.20),rgba(40,5,63,0.06))'>👥</div>
-    <div class='sec-text'>
-        <div class='sec-title'>Comparativo por Supervisor</div>
-        <div class='sec-desc'>Adherencia consolidada por equipo: verde ≥ 90%, amarillo ≥ 80%, rojo &lt; 80%.</div>
-    </div>
-    <div class='sec-meta'>
-        <div class='sec-meta-val' style='color:{COLOR_PRIMARY}'>{n_supervisores}</div>
-        <div class='sec-meta-lab'>Supervisores</div>
-    </div>
-    <span class='sec-tag'>Equipos</span>
-</div>
-""", unsafe_allow_html=True)
-
-sup_stats = (
-    dff_validos.groupby("Supervisor")
-    .apply(lambda g: pd.Series({
-        "ADH":      g["adh_s"].sum() / g["prog_s"].sum() if g["prog_s"].sum() > 0 else 0,
-        "Agentes":  g["Nombre"].nunique(),
-        "Registros": len(g)
-    }))
-    .reset_index()
-    .sort_values("ADH", ascending=True)
-)
-
-aus_sup   = dff[dff["Validador Llegada"] == "Ausente"].groupby("Supervisor").size().reset_index(name="Ausentes")
-tarde_sup = dff[dff["Validador Llegada"] == "Llegada tarde"].groupby("Supervisor").size().reset_index(name="Tardes")
-sup_stats = sup_stats.merge(aus_sup, on="Supervisor", how="left").merge(tarde_sup, on="Supervisor", how="left")
-sup_stats["Ausentes"] = sup_stats["Ausentes"].fillna(0).astype(int)
-sup_stats["Tardes"]   = sup_stats["Tardes"].fillna(0).astype(int)
-
-c_bar, c_gauge = st.columns([3, 2])
-
-with c_bar:
-    st.markdown(f"""<div class='chart-hdr' style='--cc:{COLOR_PRIMARY}'>
-        <span class='ch-icon'>📊</span>
-        <div class='ch-texts'>
-            <div class='ch-title'>Adherencia por Supervisor</div>
-            <div class='ch-sub'>Menor a mayor · Zona verde = meta cumplida</div>
-        </div>
-        <span class='ch-tag'>Barras</span>
-    </div>""", unsafe_allow_html=True)
-    sup_stats["Color"] = sup_stats["ADH"].apply(
-        lambda x: COLOR_SUCCESS if x >= 0.90 else (COLOR_WARNING if x >= 0.80 else COLOR_DANGER)
-    )
-    sup_short = sup_stats.copy()
-    sup_short["Supervisor"] = sup_short["Supervisor"].apply(lambda n: " ".join(n.split()[:2]))
-    n_sup = len(sup_stats)
-
-    fig_bar = go.Figure()
-    fig_bar.add_vrect(x0=0.90, x1=1.02, fillcolor="rgba(16,185,129,0.06)", layer="below", line_width=0)
-    fig_bar.add_trace(go.Bar(
-        x=[1.0] * n_sup, y=sup_short["Supervisor"], orientation="h",
-        marker=dict(color="rgba(255,255,255,0.07)", line=dict(width=0)),
-        showlegend=False, hoverinfo="skip", width=0.55
-    ))
-    fig_bar.add_trace(go.Bar(
-        x=sup_stats["ADH"], y=sup_short["Supervisor"], orientation="h",
-        marker=dict(color=sup_stats["Color"], line=dict(width=0)),
-        text=sup_stats["ADH"].apply(lambda x: f"{x:.1%}"),
-        textposition="outside",
-        constraintext="none",
-        textfont=dict(size=11, color="#CBD3F2", family="Inter"),
-        hovertemplate="<b>%{y}</b><br>Adherencia: %{x:.1%}<extra></extra>",
-        width=0.55
-    ))
-    fig_bar.add_vline(x=0.90, line_dash="dot", line_color="rgba(125,211,252,0.75)", line_width=1.5,
-                      annotation_text="Meta 90%",
-                      annotation_font=dict(size=10, color="#7DD3FC"),
-                      annotation_position="top left")
-    fig_bar.update_layout(
-        barmode="overlay", height=400,
-        margin=dict(l=0, r=55, t=20, b=0),
-        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-        xaxis=dict(tickformat=".0%", range=[0, 1.10], gridcolor="rgba(255,255,255,0.08)",
-                   showgrid=True, tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.62)")),
-        yaxis=dict(gridcolor="rgba(0,0,0,0)", tickfont=dict(size=11, family="Inter", color="rgba(255,255,255,0.75)")),
-        showlegend=False, font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)")
-    )
-    st.plotly_chart(fig_bar, use_container_width=True)
-
-with c_gauge:
-    st.markdown("""<div class='tbl-hdr' style='background:linear-gradient(135deg,#28053F 0%,#0EA5E9 100%)'>
-        <span class='tbl-hdr-icon'>🏆</span>
-        <div class='tbl-hdr-body'>
-            <div class='tbl-hdr-title'>Ranking Supervisores</div>
-            <div class='tbl-hdr-desc'>Adherencia, agentes, ausencias y tardanzas</div>
-        </div>
-        <span class='tbl-hdr-badge'>Resumen</span>
-    </div>""", unsafe_allow_html=True)
-    tabla_sup = sup_stats.sort_values("ADH", ascending=False)[
-        ["Supervisor","ADH","Agentes","Ausentes","Tardes"]
-    ].copy()
-    tabla_sup["ADH"] = tabla_sup["ADH"].apply(lambda x: f"{x:.1%}")
-    tabla_sup["Supervisor"] = tabla_sup["Supervisor"].apply(lambda n: " ".join(n.split()[:2]))
-    tabla_sup.columns = ["Supervisor","ADH%","Agentes","Ausentes","Tardes"]
-    st.dataframe(tabla_sup, use_container_width=True, hide_index=True, height=400)
-
-# ─────────────────────────────────────────────
-# GRÁFICAS POR SUPERVISOR (TENDENCIA)
-# ─────────────────────────────────────────────
-st.markdown(f"""
-<div class='sec-header' style='--sc:#8B5CF6'>
-    <div class='sec-wash'></div>
-    <div class='sec-icon' style='background:linear-gradient(135deg,rgba(139,92,246,0.20),rgba(139,92,246,0.06))'>📉</div>
-    <div class='sec-text'>
-        <div class='sec-title'>Tendencia por Supervisor</div>
-        <div class='sec-desc'>Comparación de la evolución de adherencia de cada supervisor a lo largo del período.</div>
-    </div>
-    <div class='sec-meta'>
-        <div class='sec-meta-val' style='color:#8B5CF6'>{n_supervisores}</div>
-        <div class='sec-meta-lab'>Equipos</div>
-    </div>
-    <span class='sec-tag' style='background:#8B5CF6'>Evolución</span>
-</div>
-""", unsafe_allow_html=True)
-
-tend_sup = (
-    dff_validos
-    .groupby(["_periodo","Supervisor"])
-    .apply(lambda g: g["adh_s"].sum() / g["prog_s"].sum() if g["prog_s"].sum() > 0 else 0)
-    .reset_index(name="ADH")
-)
-tend_sup["_ord"] = tend_sup["_periodo"].map(_periodo_rank)
-tend_sup = tend_sup.sort_values(["Supervisor","_ord"]).drop(columns="_ord")
-
-sup_lista = sorted(tend_sup["Supervisor"].unique())
-colores_sup = {s: SUPERVISOR_COLORS[i % len(SUPERVISOR_COLORS)] for i, s in enumerate(sup_lista)}
-
-st.markdown("""<div class='chart-hdr' style='--cc:#8B5CF6'>
-    <span class='ch-icon'>📉</span>
-    <div class='ch-texts'>
-        <div class='ch-title'>Adherencia por Supervisor en el Tiempo</div>
-        <div class='ch-sub'>Cada línea representa un supervisor · Meta 90%</div>
-    </div>
-    <span class='ch-tag' style='color:#8B5CF6'>Multi-línea</span>
-</div>""", unsafe_allow_html=True)
-
-fig_sup = go.Figure()
-fig_sup.add_hrect(y0=0.60, y1=0.80, fillcolor="rgba(239,68,68,0.03)",  layer="below", line_width=0)
-fig_sup.add_hrect(y0=0.80, y1=0.90, fillcolor="rgba(245,158,11,0.04)", layer="below", line_width=0)
-fig_sup.add_hrect(y0=0.90, y1=1.05, fillcolor="rgba(16,185,129,0.04)", layer="below", line_width=0)
-
-for sup in sup_lista:
-    sub = tend_sup[tend_sup["Supervisor"] == sup]
-    nombre_corto = " ".join(sup.split()[:2])
-    fig_sup.add_trace(go.Scatter(
-        x=sub["_periodo"], y=sub["ADH"],
-        name=nombre_corto,
-        mode="lines+markers",
-        line=dict(color=colores_sup[sup], width=2, shape="spline"),
-        marker=dict(size=6, color="white", line=dict(color=colores_sup[sup], width=2)),
-        hovertemplate=f"<b>{nombre_corto}</b><br>%{{x}}: %{{y:.1%}}<extra></extra>"
-    ))
-fig_sup.add_hline(y=0.90, line_dash="dot", line_color="rgba(100,116,139,0.6)", line_width=1.5,
-                  annotation_text="Meta 90%", annotation_position="top right",
-                  annotation_font=dict(color="rgba(255,255,255,0.6)", size=10, family="Inter"))
-
-_periodos_sup = _periodo_sorted
-_n_sup_per    = len(_periodos_sup)
-_ini_sup      = max(-0.5, _n_sup_per - 15 - 0.5)
-fig_sup.update_layout(
-    height=390, margin=dict(l=0, r=0, t=10, b=40),
-    paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-    yaxis=dict(
-        tickformat=".0%", gridcolor="rgba(255,255,255,0.08)",
-        range=[0.60, 1.05], dtick=0.05,
-        tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.62)"),
-        zeroline=False
-    ),
-    xaxis=dict(
-        gridcolor="rgba(0,0,0,0)", tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.62)"),
-        range=[_ini_sup, _n_sup_per - 0.5],
-        rangeslider=dict(visible=True, thickness=0.08, bgcolor="rgba(255,255,255,0.05)"),
-        tickangle=-30, showgrid=False
-    ),
-    legend=dict(
-        orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0,
-        font=dict(size=10, family="Inter"),
-        itemsizing="constant", bgcolor="rgba(0,0,0,0)"
-    ),
-    font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)")
-)
-st.plotly_chart(fig_sup, use_container_width=True)
 
 # ─────────────────────────────────────────────
 # DETALLE POR AGENTE
