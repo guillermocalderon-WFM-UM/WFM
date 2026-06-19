@@ -86,24 +86,6 @@ COLOR_DANGER  = "#EF4444"
 COLOR_BG      = "#F0F4F8"
 
 # ─────────────────────────────────────────────
-# TABLAS · estilo oscuro (celdas del grid combinan con el tema dark)
-# ─────────────────────────────────────────────
-def _dark_df(df):
-    return (
-        df.style
-        .set_properties(**{
-            "background-color": "#16122e",
-            "color": "#E3E8F7",
-            "border-color": "rgba(255,255,255,0.05)",
-        })
-        .set_table_styles([
-            {"selector": "th", "props": [("background-color", "#1b1240"),
-                                         ("color", "#FFFFFF"),
-                                         ("border-color", "rgba(255,255,255,0.06)")]},
-        ])
-    )
-
-# ─────────────────────────────────────────────
 # LOGO BASE64
 # ─────────────────────────────────────────────
 _LOGO_PATH = "logo-scala-learning-transformacion-digital-universidades.webp"
@@ -1250,7 +1232,7 @@ with c_gauge:
     tabla_sup["ADH"] = tabla_sup["ADH"].apply(lambda x: f"{x:.1%}")
     tabla_sup["Supervisor"] = tabla_sup["Supervisor"].apply(lambda n: " ".join(n.split()[:2]))
     tabla_sup.columns = ["Supervisor","ADH%","Agentes","Ausentes","Tardes"]
-    st.dataframe(_dark_df(tabla_sup), use_container_width=True, hide_index=True, height=400)
+    st.dataframe(tabla_sup, use_container_width=True, hide_index=True, height=400)
 
 # ─────────────────────────────────────────────
 # GRÁFICAS POR SUPERVISOR (TENDENCIA)
@@ -1402,7 +1384,7 @@ t1_show = (
     ].sort_values(["Fecha", "Agente"]).reset_index(drop=True)
 )
 st.dataframe(
-    _dark_df(t1_show),
+    t1_show,
     column_config={
         "Adherencia %": st.column_config.ProgressColumn(
             "Adherencia %", format="%.1f%%", min_value=0, max_value=100
@@ -1443,7 +1425,7 @@ for c in plan_disponibles:
     t2[c] = t2[c].apply(fmt_plan)
 
 st.dataframe(
-    _dark_df(t2.sort_values(["Fecha", "Agente"]).reset_index(drop=True)),
+    t2.sort_values(["Fecha", "Agente"]).reset_index(drop=True),
     use_container_width=True, hide_index=True, height=350
 )
 
@@ -1476,6 +1458,6 @@ if exc_min_disp:
 
 cols_t3 = ["Fecha", "Agente", "Supervisor", "Campaña"] + exc_fmt_cols + (["Total excesos"] if exc_min_disp else [])
 t3_show = t3[cols_t3].sort_values(["Fecha", "Agente"]).reset_index(drop=True)
-st.dataframe(_dark_df(t3_show), use_container_width=True, hide_index=True, height=350)
+st.dataframe(t3_show, use_container_width=True, hide_index=True, height=350)
 
 st.caption(f"📋 {dff['Nombre'].nunique()} agentes · {len(dff)} registros en el período seleccionado")
