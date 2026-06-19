@@ -212,25 +212,35 @@ st.markdown(f"""
         color:rgba(255,255,255,0.40);margin:3px 0 7px; }}
     .st-key-hdrbanner [data-testid="stVerticalBlock"] {{ gap: 0.5rem !important; }}
     .st-key-hdrbanner [data-testid="stButton"] > button {{
-        background: rgba(255,255,255,0.08) !important;
-        border: 1px solid rgba(255,255,255,0.18) !important;
-        color: rgba(255,255,255,0.92) !important; border-radius: 9px !important;
-        font-size: 11px !important; font-weight: 700 !important; white-space: nowrap !important;
-        height: 32px !important; min-height: 32px !important; padding: 0 8px !important;
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.06) !important;
-        transition: transform .2s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease !important;
+        position:relative; z-index:2; overflow:hidden; white-space:nowrap !important;
+        color:#CBD3F2 !important; border-radius:9px !important;
+        font-size:10px !important; font-weight:700 !important;
+        height:32px !important; min-height:32px !important; padding:0 11px !important;
+        border:1px solid rgba(255,255,255,0.12) !important; border-top-color:rgba(255,255,255,0.18) !important;
+        background:linear-gradient(180deg, rgba(255,255,255,0.085), rgba(255,255,255,0.025)) !important;
+        box-shadow:inset 0 1px 0 rgba(255,255,255,0.10), inset 0 -2px 6px -2px rgba(0,0,0,0.35), 0 4px 12px -8px rgba(8,3,24,0.60) !important;
+        transition:transform .16s ease, box-shadow .16s ease, background .16s ease, border-color .16s ease, color .16s ease !important;
     }}
     .st-key-hdrbanner [data-testid="stButton"] > button p {{ white-space:nowrap !important; margin:0 !important; }}
     .st-key-hdrbanner [data-testid="stButton"] > button:hover {{
-        background: rgba(255,255,255,0.16) !important;
-        border-color: rgba(56,189,248,0.5) !important; transform: translateY(-2px) !important;
-    }}
+        color:#EAF2FF !important; transform:translateY(-1px) !important;
+        border-color:rgba(125,211,252,0.42) !important;
+        background:linear-gradient(180deg, rgba(125,211,252,0.15), rgba(255,255,255,0.04)) !important;
+        box-shadow:inset 0 1px 0 rgba(255,255,255,0.16), 0 8px 20px -10px rgba(56,189,248,0.38) !important; }}
+    .st-key-hdrbanner [data-testid="stButton"] > button:active {{
+        transform:translateY(0) !important; box-shadow:inset 0 2px 5px rgba(0,0,0,0.48) !important; }}
     .st-key-hdrbanner [data-testid="stButton"] > button[kind="primary"] {{
-        background: linear-gradient(135deg,#38BDF8,#818CF8) !important; color: white !important;
-        border: 1px solid transparent !important;
-        box-shadow: 0 8px 22px -6px rgba(56,189,248,0.65) !important; }}
+        color:#F4F9FF !important; padding-left:20px !important;
+        border:1px solid rgba(56,189,248,0.55) !important; border-top-color:rgba(186,225,255,0.62) !important;
+        background:linear-gradient(180deg, rgba(56,189,248,0.30), rgba(59,130,246,0.16)) !important;
+        box-shadow:inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -8px 14px -12px rgba(8,3,24,0.42), 0 8px 22px -10px rgba(56,189,248,0.50) !important; }}
+    .st-key-hdrbanner [data-testid="stButton"] > button[kind="primary"]::before {{
+        content:""; position:absolute; left:8px; top:50%; transform:translateY(-50%);
+        width:5px; height:5px; border-radius:50%; background:#7DD3FC; box-shadow:0 0 8px rgba(125,211,252,0.9); }}
     .st-key-hdrbanner [data-testid="stButton"] > button[kind="primary"]:hover {{
-        filter: brightness(1.08) !important; transform: translateY(-2px) !important; }}
+        transform:translateY(-1px) !important;
+        background:linear-gradient(180deg, rgba(56,189,248,0.36), rgba(59,130,246,0.20)) !important;
+        box-shadow:inset 0 1px 0 rgba(255,255,255,0.24), 0 10px 26px -10px rgba(56,189,248,0.58) !important; }}
 
     /* ── Section label (fondo claro) ── */
     .ocu-seclbl {{ display:flex;align-items:center;gap:12px;margin:30px 0 18px;
