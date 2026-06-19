@@ -48,7 +48,7 @@ def cargar_datos(firma):
 
     partes = []
     for archivo in archivos:
-        df_mes = pd.read_excel(archivo, sheet_name="Consolidado", engine="openpyxl", dayfirst=True)
+        df_mes = pd.read_excel(archivo, sheet_name="Consolidado", engine="openpyxl")
         df_mes["_archivo"] = os.path.basename(archivo)
         partes.append(df_mes)
 

@@ -29,7 +29,10 @@ def _mes_orden(path):
 def cargar_datos(firma):
     # firma = (nombre, fecha_modificación) de cada archivo → el caché se invalida
     #         automáticamente cuando agregas/actualizas un Consolidado_*.xlsx.
-    archivos = sorted(glob.glob("Consolidado_*.xlsx"), key=_mes_orden)
+    archivos = sorted(
+        [f for f in glob.glob("Consolidado_*.xlsx") if "_O_" not in os.path.basename(f)],
+        key=_mes_orden
+    )
     if not archivos:
         st.error("No se encontraron archivos Consolidado_*.xlsx en la carpeta.")
         st.stop()
@@ -71,7 +74,10 @@ def cargar_datos(firma):
 
 _firma_archivos = tuple(
     (os.path.basename(a), os.path.getmtime(a))
-    for a in sorted(glob.glob("Consolidado_*.xlsx"), key=_mes_orden)
+    for a in sorted(
+        [f for f in glob.glob("Consolidado_*.xlsx") if "_O_" not in os.path.basename(f)],
+        key=_mes_orden
+    )
 )
 df, archivos_cargados = cargar_datos(_firma_archivos)
 
