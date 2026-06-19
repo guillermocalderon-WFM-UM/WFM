@@ -13,22 +13,24 @@ import io
 # ─────────────────────────────────────────────
 SUPERVISOR_COLORS = px.colors.qualitative.Bold
 
-def df_descarga(df, nombre_archivo, **kwargs):
-    st.dataframe(df, **kwargs)
+@st.cache_data(show_spinner=False)
+def _excel_bytes(df):
     buf = io.BytesIO()
     df.to_excel(buf, index=False, engine="openpyxl")
-    b64 = base64.b64encode(buf.getvalue()).decode()
-    st.markdown(
-        f'<div style="text-align:right;margin-top:-6px;margin-bottom:8px">'
-        f'<a href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{b64}" '
-        f'download="{nombre_archivo}" '
-        f'style="font-size:0.72rem;color:rgba(255,255,255,0.35);text-decoration:none;'
-        f'letter-spacing:0.03em;transition:color .2s" '
-        f'onmouseover="this.style.color=\'rgba(255,255,255,0.75)\'" '
-        f'onmouseout="this.style.color=\'rgba(255,255,255,0.35)\'">'
-        f'↓ Exportar Excel</a></div>',
-        unsafe_allow_html=True,
-    )
+    return buf.getvalue()
+
+def df_descarga(df, nombre_archivo, **kwargs):
+    st.dataframe(df, **kwargs)
+    _, col_dl = st.columns([7, 3])
+    with col_dl:
+        st.download_button(
+            label="↓ Exportar Excel",
+            data=_excel_bytes(df),
+            file_name=nombre_archivo,
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            key=f"dl_{nombre_archivo}",
+            use_container_width=True,
+        )
 
 # ─────────────────────────────────────────────
 # CARGA Y PREPARACIÓN DE DATOS
@@ -1203,6 +1205,7 @@ with c_bar:
     sup_short = sup_stats.copy()
     sup_short["Supervisor"] = sup_short["Supervisor"].apply(lambda n: " ".join(n.split()[:2]))
     n_sup = len(sup_stats)
+    _adh_h = min(max(400, n_sup * 22 + 60), 700)
 
     fig_bar = go.Figure()
     fig_bar.add_vrect(x0=0.90, x1=1.02, fillcolor="rgba(16,185,129,0.06)", layer="below", line_width=0)
@@ -1226,7 +1229,7 @@ with c_bar:
                       annotation_font=dict(size=10, color="#7DD3FC"),
                       annotation_position="top left")
     fig_bar.update_layout(
-        barmode="overlay", height=400,
+        barmode="overlay", height=_adh_h,
         margin=dict(l=0, r=55, t=20, b=0),
         paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
         xaxis=dict(tickformat=".0%", range=[0, 1.10], gridcolor="rgba(255,255,255,0.08)",
@@ -1251,7 +1254,7 @@ with c_gauge:
     tabla_sup["ADH"] = tabla_sup["ADH"].apply(lambda x: f"{x:.1%}")
     tabla_sup["Supervisor"] = tabla_sup["Supervisor"].apply(lambda n: " ".join(n.split()[:2]))
     tabla_sup.columns = ["Supervisor","ADH%","Agentes","Ausentes","Tardes"]
-    st.dataframe(tabla_sup, use_container_width=True, hide_index=True, height=400)
+    st.dataframe(tabla_sup, use_container_width=True, hide_index=True, height=_adh_h)
 
 # ─────────────────────────────────────────────
 # TENDENCIA + DISTRIBUCIÓN LLEGADAS
