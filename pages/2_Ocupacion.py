@@ -1031,8 +1031,9 @@ tbl_sup = (
     .reset_index()
     .sort_values("Llamadas", ascending=False)
 )
-if "Abandonadas" in tbl_sup.columns and "Llamadas" in tbl_sup.columns:
-    tbl_sup["PctAbandono"] = tbl_sup["Abandonadas"] / tbl_sup["Llamadas"].replace(0, float("nan"))
+if "Abandonadas" in tbl_sup.columns:
+    _total_abandon_sup = tbl_sup["Abandonadas"].sum()
+    tbl_sup["PctAbandono"] = tbl_sup["Abandonadas"] / (_total_abandon_sup if _total_abandon_sup > 0 else float("nan"))
 
 col_tbl, col_pie = st.columns([1, 1])
 
