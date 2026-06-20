@@ -789,6 +789,106 @@ fig_ocu.update_layout(
 )
 st.plotly_chart(fig_ocu, use_container_width=True)
 
+# ─────────────────────────────────────────────
+# COMPARATIVO POR SUPERVISOR
+# ─────────────────────────────────────────────
+st.markdown(f"""
+<div class='sec-header' style='--sc:{COLOR_PRIMARY}; background:radial-gradient(ellipse 95% 60% at 6% 0%, rgba(14,165,233,0.30) 0%, transparent 55%), radial-gradient(ellipse 90% 70% at 100% 120%, rgba(129,140,248,0.32) 0%, transparent 55%), radial-gradient(ellipse 80% 70% at 55% 130%, rgba(52,211,153,0.14) 0%, transparent 55%), linear-gradient(150deg, #0B0518 0%, #1a0b34 50%, #0A0414 100%)'>
+    <div class='sec-wash'></div>
+    <div class='sec-icon' style='background:linear-gradient(135deg,rgba(40,5,63,0.20),rgba(40,5,63,0.06))'>👥</div>
+    <div class='sec-text'>
+        <div class='sec-title'>Comparativo por Supervisor</div>
+        <div class='sec-desc'>Ocupación consolidada por equipo: verde ≥ 90%, amarillo ≥ 80%, rojo &lt; 80%.</div>
+    </div>
+    <div class='sec-meta'>
+        <div class='sec-meta-val' style='color:#0EA5E9'>{n_supervisores}</div>
+        <div class='sec-meta-lab'>Supervisores</div>
+    </div>
+    <span class='sec-tag'>Equipos</span>
+</div>
+""", unsafe_allow_html=True)
+
+sup_ocu = (
+    dff.groupby("Supervisor")
+    .apply(lambda g: pd.Series({
+        "OcuAjuste": g["Ocupación"].mean() if "Ocupación" in g.columns else 0.0,
+        "Agentes":   g["Nombre"].nunique(),
+        "Llamadas":  int(g["Llamadas"].sum()) if "Llamadas" in g.columns else 0,
+        "Ajuste_s":  g["Ajuste_s"].sum() if "Ajuste_s" in g.columns else 0,
+    }))
+    .reset_index()
+    .sort_values("OcuAjuste", ascending=True)
+)
+sup_ocu["Color"] = sup_ocu["OcuAjuste"].apply(
+    lambda x: COLOR_SUCCESS if x >= 0.90 else (COLOR_WARNING if x >= 0.80 else COLOR_DANGER)
+)
+
+c_bar_ocu, c_rank_ocu = st.columns([3, 2])
+
+with c_bar_ocu:
+    st.markdown(f"""<div class='chart-hdr' style='--cc:#0EA5E9'>
+        <span class='ch-icon'>📊</span>
+        <div class='ch-texts'>
+            <div class='ch-title'>Ocupación por Supervisor</div>
+            <div class='ch-sub'>Menor a mayor · Zona verde = meta cumplida</div>
+        </div>
+        <span class='ch-tag' style='color:#0EA5E9'>Barras</span>
+    </div>""", unsafe_allow_html=True)
+
+    sup_ocu_short = sup_ocu.copy()
+    sup_ocu_short["Supervisor"] = sup_ocu_short["Supervisor"].apply(lambda n: " ".join(n.split()[:2]))
+    n_sup_ocu = len(sup_ocu)
+
+    fig_bar_ocu = go.Figure()
+    fig_bar_ocu.add_vrect(x0=0.90, x1=1.02, fillcolor="rgba(16,185,129,0.06)", layer="below", line_width=0)
+    fig_bar_ocu.add_trace(go.Bar(
+        x=[1.0] * n_sup_ocu, y=sup_ocu_short["Supervisor"], orientation="h",
+        marker=dict(color="rgba(255,255,255,0.07)", line=dict(width=0)),
+        showlegend=False, hoverinfo="skip", width=0.55
+    ))
+    fig_bar_ocu.add_trace(go.Bar(
+        x=sup_ocu["OcuAjuste"], y=sup_ocu_short["Supervisor"], orientation="h",
+        marker=dict(color=sup_ocu["Color"], line=dict(width=0)),
+        text=sup_ocu["OcuAjuste"].apply(lambda x: f"{x:.1%}"),
+        textposition="outside",
+        constraintext="none",
+        textfont=dict(size=11, color="#CBD3F2", family="Inter"),
+        hovertemplate="<b>%{y}</b><br>Ocupación: %{x:.1%}<extra></extra>",
+        width=0.55
+    ))
+    fig_bar_ocu.add_vline(x=0.90, line_dash="dot", line_color="rgba(125,211,252,0.75)", line_width=1.5,
+                          annotation_text="Meta 90%",
+                          annotation_font=dict(size=10, color="#7DD3FC"),
+                          annotation_position="top left")
+    fig_bar_ocu.update_layout(
+        barmode="overlay", height=400,
+        margin=dict(l=0, r=55, t=20, b=0),
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+        xaxis=dict(tickformat=".0%", range=[0, 1.10], gridcolor="rgba(255,255,255,0.08)",
+                   showgrid=True, tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.62)")),
+        yaxis=dict(gridcolor="rgba(0,0,0,0)", tickfont=dict(size=11, family="Inter", color="rgba(255,255,255,0.75)")),
+        showlegend=False, font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)")
+    )
+    st.plotly_chart(fig_bar_ocu, use_container_width=True)
+
+with c_rank_ocu:
+    st.markdown("""<div class='tbl-hdr' style='background:linear-gradient(135deg,#28053F 0%,#0EA5E9 100%)'>
+        <span class='tbl-hdr-icon'>🏆</span>
+        <div class='tbl-hdr-body'>
+            <div class='tbl-hdr-title'>Ranking Supervisores</div>
+            <div class='tbl-hdr-desc'>Ocupación, agentes y tiempo en llamadas</div>
+        </div>
+        <span class='tbl-hdr-badge'>Resumen</span>
+    </div>""", unsafe_allow_html=True)
+    tbl_sup_ocu = sup_ocu.sort_values("OcuAjuste", ascending=False)[
+        ["Supervisor", "OcuAjuste", "Agentes", "Llamadas", "Ajuste_s"]
+    ].copy()
+    tbl_sup_ocu["Supervisor"] = tbl_sup_ocu["Supervisor"].apply(lambda n: " ".join(n.split()[:2]))
+    tbl_sup_ocu["OcuAjuste"]  = tbl_sup_ocu["OcuAjuste"].apply(lambda x: f"{x:.1%}")
+    tbl_sup_ocu["Ajuste_s"]   = tbl_sup_ocu["Ajuste_s"].apply(seg_a_hhmmss)
+    tbl_sup_ocu.columns = ["Supervisor", "Ocupación%", "Agentes", "Llamadas", "T. en Llamadas"]
+    st.dataframe(tbl_sup_ocu, use_container_width=True, hide_index=True, height=400)
+
 # Tabla detalle por agente
 n_ocu = dff["Nombre"].nunique()
 st.markdown(f"""
