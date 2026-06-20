@@ -473,81 +473,43 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ── NOTICIAS ─────────────────────────────
-st.markdown("""
-<div class='nticker-shell'>
-    <div class='nticker-label'><span class='nticker-dot'></span>EN VIVO</div>
-    <div class='nticker-track'>
-        <div class='nticker-inner'>
-            <div class='nticker-item'><span class='ntag ntag-n'>Logro</span>Adherencia supera meta del 90 % en semana 22 <span class='nticker-sep'>·</span></div>
-            <div class='nticker-item'><span class='ntag ntag-u'>Actualización</span>Módulo de Ocupación disponible desde esta semana <span class='nticker-sep'>·</span></div>
-            <div class='nticker-item'><span class='ntag ntag-r'>Recordatorio</span>Campaña de capacitación — miércoles 18 de junio, 2 p.m. <span class='nticker-sep'>·</span></div>
-            <div class='nticker-item'><span class='ntag ntag-a'>Atención</span>Verificar asignación de turnos antes del inicio de semana 25 <span class='nticker-sep'>·</span></div>
-            <div class='nticker-item'><span class='ntag ntag-n'>Logro</span>Adherencia supera meta del 90 % en semana 22 <span class='nticker-sep'>·</span></div>
-            <div class='nticker-item'><span class='ntag ntag-u'>Actualización</span>Módulo de Ocupación disponible desde esta semana <span class='nticker-sep'>·</span></div>
-            <div class='nticker-item'><span class='ntag ntag-r'>Recordatorio</span>Campaña de capacitación — miércoles 18 de junio, 2 p.m. <span class='nticker-sep'>·</span></div>
-            <div class='nticker-item'><span class='ntag ntag-a'>Atención</span>Verificar asignación de turnos antes del inicio de semana 25 <span class='nticker-sep'>·</span></div>
-        </div>
-    </div>
-</div>
-
-<div class='sec-lbl' style='margin-top:30px'>Noticias · Pulso WFM</div>
-
-<div class='nws-grid'>
-
-    <!-- DESTACADA -->
-    <div class='ncard ncard-feat'>
-        <div class='ncard-ghost'>01</div>
-        <div class='ncard-eyebrow'>
-            <span class='ntag ntag-u'>Actualización</span>
-            <span class='ncard-date'>Jun 2026</span>
-        </div>
-        <div class='ncard-title-feat'>
-            El módulo de Ocupación ya está disponible para todos los equipos WFM
-        </div>
-        <div class='ncard-body'>
-            A partir de esta semana el equipo puede monitorear en tiempo real la ocupación y el contacto
-            de cada experto. El módulo incluye tendencias por supervisor, tiempo programado efectivo,
-            detalle de llamadas y la distribución de abandonos por supervisor.
-            Accede directamente desde la pantalla principal del dashboard.
-        </div>
-        <div class='ncard-footer'>
-            <div class='ncard-avatar'>⚡</div>
-            <div class='ncard-byline'>
-                <strong>Equipo Workforce Management</strong>
-                Scala Learning · Uniminuto
-            </div>
-            <span class='ncard-arrow'>→</span>
-        </div>
-    </div>
-
-    <!-- CARD 1 -->
-    <div class='ncard'>
-        <div class='ncard-eyebrow'>
-            <span class='ntag ntag-n'>Logro</span>
-            <span class='ncard-date'>Sem 22 · Jun 2026</span>
-        </div>
-        <div class='ncard-title'>Adherencia supera la meta del 90 % por tercer período consecutivo</div>
-        <div class='ncard-body-sm'>
-            El equipo consolidó un promedio de 90.8 %. Ana Milena (92.9 %) y Karen Julieth (91.5 %)
-            lideran el ranking de supervisores.
-        </div>
-    </div>
-
-    <!-- CARD 2 -->
-    <div class='ncard'>
-        <div class='ncard-eyebrow'>
-            <span class='ntag ntag-r'>Recordatorio</span>
-            <span class='ncard-date'>Sem 25 · Jun 2026</span>
-        </div>
-        <div class='ncard-title'>Capacitación obligatoria y revisión de horarios — semana 25</div>
-        <div class='ncard-body-sm'>
-            Confirmar asignación de turnos antes del lunes. Capacitación para nuevos expertos
-            el miércoles 18 de junio a las 2:00 p.m.
-        </div>
-    </div>
-
-</div>
-""", unsafe_allow_html=True)
+st.markdown(
+"<div class='nticker-shell'>"
+"<div class='nticker-label'><span class='nticker-dot'></span>EN VIVO</div>"
+"<div class='nticker-track'><div class='nticker-inner'>"
+"<div class='nticker-item'><span class='ntag ntag-n'>Logro</span>Adherencia supera meta del 90% en semana 22 <span class='nticker-sep'>·</span></div>"
+"<div class='nticker-item'><span class='ntag ntag-u'>Actualización</span>Módulo de Ocupación disponible desde esta semana <span class='nticker-sep'>·</span></div>"
+"<div class='nticker-item'><span class='ntag ntag-r'>Recordatorio</span>Capacitación obligatoria — miércoles 18 de junio, 2 p.m. <span class='nticker-sep'>·</span></div>"
+"<div class='nticker-item'><span class='ntag ntag-a'>Atención</span>Verificar turnos antes del inicio de semana 25 <span class='nticker-sep'>·</span></div>"
+"<div class='nticker-item'><span class='ntag ntag-n'>Logro</span>Adherencia supera meta del 90% en semana 22 <span class='nticker-sep'>·</span></div>"
+"<div class='nticker-item'><span class='ntag ntag-u'>Actualización</span>Módulo de Ocupación disponible desde esta semana <span class='nticker-sep'>·</span></div>"
+"<div class='nticker-item'><span class='ntag ntag-r'>Recordatorio</span>Capacitación obligatoria — miércoles 18 de junio, 2 p.m. <span class='nticker-sep'>·</span></div>"
+"<div class='nticker-item'><span class='ntag ntag-a'>Atención</span>Verificar turnos antes del inicio de semana 25 <span class='nticker-sep'>·</span></div>"
+"</div></div></div>"
+"<div class='sec-lbl' style='margin-top:30px'>Noticias · Pulso WFM</div>"
+"<div class='nws-grid'>"
+"<div class='ncard ncard-feat'>"
+"<div class='ncard-ghost'>01</div>"
+"<div class='ncard-eyebrow'><span class='ntag ntag-u'>Actualización</span><span class='ncard-date'>Jun 2026</span></div>"
+"<div class='ncard-title-feat'>El módulo de Ocupación ya está disponible para todos los equipos WFM</div>"
+"<div class='ncard-body'>A partir de esta semana el equipo puede monitorear en tiempo real la ocupación y el contacto de cada experto. Incluye tendencias por supervisor, tiempo programado efectivo, detalle de llamadas y distribución de abandonos. Accede desde la pantalla principal.</div>"
+"<div class='ncard-footer'>"
+"<div class='ncard-avatar'>⚡</div>"
+"<div class='ncard-byline'><strong>Equipo Workforce Management</strong>Scala Learning · Uniminuto</div>"
+"<span class='ncard-arrow'>→</span>"
+"</div></div>"
+"<div class='ncard'>"
+"<div class='ncard-eyebrow'><span class='ntag ntag-n'>Logro</span><span class='ncard-date'>Sem 22 · Jun 2026</span></div>"
+"<div class='ncard-title'>Adherencia supera la meta del 90% por tercer período consecutivo</div>"
+"<div class='ncard-body-sm'>El equipo consolidó un promedio de 90.8%. Ana Milena (92.9%) y Karen Julieth (91.5%) lideran el ranking de supervisores.</div>"
+"</div>"
+"<div class='ncard'>"
+"<div class='ncard-eyebrow'><span class='ntag ntag-r'>Recordatorio</span><span class='ncard-date'>Sem 25 · Jun 2026</span></div>"
+"<div class='ncard-title'>Capacitación obligatoria y revisión de horarios — semana 25</div>"
+"<div class='ncard-body-sm'>Confirmar asignación de turnos antes del lunes. Sesión para nuevos expertos el miércoles 18 de junio a las 2:00 p.m.</div>"
+"</div>"
+"</div>",
+unsafe_allow_html=True)
 
 # ── MÓDULOS ──────────────────────────────
 st.markdown("<div class='sec-lbl'>Módulos disponibles</div>", unsafe_allow_html=True)
