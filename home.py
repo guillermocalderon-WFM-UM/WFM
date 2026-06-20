@@ -201,44 +201,46 @@ st.markdown(f"""
     /* ══════════ HERO ══════════ */
     .hero {{
         position:relative; border-radius:28px; overflow:hidden;
-        padding:30px 50px 26px; text-align:center; margin-bottom:20px;
+        padding:34px 50px 30px; text-align:center; margin-bottom:20px;
         background:
-            linear-gradient(135deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.015) 100%);
-        border:1px solid rgba(255,255,255,0.10);
-        box-shadow:0 30px 80px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.10);
-        backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+            linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
+        border:1px solid rgba(255,255,255,0.11);
+        box-shadow:0 32px 90px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.12);
+        backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
         animation:fadeUp 0.7s ease both;
     }}
-    .hero-aurora {{ position:absolute; border-radius:50%; filter:blur(46px); pointer-events:none; z-index:0; }}
-    .ha1 {{ width:380px;height:380px;background:radial-gradient(circle,rgba(14,165,233,0.45),transparent 65%);top:-140px;left:-90px;animation:auroraMove 14s ease-in-out infinite; }}
-    .ha2 {{ width:340px;height:340px;background:radial-gradient(circle,rgba(129,140,248,0.42),transparent 65%);bottom:-150px;right:-70px;animation:auroraMove 18s ease-in-out infinite reverse; }}
-    .ha3 {{ width:260px;height:260px;background:radial-gradient(circle,rgba(52,211,153,0.30),transparent 65%);top:30%;right:18%;animation:auroraMove 22s ease-in-out infinite; }}
+    .hero-aurora {{ position:absolute; border-radius:50%; filter:blur(52px); pointer-events:none; z-index:0; }}
+    .ha1 {{ width:420px;height:420px;background:radial-gradient(circle,rgba(14,165,233,0.52),transparent 65%);top:-160px;left:-110px;animation:auroraMove 14s ease-in-out infinite; }}
+    .ha2 {{ width:380px;height:380px;background:radial-gradient(circle,rgba(129,140,248,0.48),transparent 65%);bottom:-170px;right:-80px;animation:auroraMove 18s ease-in-out infinite reverse; }}
+    .ha3 {{ width:280px;height:280px;background:radial-gradient(circle,rgba(52,211,153,0.35),transparent 65%);top:25%;right:15%;animation:auroraMove 22s ease-in-out infinite; }}
+    .ha4 {{ width:220px;height:220px;background:radial-gradient(circle,rgba(245,158,11,0.28),transparent 65%);bottom:-80px;left:10%;animation:auroraMove 26s ease-in-out infinite reverse; }}
     .hero::before {{
         content:''; position:absolute; inset:0; z-index:0;
-        background-image:linear-gradient(rgba(255,255,255,0.04) 1px,transparent 1px),
-                         linear-gradient(90deg,rgba(255,255,255,0.04) 1px,transparent 1px);
-        background-size:46px 46px;
-        mask-image:radial-gradient(ellipse 70% 70% at 50% 40%,black,transparent 80%);
-        -webkit-mask-image:radial-gradient(ellipse 70% 70% at 50% 40%,black,transparent 80%);
+        background-image:linear-gradient(rgba(255,255,255,0.045) 1px,transparent 1px),
+                         linear-gradient(90deg,rgba(255,255,255,0.045) 1px,transparent 1px);
+        background-size:44px 44px;
+        mask-image:radial-gradient(ellipse 75% 75% at 50% 40%,black,transparent 82%);
+        -webkit-mask-image:radial-gradient(ellipse 75% 75% at 50% 40%,black,transparent 82%);
     }}
     .hero-inner {{ position:relative; z-index:1; }}
     .hero-badge {{ display:inline-flex;align-items:center;gap:9px;
-        background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.16);
-        border-radius:99px;padding:7px 18px;margin-bottom:30px;
-        font-size:11px;font-weight:700;color:rgba(255,255,255,0.78);
+        background:rgba(52,211,153,0.08);
+        border:1px solid rgba(52,211,153,0.28);
+        border-radius:99px;padding:7px 20px;margin-bottom:28px;
+        font-size:10.5px;font-weight:700;color:rgba(255,255,255,0.82);
         letter-spacing:0.14em;text-transform:uppercase;
-        box-shadow:0 4px 20px rgba(0,0,0,0.25); }}
+        box-shadow:0 4px 22px rgba(0,0,0,0.28), 0 0 18px -6px rgba(52,211,153,0.30); }}
     .hero-badge-dot {{ position:relative;width:8px;height:8px; }}
     .hero-badge-dot::after {{ content:'';position:absolute;inset:0;border-radius:50%;background:#34D399; }}
     .hero-badge-dot::before {{ content:'';position:absolute;inset:0;border-radius:50%;border:2px solid #34D399;animation:ring 1.8s ease-out infinite; }}
     .hero-title {{ font-family:'Space Grotesk',sans-serif!important;
-        font-size:40px;font-weight:700;color:white;margin:0 0 10px;
-        letter-spacing:-1.4px;line-height:1.05;text-shadow:0 4px 40px rgba(0,0,0,0.4); }}
+        font-size:44px;font-weight:800;color:white;margin:0 0 12px;
+        letter-spacing:-1.8px;line-height:1.04;text-shadow:0 4px 44px rgba(0,0,0,0.45); }}
     .hero-title .grad {{ background:linear-gradient(90deg,#38BDF8 0%,#818CF8 35%,#34D399 70%,#38BDF8 100%);
         background-size:220% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;
         background-clip:text;animation:shimmer 4s linear infinite; }}
-    .hero-sub {{ font-size:15px;color:rgba(255,255,255,0.58);max-width:560px;
-        margin:0 auto 22px;line-height:1.65;font-weight:400; }}
+    .hero-sub {{ font-size:15px;color:rgba(255,255,255,0.62);max-width:580px;
+        margin:0 auto 0;line-height:1.68;font-weight:400; }}
 
     /* ══ SECTION LABEL ══ */
     .sec-lbl {{ display:flex;align-items:center;gap:12px;margin:38px 0 20px;
@@ -341,20 +343,32 @@ st.markdown(f"""
     /* ══ Ocultar el menú automático del sidebar ══ */
     [data-testid="stSidebarNav"] {{ display:none !important; }}
 
-    /* ══ HERO · tarjetas de estado (más objetos visuales) ══ */
-    .hero-cards {{ display:flex;justify-content:center;gap:13px;flex-wrap:wrap;margin-top:6px; }}
-    .hcard {{ display:flex;align-items:center;gap:11px;
-        background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);
-        border-radius:14px;padding:11px 17px;backdrop-filter:blur(6px);
-        transition:transform .22s ease,border-color .22s ease,background .22s ease; }}
-    .hcard:hover {{ transform:translateY(-3px);border-color:rgba(56,189,248,0.45);background:rgba(255,255,255,0.10); }}
-    .hcard-ico {{ width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;
-        font-size:18px;flex-shrink:0;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.14); }}
-    .hcard-txt {{ text-align:left;line-height:1.2; }}
-    .hcard-lbl {{ font-size:9px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:rgba(255,255,255,0.45); }}
-    .hcard-val {{ font-size:14px;font-weight:800;color:white;margin-top:2px; }}
+    /* ══ HERO · separador y tarjetas de estado ══ */
+    .hero-divider {{ width:56px;height:1.5px;margin:22px auto 20px;border-radius:2px;
+        background:linear-gradient(90deg,transparent,rgba(56,189,248,0.55),rgba(129,140,248,0.55),transparent); }}
+    .hero-cards {{ display:flex;justify-content:center;gap:10px;flex-wrap:wrap; }}
+    .hcard {{ display:flex;align-items:center;gap:13px;min-width:148px;
+        background:rgba(255,255,255,0.05);
+        border:1px solid rgba(255,255,255,0.09);
+        border-top:2px solid var(--hc,rgba(56,189,248,0.50));
+        border-radius:16px;padding:14px 20px;
+        backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+        box-shadow:0 8px 28px rgba(0,0,0,0.22),inset 0 1px 0 rgba(255,255,255,0.07);
+        transition:transform .24s cubic-bezier(.2,.8,.2,1),box-shadow .24s ease,background .24s ease; }}
+    .hcard:hover {{ transform:translateY(-5px);background:rgba(255,255,255,0.09);
+        box-shadow:0 18px 44px rgba(0,0,0,0.32),0 0 0 1px var(--hc,rgba(56,189,248,0.28)),
+                   0 0 24px -8px var(--hc,rgba(56,189,248,0.28)); }}
+    .hcard-ico {{ width:44px;height:44px;border-radius:13px;flex-shrink:0;
+        display:flex;align-items:center;justify-content:center;font-size:20px;
+        background:var(--hc-bg,rgba(56,189,248,0.12));
+        border:1px solid var(--hc,rgba(56,189,248,0.22));
+        box-shadow:0 4px 16px -4px var(--hc,rgba(56,189,248,0.30)); }}
+    .hcard-txt {{ text-align:left; }}
+    .hcard-lbl {{ font-size:8.5px;font-weight:700;letter-spacing:0.13em;text-transform:uppercase;
+        color:var(--hc,rgba(56,189,248,0.80));margin-bottom:4px;display:block; }}
+    .hcard-val {{ font-size:15px;font-weight:800;color:white;line-height:1;display:block; }}
     .hcard-val .dot {{ display:inline-block;width:7px;height:7px;border-radius:50%;background:#34D399;
-        box-shadow:0 0 8px #34D399;margin-right:5px;animation:sbcPulse 1.8s ease-in-out infinite; }}
+        box-shadow:0 0 10px #34D399;margin-right:6px;animation:sbcPulse 1.8s ease-in-out infinite; }}
 
     /* ══ TICKER EN VIVO ══ */
     @keyframes nticker {{ 0% {{ transform:translateX(0); }} 100% {{ transform:translateX(-50%); }} }}
@@ -484,6 +498,7 @@ st.markdown("""
     <div class='hero-aurora ha1'></div>
     <div class='hero-aurora ha2'></div>
     <div class='hero-aurora ha3'></div>
+    <div class='hero-aurora ha4'></div>
     <div class='hero-inner'>
         <div class='hero-badge'>
             <span class='hero-badge-dot'></span>
@@ -497,15 +512,36 @@ st.markdown("""
             Monitorea <b style='color:rgba(255,255,255,0.85)'>adherencia</b>,
             <b style='color:rgba(255,255,255,0.85)'>ocupación</b> y desempeño operativo en tiempo real.
         </div>
+        <div class='hero-divider'></div>
         <div class='hero-cards'>
-            <div class='hcard'><div class='hcard-ico'>🟢</div><div class='hcard-txt'>
-                <div class='hcard-lbl'>Estado</div><div class='hcard-val'><span class='dot'></span>En línea</div></div></div>
-            <div class='hcard'><div class='hcard-ico'>👥</div><div class='hcard-txt'>
-                <div class='hcard-lbl'>Seguimiento</div><div class='hcard-val'>Por equipo</div></div></div>
-            <div class='hcard'><div class='hcard-ico'>📅</div><div class='hcard-txt'>
-                <div class='hcard-lbl'>Período</div><div class='hcard-val'>2026</div></div></div>
-            <div class='hcard'><div class='hcard-ico'>🤝</div><div class='hcard-txt'>
-                <div class='hcard-lbl'>Alianza</div><div class='hcard-val'>Uniminuto</div></div></div>
+            <div class='hcard' style='--hc:rgba(52,211,153,0.70);--hc-bg:rgba(52,211,153,0.13)'>
+                <div class='hcard-ico'>⚡</div>
+                <div class='hcard-txt'>
+                    <span class='hcard-lbl'>Estado del sistema</span>
+                    <span class='hcard-val'><span class='dot'></span>En línea</span>
+                </div>
+            </div>
+            <div class='hcard' style='--hc:rgba(56,189,248,0.70);--hc-bg:rgba(56,189,248,0.13)'>
+                <div class='hcard-ico'>◈</div>
+                <div class='hcard-txt'>
+                    <span class='hcard-lbl'>Seguimiento</span>
+                    <span class='hcard-val'>Por equipo</span>
+                </div>
+            </div>
+            <div class='hcard' style='--hc:rgba(129,140,248,0.70);--hc-bg:rgba(129,140,248,0.13)'>
+                <div class='hcard-ico'>◷</div>
+                <div class='hcard-txt'>
+                    <span class='hcard-lbl'>Período activo</span>
+                    <span class='hcard-val'>2026</span>
+                </div>
+            </div>
+            <div class='hcard' style='--hc:rgba(245,158,11,0.70);--hc-bg:rgba(245,158,11,0.13)'>
+                <div class='hcard-ico'>✦</div>
+                <div class='hcard-txt'>
+                    <span class='hcard-lbl'>Alianza</span>
+                    <span class='hcard-val'>Uniminuto</span>
+                </div>
+            </div>
         </div>
     </div>
 </div>
