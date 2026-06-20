@@ -82,7 +82,7 @@ def cargar_datos(firma):
 
     # Calcular métricas desde columnas de tiempo (más confiable que el Excel precalculado)
     if "Ajuste_s" in df.columns and "Tiempo Efectivo_s" in df.columns:
-        df["Ocupación Ajuste"] = (
+        df["Ocupación"] = (
             df["Ajuste_s"] / df["Tiempo Efectivo_s"].replace(0, float("nan"))
         ).clip(upper=1.0)
 
@@ -661,7 +661,7 @@ with st.container(key="hdrbanner"):
 # ─────────────────────────────────────────────
 # MÉTRICAS GLOBALES
 # ─────────────────────────────────────────────
-ocu_avg      = dff["Ocupación Ajuste"].mean() if "Ocupación Ajuste" in dff.columns else 0.0
+ocu_avg      = dff["Ocupación"].mean() if "Ocupación " in dff.columns else 0.0
 cont_avg     = dff["% Contacto"].mean()       if "% Contacto"       in dff.columns else 0.0
 tot_llamadas = int(dff["Llamadas"].sum())     if "Llamadas"         in dff.columns else 0
 tot_abandon  = int(dff["Abandonadas"].sum())  if "Abandonadas"      in dff.columns else 0
@@ -680,7 +680,7 @@ with k1:
     st.markdown(f"""<div class='kpi-card' style='--kc:{ocu_color}'>
         <div class='kpi-bg-icon'>⏱️</div>
         <div>
-            <div class='kpi-label'>Ocupación Ajuste</div>
+            <div class='kpi-label'>Ocupación</div>
             <div class='kpi-value' style='color:{ocu_color}'>{ocu_avg:.1%}</div>
             <div class='kpi-sub'>Meta: 90%</div>
         </div>
@@ -726,7 +726,7 @@ st.markdown(f"""
     <div class='sec-icon'>⏱️</div>
     <div class='sec-text'>
         <div class='sec-title'>Ocupación</div>
-        <div class='sec-desc'>Evolución del indicador de Ocupación Ajuste por período, desglosado por supervisor y experto.</div>
+        <div class='sec-desc'>Evolución del indicador de Ocupación por período, desglosado por supervisor y experto.</div>
     </div>
     <div class='sec-meta'>
         <div class='sec-meta-val' style='color:#0EA5E9'>{ocu_avg:.1%}</div>
@@ -738,7 +738,7 @@ st.markdown(f"""
 
 # Preparar datos de tendencia por supervisor
 tend_ocu = (
-    dff.groupby(["_periodo", "Supervisor"])["Ocupación Ajuste"]
+    dff.groupby(["_periodo", "Supervisor"])["Ocupación"]
     .mean().reset_index(name="OcuAjuste")
 )
 tend_ocu["_ord"] = tend_ocu["_periodo"].map(_periodo_rank)
@@ -750,7 +750,7 @@ colores_sup = {s: SUPERVISOR_COLORS[i % len(SUPERVISOR_COLORS)] for i, s in enum
 st.markdown("""<div class='chart-hdr' style='--cc:#0EA5E9'>
     <span class='ch-icon'>⏱️</span>
     <div class='ch-texts'>
-        <div class='ch-title'>Ocupación Ajuste por Supervisor en el Tiempo</div>
+        <div class='ch-title'>Ocupación por Supervisor en el Tiempo</div>
         <div class='ch-sub'>Promedio por período · cada línea = un supervisor</div>
     </div>
     <span class='ch-tag' style='color:#0EA5E9'>Multi-línea</span>
@@ -796,15 +796,16 @@ st.markdown(f"""
     <div class='tbl-hdr-icon'>📋</div>
     <div class='tbl-hdr-body'>
         <div class='tbl-hdr-title'>Detalle por Experto · Ocupación</div>
-        <div class='tbl-hdr-desc'>Ocupación Ajuste promedio, Ajuste acumulado y Tiempo en Llamadas</div>
+        <div class='tbl-hdr-desc'>Ocupación promedio, Tiempo Efectivo y Tiempo en Llamadas</div>
     </div>
     <div class='tbl-hdr-badge'>{n_ocu} expertos</div>
 </div>
 """, unsafe_allow_html=True)
 
-_agg_ocu = {"OcuAjuste": ("Ocupación Ajuste", "mean")}
-if "Ajuste_s"               in dff.columns: _agg_ocu["Ajuste_s"]   = ("Ajuste_s", "sum")
-if "Tiempo Dur. Llamadas_s" in dff.columns: _agg_ocu["Llamadas_s"] = ("Tiempo Dur. Llamadas_s", "sum")
+_agg_ocu = {"OcuAjuste": ("Ocupación", "mean")}
+if "Tiempo Efectivo_s"      in dff.columns: _agg_ocu["TiempoEfectivo_s"] = ("Tiempo Efectivo_s", "sum")
+if "Ajuste_s"               in dff.columns: _agg_ocu["Ajuste_s"]         = ("Ajuste_s", "sum")
+if "Tiempo Dur. Llamadas_s" in dff.columns: _agg_ocu["Llamadas_s"]       = ("Tiempo Dur. Llamadas_s", "sum")
 
 tbl_ocu = (
     dff.groupby(["Fecha","Nombre","Supervisor"])
@@ -813,13 +814,14 @@ tbl_ocu = (
     .sort_values(["Fecha","Nombre"])
 )
 tbl_ocu_disp = {
-    "Fecha":             tbl_ocu["Fecha"].dt.strftime("%d/%m/%Y"),
-    "Experto":           tbl_ocu["Nombre"],
-    "Supervisor":        tbl_ocu["Supervisor"],
-    "Ocupación Ajuste":  tbl_ocu["OcuAjuste"].map(lambda x: f"{x:.1%}"),
+    "Fecha":      tbl_ocu["Fecha"].dt.strftime("%d/%m/%Y"),
+    "Experto":    tbl_ocu["Nombre"],
+    "Supervisor": tbl_ocu["Supervisor"],
+    "Ocupación":  tbl_ocu["OcuAjuste"].map(lambda x: f"{x:.1%}"),
 }
-if "Ajuste_s"   in tbl_ocu.columns: tbl_ocu_disp["Ajuste"]          = tbl_ocu["Ajuste_s"].map(seg_a_hhmmss)
-if "Llamadas_s" in tbl_ocu.columns: tbl_ocu_disp["Tiempo Llamadas"] = tbl_ocu["Llamadas_s"].map(seg_a_hhmmss)
+if "TiempoEfectivo_s" in tbl_ocu.columns: tbl_ocu_disp["Tiempo Efectivo"]         = tbl_ocu["TiempoEfectivo_s"].map(seg_a_hhmmss)
+if "Ajuste_s"         in tbl_ocu.columns: tbl_ocu_disp["T. Efect. en Llamadas"]   = tbl_ocu["Ajuste_s"].map(seg_a_hhmmss)
+if "Llamadas_s"       in tbl_ocu.columns: tbl_ocu_disp["Tiempo Llamadas"]         = tbl_ocu["Llamadas_s"].map(seg_a_hhmmss)
 df_descarga(pd.DataFrame(tbl_ocu_disp), "ocupacion_detalle.xlsx", use_container_width=True, hide_index=True)
 
 # ─────────────────────────────────────────────
@@ -897,13 +899,14 @@ st.markdown(f"""
     <div class='tbl-hdr-icon'>📋</div>
     <div class='tbl-hdr-body'>
         <div class='tbl-hdr-title'>Detalle por Experto · Contacto</div>
-        <div class='tbl-hdr-desc'>% Contacto promedio, Tiempo Disponible y Duración de Llamadas</div>
+        <div class='tbl-hdr-desc'>% Contacto promedio, T. Efectivo en Llamadas, Disponible y Duración de Llamadas</div>
     </div>
     <div class='tbl-hdr-badge'>{n_cont} expertos</div>
 </div>
 """, unsafe_allow_html=True)
 
 _agg_cont = {"PctContacto": ("% Contacto", "mean")}
+if "Ajuste_s"               in dff.columns: _agg_cont["Ajuste_s"]     = ("Ajuste_s", "sum")
 if "Disponible_s"           in dff.columns: _agg_cont["Disponible_s"] = ("Disponible_s", "sum")
 if "Tiempo Dur. Llamadas_s" in dff.columns: _agg_cont["Llamadas_s"]   = ("Tiempo Dur. Llamadas_s", "sum")
 
@@ -919,8 +922,9 @@ tbl_cont_disp = {
     "Supervisor": tbl_cont["Supervisor"],
     "% Contacto": tbl_cont["PctContacto"].map(lambda x: f"{x:.1%}"),
 }
-if "Disponible_s" in tbl_cont.columns: tbl_cont_disp["Disponible"]      = tbl_cont["Disponible_s"].map(seg_a_hhmmss)
-if "Llamadas_s"   in tbl_cont.columns: tbl_cont_disp["Tiempo Llamadas"] = tbl_cont["Llamadas_s"].map(seg_a_hhmmss)
+if "Ajuste_s"     in tbl_cont.columns: tbl_cont_disp["T. Efect. en Llamadas"] = tbl_cont["Ajuste_s"].map(seg_a_hhmmss)
+if "Disponible_s" in tbl_cont.columns: tbl_cont_disp["Disponible"]            = tbl_cont["Disponible_s"].map(seg_a_hhmmss)
+if "Llamadas_s"   in tbl_cont.columns: tbl_cont_disp["Tiempo Llamadas"]       = tbl_cont["Llamadas_s"].map(seg_a_hhmmss)
 df_descarga(pd.DataFrame(tbl_cont_disp), "contacto_detalle.xlsx", use_container_width=True, hide_index=True)
 
 # ─────────────────────────────────────────────

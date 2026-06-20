@@ -450,26 +450,26 @@ with col2:
         <div class='mod-glow'></div>
         <div class='mod-head'>
             <div class='mod-ico'>📊</div>
-            <span class='mod-badge' style='background:rgba(245,158,11,0.14);color:#FBBF24;border:1px solid rgba(245,158,11,0.30);'>
-                <span class='mod-badge-dot' style='background:#FBBF24'></span>En Desarrollo
+            <span class='mod-badge' style='background:rgba(16,185,129,0.14);color:#34D399;border:1px solid rgba(16,185,129,0.30);'>
+                <span class='mod-badge-dot' style='background:#34D399'></span>Disponible
             </span>
         </div>
         <div class='mod-title'>Ocupación</div>
         <div class='mod-desc'>
-            Análisis de ocupación, shrinkage, capacidad y nivel de servicio.
-            Correlaciona la disponibilidad real con los requerimientos por franja horaria.
+            Seguimiento de ocupación y contacto por experto. Tendencias por supervisor,
+            detalle de llamadas y resumen de distribución por equipo.
         </div>
         <div class='mod-feats'>
-            <div class='mfeat'><span class='mfeat-ck'>✓</span>Ocupación por hora y campaña</div>
-            <div class='mfeat'><span class='mfeat-ck'>✓</span>Shrinkage planificado vs real</div>
-            <div class='mfeat'><span class='mfeat-ck'>✓</span>Cobertura y nivel de servicio</div>
-            <div class='mfeat'><span class='mfeat-ck'>✓</span>Próximamente disponible</div>
+            <div class='mfeat'><span class='mfeat-ck'>✓</span>Ocupación y contacto por período</div>
+            <div class='mfeat'><span class='mfeat-ck'>✓</span>Tendencia por supervisor y experto</div>
+            <div class='mfeat'><span class='mfeat-ck'>✓</span>Detalle de llamadas atendidas</div>
+            <div class='mfeat'><span class='mfeat-ck'>✓</span>Resumen y distribución por supervisor</div>
         </div>
         <div class='mod-div'></div>
         <div class='mod-foot'>
             <div class='mod-chips'>
-                <span class='mchip'>⏳ <b>Q3</b>&nbsp;2026</span>
-                <span class='mchip'>🧮 <b>3</b>&nbsp;métricas</span>
+                <span class='mchip'>📈 Meta&nbsp;<b>90%</b></span>
+                <span class='mchip'>📊 <b>3</b>&nbsp;vistas</span>
             </div>
             <div class='mspark'>
                 <span style='height:55%'></span><span style='height:35%'></span>
@@ -480,8 +480,8 @@ with col2:
         </div>
     </div>
     """, unsafe_allow_html=True)
-    if st.button("📊  Ver módulo de Ocupación →", key="btn_ocu",
-                 use_container_width=True, type="secondary"):
+    if st.button("📊  Abrir módulo de Ocupación →", key="btn_ocu",
+                 use_container_width=True, type="primary"):
         st.switch_page(ocu_pg)
 
 with col3:
