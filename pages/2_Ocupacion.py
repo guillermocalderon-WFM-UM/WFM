@@ -796,15 +796,16 @@ st.markdown(f"""
     <div class='tbl-hdr-icon'>📋</div>
     <div class='tbl-hdr-body'>
         <div class='tbl-hdr-title'>Detalle por Experto · Ocupación</div>
-        <div class='tbl-hdr-desc'>Ocupación promedio, Tiempo Programado y Tiempo en Llamadas</div>
+        <div class='tbl-hdr-desc'>Ocupación promedio, Tiempo Programado, Tiempo Programado Efectivo y Tiempo en Llamadas</div>
     </div>
     <div class='tbl-hdr-badge'>{n_ocu} expertos</div>
 </div>
 """, unsafe_allow_html=True)
 
 _agg_ocu = {"OcuAjuste": ("Ocupación", "mean")}
-if "Total Turno_s" in dff.columns: _agg_ocu["TotalTurno_s"] = ("Total Turno_s", "sum")
-if "Ajuste_s"      in dff.columns: _agg_ocu["Ajuste_s"]     = ("Ajuste_s", "sum")
+if "Total Turno_s"    in dff.columns: _agg_ocu["TotalTurno_s"]    = ("Total Turno_s", "sum")
+if "Tiempo Efectivo_s" in dff.columns: _agg_ocu["TiempoEfectivo_s"] = ("Tiempo Efectivo_s", "sum")
+if "Ajuste_s"          in dff.columns: _agg_ocu["Ajuste_s"]          = ("Ajuste_s", "sum")
 
 tbl_ocu = (
     dff.groupby(["Fecha","Nombre","Supervisor"])
@@ -818,8 +819,9 @@ tbl_ocu_disp = {
     "Supervisor": tbl_ocu["Supervisor"],
     "Ocupación":  tbl_ocu["OcuAjuste"].map(lambda x: f"{x:.1%}"),
 }
-if "TotalTurno_s" in tbl_ocu.columns: tbl_ocu_disp["Tiempo Programado"]  = tbl_ocu["TotalTurno_s"].map(seg_a_hhmmss)
-if "Ajuste_s"     in tbl_ocu.columns: tbl_ocu_disp["Tiempo en Llamadas"] = tbl_ocu["Ajuste_s"].map(seg_a_hhmmss)
+if "TotalTurno_s"    in tbl_ocu.columns: tbl_ocu_disp["Tiempo Programado"]          = tbl_ocu["TotalTurno_s"].map(seg_a_hhmmss)
+if "TiempoEfectivo_s" in tbl_ocu.columns: tbl_ocu_disp["Tiempo Programado Efectivo"] = tbl_ocu["TiempoEfectivo_s"].map(seg_a_hhmmss)
+if "Ajuste_s"          in tbl_ocu.columns: tbl_ocu_disp["Tiempo en Llamadas"]         = tbl_ocu["Ajuste_s"].map(seg_a_hhmmss)
 df_descarga(pd.DataFrame(tbl_ocu_disp), "ocupacion_detalle.xlsx", use_container_width=True, hide_index=True)
 
 # ─────────────────────────────────────────────
