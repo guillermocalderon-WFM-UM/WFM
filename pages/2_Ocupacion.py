@@ -661,7 +661,7 @@ with st.container(key="hdrbanner"):
 # ─────────────────────────────────────────────
 # MÉTRICAS GLOBALES
 # ─────────────────────────────────────────────
-ocu_avg      = dff["Ocupación"].mean() if "Ocupación " in dff.columns else 0.0
+ocu_avg      = dff["Ocupación"].mean() if "Ocupación" in dff.columns else 0.0
 cont_avg     = dff["% Contacto"].mean()       if "% Contacto"       in dff.columns else 0.0
 tot_llamadas = int(dff["Llamadas"].sum())     if "Llamadas"         in dff.columns else 0
 tot_abandon  = int(dff["Abandonadas"].sum())  if "Abandonadas"      in dff.columns else 0
@@ -796,16 +796,15 @@ st.markdown(f"""
     <div class='tbl-hdr-icon'>📋</div>
     <div class='tbl-hdr-body'>
         <div class='tbl-hdr-title'>Detalle por Experto · Ocupación</div>
-        <div class='tbl-hdr-desc'>Ocupación promedio, Tiempo Efectivo y Tiempo en Llamadas</div>
+        <div class='tbl-hdr-desc'>Ocupación promedio, Tiempo Programado y Tiempo en Llamadas</div>
     </div>
     <div class='tbl-hdr-badge'>{n_ocu} expertos</div>
 </div>
 """, unsafe_allow_html=True)
 
 _agg_ocu = {"OcuAjuste": ("Ocupación", "mean")}
-if "Tiempo Efectivo_s"      in dff.columns: _agg_ocu["TiempoEfectivo_s"] = ("Tiempo Efectivo_s", "sum")
-if "Ajuste_s"               in dff.columns: _agg_ocu["Ajuste_s"]         = ("Ajuste_s", "sum")
-if "Tiempo Dur. Llamadas_s" in dff.columns: _agg_ocu["Llamadas_s"]       = ("Tiempo Dur. Llamadas_s", "sum")
+if "Total Turno_s" in dff.columns: _agg_ocu["TotalTurno_s"] = ("Total Turno_s", "sum")
+if "Ajuste_s"      in dff.columns: _agg_ocu["Ajuste_s"]     = ("Ajuste_s", "sum")
 
 tbl_ocu = (
     dff.groupby(["Fecha","Nombre","Supervisor"])
@@ -819,9 +818,8 @@ tbl_ocu_disp = {
     "Supervisor": tbl_ocu["Supervisor"],
     "Ocupación":  tbl_ocu["OcuAjuste"].map(lambda x: f"{x:.1%}"),
 }
-if "TiempoEfectivo_s" in tbl_ocu.columns: tbl_ocu_disp["Tiempo Efectivo"]         = tbl_ocu["TiempoEfectivo_s"].map(seg_a_hhmmss)
-if "Ajuste_s"         in tbl_ocu.columns: tbl_ocu_disp["T. Efect. en Llamadas"]   = tbl_ocu["Ajuste_s"].map(seg_a_hhmmss)
-if "Llamadas_s"       in tbl_ocu.columns: tbl_ocu_disp["Tiempo Llamadas"]         = tbl_ocu["Llamadas_s"].map(seg_a_hhmmss)
+if "TotalTurno_s" in tbl_ocu.columns: tbl_ocu_disp["Tiempo Programado"]  = tbl_ocu["TotalTurno_s"].map(seg_a_hhmmss)
+if "Ajuste_s"     in tbl_ocu.columns: tbl_ocu_disp["Tiempo en Llamadas"] = tbl_ocu["Ajuste_s"].map(seg_a_hhmmss)
 df_descarga(pd.DataFrame(tbl_ocu_disp), "ocupacion_detalle.xlsx", use_container_width=True, hide_index=True)
 
 # ─────────────────────────────────────────────
@@ -899,16 +897,15 @@ st.markdown(f"""
     <div class='tbl-hdr-icon'>📋</div>
     <div class='tbl-hdr-body'>
         <div class='tbl-hdr-title'>Detalle por Experto · Contacto</div>
-        <div class='tbl-hdr-desc'>% Contacto promedio, T. Efectivo en Llamadas, Disponible y Duración de Llamadas</div>
+        <div class='tbl-hdr-desc'>% Contacto promedio, Tiempo Ejecutado en Disponible y Tiempo en Llamadas</div>
     </div>
     <div class='tbl-hdr-badge'>{n_cont} expertos</div>
 </div>
 """, unsafe_allow_html=True)
 
 _agg_cont = {"PctContacto": ("% Contacto", "mean")}
-if "Ajuste_s"               in dff.columns: _agg_cont["Ajuste_s"]     = ("Ajuste_s", "sum")
-if "Disponible_s"           in dff.columns: _agg_cont["Disponible_s"] = ("Disponible_s", "sum")
-if "Tiempo Dur. Llamadas_s" in dff.columns: _agg_cont["Llamadas_s"]   = ("Tiempo Dur. Llamadas_s", "sum")
+if "Disponible_s" in dff.columns: _agg_cont["Disponible_s"] = ("Disponible_s", "sum")
+if "Ajuste_s"     in dff.columns: _agg_cont["Ajuste_s"]     = ("Ajuste_s", "sum")
 
 tbl_cont = (
     dff.groupby(["Fecha","Nombre","Supervisor"])
@@ -922,9 +919,8 @@ tbl_cont_disp = {
     "Supervisor": tbl_cont["Supervisor"],
     "% Contacto": tbl_cont["PctContacto"].map(lambda x: f"{x:.1%}"),
 }
-if "Ajuste_s"     in tbl_cont.columns: tbl_cont_disp["T. Efect. en Llamadas"] = tbl_cont["Ajuste_s"].map(seg_a_hhmmss)
-if "Disponible_s" in tbl_cont.columns: tbl_cont_disp["Disponible"]            = tbl_cont["Disponible_s"].map(seg_a_hhmmss)
-if "Llamadas_s"   in tbl_cont.columns: tbl_cont_disp["Tiempo Llamadas"]       = tbl_cont["Llamadas_s"].map(seg_a_hhmmss)
+if "Disponible_s" in tbl_cont.columns: tbl_cont_disp["T. Ejecutado en Disponible"] = tbl_cont["Disponible_s"].map(seg_a_hhmmss)
+if "Ajuste_s"     in tbl_cont.columns: tbl_cont_disp["Tiempo en Llamadas"]         = tbl_cont["Ajuste_s"].map(seg_a_hhmmss)
 df_descarga(pd.DataFrame(tbl_cont_disp), "contacto_detalle.xlsx", use_container_width=True, hide_index=True)
 
 # ─────────────────────────────────────────────
@@ -1076,22 +1072,28 @@ with col_tbl:
     st.dataframe(pd.DataFrame(tbl_sup_disp), use_container_width=True, hide_index=True, height=_sup_h)
 
 with col_pie:
-    if "Llamadas" in tbl_sup.columns:
+    if "Abandonadas" in tbl_sup.columns and tbl_sup["Abandonadas"].sum() > 0:
         _pie_h = _sup_h
+        _labels = tbl_sup["Supervisor"].apply(lambda n: " ".join(n.split()[:2]))
+        _values = tbl_sup["Abandonadas"]
+        _pcts   = tbl_sup["PctAbandono"].fillna(0)
+        _text   = _pcts.map(lambda x: f"{x:.1%}")
         fig_pie = go.Figure(go.Pie(
-            labels=tbl_sup["Supervisor"].apply(lambda n: " ".join(n.split()[:2])),
-            values=tbl_sup["Llamadas"],
+            labels=_labels,
+            values=_values,
             hole=0.52,
             marker=dict(
                 colors=[SUPERVISOR_COLORS[i % len(SUPERVISOR_COLORS)] for i in range(len(tbl_sup))],
                 line=dict(color="rgba(0,0,0,0.35)", width=2)
             ),
-            textinfo="percent",
+            text=_text,
+            textinfo="text",
             textfont=dict(size=11, family="Inter", color="white"),
-            hovertemplate="<b>%{label}</b><br>Llamadas: %{value:,}<br>%{percent}<extra></extra>",
+            hovertemplate="<b>%{label}</b><br>Abandonadas: %{value:,}<br>% del total: %{text}<extra></extra>",
         ))
         fig_pie.update_layout(
-            height=_pie_h, margin=dict(l=0, r=0, t=10, b=10),
+            height=_pie_h, margin=dict(l=0, r=0, t=30, b=10),
+            title=dict(text="Distribución % Abandono", font=dict(size=13, color="rgba(255,255,255,0.7)", family="Inter"), x=0.5),
             paper_bgcolor="rgba(0,0,0,0)",
             legend=dict(
                 orientation="v", x=1.02, y=0.5,
