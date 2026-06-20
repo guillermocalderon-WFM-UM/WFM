@@ -201,7 +201,7 @@ st.markdown(f"""
     /* ══════════ HERO ══════════ */
     .hero {{
         position:relative; border-radius:28px; overflow:hidden;
-        padding:48px 50px 44px; text-align:center; margin-bottom:28px;
+        padding:30px 50px 26px; text-align:center; margin-bottom:20px;
         background:
             linear-gradient(135deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.015) 100%);
         border:1px solid rgba(255,255,255,0.10);
@@ -232,13 +232,13 @@ st.markdown(f"""
     .hero-badge-dot::after {{ content:'';position:absolute;inset:0;border-radius:50%;background:#34D399; }}
     .hero-badge-dot::before {{ content:'';position:absolute;inset:0;border-radius:50%;border:2px solid #34D399;animation:ring 1.8s ease-out infinite; }}
     .hero-title {{ font-family:'Space Grotesk',sans-serif!important;
-        font-size:48px;font-weight:700;color:white;margin:0 0 14px;
-        letter-spacing:-1.6px;line-height:1.05;text-shadow:0 4px 40px rgba(0,0,0,0.4); }}
+        font-size:40px;font-weight:700;color:white;margin:0 0 10px;
+        letter-spacing:-1.4px;line-height:1.05;text-shadow:0 4px 40px rgba(0,0,0,0.4); }}
     .hero-title .grad {{ background:linear-gradient(90deg,#38BDF8 0%,#818CF8 35%,#34D399 70%,#38BDF8 100%);
         background-size:220% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;
         background-clip:text;animation:shimmer 4s linear infinite; }}
-    .hero-sub {{ font-size:17px;color:rgba(255,255,255,0.60);max-width:580px;
-        margin:0 auto 30px;line-height:1.7;font-weight:400; }}
+    .hero-sub {{ font-size:15px;color:rgba(255,255,255,0.58);max-width:560px;
+        margin:0 auto 22px;line-height:1.65;font-weight:400; }}
 
     /* ══ SECTION LABEL ══ */
     .sec-lbl {{ display:flex;align-items:center;gap:12px;margin:38px 0 20px;
@@ -355,6 +355,87 @@ st.markdown(f"""
     .hcard-val {{ font-size:14px;font-weight:800;color:white;margin-top:2px; }}
     .hcard-val .dot {{ display:inline-block;width:7px;height:7px;border-radius:50%;background:#34D399;
         box-shadow:0 0 8px #34D399;margin-right:5px;animation:sbcPulse 1.8s ease-in-out infinite; }}
+
+    /* ══ TICKER EN VIVO ══ */
+    @keyframes nticker {{ 0% {{ transform:translateX(0); }} 100% {{ transform:translateX(-50%); }} }}
+    .nticker-shell {{ display:flex;align-items:stretch;overflow:hidden;border-radius:12px;
+        background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.20);
+        margin:24px 0 0; }}
+    .nticker-label {{ flex-shrink:0;display:flex;align-items:center;gap:7px;
+        padding:10px 16px;font-size:9px;font-weight:800;letter-spacing:0.16em;
+        text-transform:uppercase;color:#F59E0B;
+        background:rgba(245,158,11,0.13);border-right:1px solid rgba(245,158,11,0.20); }}
+    .nticker-dot {{ width:6px;height:6px;border-radius:50%;background:#F59E0B;
+        animation:sbcPulse 1.8s ease-in-out infinite;flex-shrink:0; }}
+    .nticker-track {{ overflow:hidden;flex:1; }}
+    .nticker-inner {{ display:flex;width:max-content;
+        animation:nticker 36s linear infinite;padding:10px 0; }}
+    .nticker-inner:hover {{ animation-play-state:paused; }}
+    .nticker-item {{ display:flex;align-items:center;gap:10px;
+        padding:0 44px;white-space:nowrap;
+        font-size:12.5px;color:rgba(255,255,255,0.70);font-weight:500; }}
+    .nticker-sep {{ color:rgba(245,158,11,0.40);margin-left:4px; }}
+    .ntag {{ font-size:8.5px;font-weight:800;padding:2px 8px;border-radius:5px;
+        text-transform:uppercase;letter-spacing:0.08em;flex-shrink:0; }}
+    .ntag-a {{ background:rgba(244,63,94,0.18);color:#FB7185;border:1px solid rgba(244,63,94,0.28); }}
+    .ntag-u {{ background:rgba(14,165,233,0.18);color:#38BDF8;border:1px solid rgba(14,165,233,0.28); }}
+    .ntag-n {{ background:rgba(52,211,153,0.18);color:#34D399;border:1px solid rgba(52,211,153,0.28); }}
+    .ntag-r {{ background:rgba(245,158,11,0.18);color:#FCD34D;border:1px solid rgba(245,158,11,0.28); }}
+
+    /* ══ NEWS GRID ══ */
+    .nws-grid {{ display:grid;grid-template-columns:1.65fr 1fr;
+        grid-template-rows:auto auto;gap:14px;
+        margin:20px 0 32px;animation:fadeUp 1.05s ease both; }}
+    .ncard-feat {{ grid-row:1/3; }}
+
+    .ncard {{ position:relative;overflow:hidden;border-radius:20px;
+        padding:26px 28px;display:flex;flex-direction:column;
+        background:linear-gradient(145deg,rgba(255,255,255,0.06) 0%,rgba(255,255,255,0.015) 100%);
+        border:1px solid rgba(255,255,255,0.09);
+        box-shadow:0 12px 32px rgba(0,0,0,0.28),inset 0 1px 0 rgba(255,255,255,0.06);
+        transition:transform .28s cubic-bezier(.2,.8,.2,1),border-color .28s ease,background .28s ease; }}
+    .ncard:hover {{ transform:translateY(-5px);border-color:rgba(255,255,255,0.22);
+        background:rgba(255,255,255,0.08); }}
+
+    /* Noticia destacada */
+    .ncard-feat {{ padding:34px 32px 28px;
+        background:linear-gradient(145deg,rgba(245,158,11,0.11) 0%,rgba(245,158,11,0.03) 55%,rgba(14,165,233,0.06) 100%);
+        border-color:rgba(245,158,11,0.24); }}
+    .ncard-feat:hover {{ border-color:rgba(245,158,11,0.48);
+        box-shadow:0 24px 60px rgba(0,0,0,0.40),0 0 40px -12px rgba(245,158,11,0.18); }}
+    .ncard-ghost {{ position:absolute;bottom:-18px;right:-10px;
+        font-family:'Space Grotesk',sans-serif;font-size:168px;font-weight:900;
+        line-height:1;color:rgba(245,158,11,0.055);pointer-events:none;
+        user-select:none;letter-spacing:-8px;z-index:0; }}
+
+    .ncard-eyebrow {{ display:flex;align-items:center;gap:9px;
+        margin-bottom:14px;position:relative;z-index:1; }}
+    .ncard-date {{ font-size:10px;font-weight:600;letter-spacing:0.06em;
+        color:rgba(255,255,255,0.32);text-transform:uppercase; }}
+    .ncard-title-feat {{ font-family:'Space Grotesk',sans-serif;
+        font-size:22px;font-weight:700;color:white;
+        line-height:1.28;letter-spacing:-0.4px;
+        margin-bottom:14px;flex:1;position:relative;z-index:1; }}
+    .ncard-body {{ font-size:13px;color:rgba(255,255,255,0.48);
+        line-height:1.65;flex:1;position:relative;z-index:1; }}
+    .ncard-title {{ font-size:13.5px;font-weight:700;color:rgba(255,255,255,0.88);
+        line-height:1.40;letter-spacing:-0.1px;position:relative;z-index:1; }}
+    .ncard-body-sm {{ font-size:12.5px;color:rgba(255,255,255,0.46);
+        line-height:1.58;position:relative;z-index:1;margin-top:6px; }}
+
+    .ncard-footer {{ display:flex;align-items:center;gap:10px;
+        margin-top:auto;padding-top:18px;
+        border-top:1px solid rgba(255,255,255,0.07);position:relative;z-index:1; }}
+    .ncard-avatar {{ width:30px;height:30px;border-radius:9px;
+        background:linear-gradient(135deg,#F59E0B,#FB923C);
+        display:flex;align-items:center;justify-content:center;
+        font-size:14px;flex-shrink:0; }}
+    .ncard-byline {{ font-size:10.5px;color:rgba(255,255,255,0.38);line-height:1.3; }}
+    .ncard-byline strong {{ font-size:11.5px;font-weight:700;
+        color:rgba(255,255,255,0.72);display:block;margin-bottom:1px; }}
+    .ncard-arrow {{ margin-left:auto;font-size:18px;
+        color:rgba(245,158,11,0.55);transition:transform .2s ease,color .2s ease; }}
+    .ncard-feat:hover .ncard-arrow {{ transform:translateX(4px);color:#F59E0B; }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -388,6 +469,83 @@ st.markdown("""
                 <div class='hcard-lbl'>Alianza</div><div class='hcard-val'>Uniminuto</div></div></div>
         </div>
     </div>
+</div>
+""", unsafe_allow_html=True)
+
+# ── NOTICIAS ─────────────────────────────
+st.markdown("""
+<div class='nticker-shell'>
+    <div class='nticker-label'><span class='nticker-dot'></span>EN VIVO</div>
+    <div class='nticker-track'>
+        <div class='nticker-inner'>
+            <div class='nticker-item'><span class='ntag ntag-n'>Logro</span>Adherencia supera meta del 90 % en semana 22 <span class='nticker-sep'>·</span></div>
+            <div class='nticker-item'><span class='ntag ntag-u'>Actualización</span>Módulo de Ocupación disponible desde esta semana <span class='nticker-sep'>·</span></div>
+            <div class='nticker-item'><span class='ntag ntag-r'>Recordatorio</span>Campaña de capacitación — miércoles 18 de junio, 2 p.m. <span class='nticker-sep'>·</span></div>
+            <div class='nticker-item'><span class='ntag ntag-a'>Atención</span>Verificar asignación de turnos antes del inicio de semana 25 <span class='nticker-sep'>·</span></div>
+            <div class='nticker-item'><span class='ntag ntag-n'>Logro</span>Adherencia supera meta del 90 % en semana 22 <span class='nticker-sep'>·</span></div>
+            <div class='nticker-item'><span class='ntag ntag-u'>Actualización</span>Módulo de Ocupación disponible desde esta semana <span class='nticker-sep'>·</span></div>
+            <div class='nticker-item'><span class='ntag ntag-r'>Recordatorio</span>Campaña de capacitación — miércoles 18 de junio, 2 p.m. <span class='nticker-sep'>·</span></div>
+            <div class='nticker-item'><span class='ntag ntag-a'>Atención</span>Verificar asignación de turnos antes del inicio de semana 25 <span class='nticker-sep'>·</span></div>
+        </div>
+    </div>
+</div>
+
+<div class='sec-lbl' style='margin-top:30px'>Noticias · Pulso WFM</div>
+
+<div class='nws-grid'>
+
+    <!-- DESTACADA -->
+    <div class='ncard ncard-feat'>
+        <div class='ncard-ghost'>01</div>
+        <div class='ncard-eyebrow'>
+            <span class='ntag ntag-u'>Actualización</span>
+            <span class='ncard-date'>Jun 2026</span>
+        </div>
+        <div class='ncard-title-feat'>
+            El módulo de Ocupación ya está disponible para todos los equipos WFM
+        </div>
+        <div class='ncard-body'>
+            A partir de esta semana el equipo puede monitorear en tiempo real la ocupación y el contacto
+            de cada experto. El módulo incluye tendencias por supervisor, tiempo programado efectivo,
+            detalle de llamadas y la distribución de abandonos por supervisor.
+            Accede directamente desde la pantalla principal del dashboard.
+        </div>
+        <div class='ncard-footer'>
+            <div class='ncard-avatar'>⚡</div>
+            <div class='ncard-byline'>
+                <strong>Equipo Workforce Management</strong>
+                Scala Learning · Uniminuto
+            </div>
+            <span class='ncard-arrow'>→</span>
+        </div>
+    </div>
+
+    <!-- CARD 1 -->
+    <div class='ncard'>
+        <div class='ncard-eyebrow'>
+            <span class='ntag ntag-n'>Logro</span>
+            <span class='ncard-date'>Sem 22 · Jun 2026</span>
+        </div>
+        <div class='ncard-title'>Adherencia supera la meta del 90 % por tercer período consecutivo</div>
+        <div class='ncard-body-sm'>
+            El equipo consolidó un promedio de 90.8 %. Ana Milena (92.9 %) y Karen Julieth (91.5 %)
+            lideran el ranking de supervisores.
+        </div>
+    </div>
+
+    <!-- CARD 2 -->
+    <div class='ncard'>
+        <div class='ncard-eyebrow'>
+            <span class='ntag ntag-r'>Recordatorio</span>
+            <span class='ncard-date'>Sem 25 · Jun 2026</span>
+        </div>
+        <div class='ncard-title'>Capacitación obligatoria y revisión de horarios — semana 25</div>
+        <div class='ncard-body-sm'>
+            Confirmar asignación de turnos antes del lunes. Capacitación para nuevos expertos
+            el miércoles 18 de junio a las 2:00 p.m.
+        </div>
+    </div>
+
 </div>
 """, unsafe_allow_html=True)
 
