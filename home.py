@@ -358,84 +358,123 @@ st.markdown(f"""
 
     /* ══ TICKER EN VIVO ══ */
     @keyframes nticker {{ 0% {{ transform:translateX(0); }} 100% {{ transform:translateX(-50%); }} }}
-    .nticker-shell {{ display:flex;align-items:stretch;overflow:hidden;border-radius:12px;
-        background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.20);
+    .nticker-shell {{ display:flex;align-items:stretch;overflow:hidden;border-radius:14px;
+        background:rgba(245,158,11,0.04);
+        border:1px solid rgba(245,158,11,0.22);
+        box-shadow:0 0 30px -8px rgba(245,158,11,0.12),inset 0 1px 0 rgba(255,255,255,0.06);
         margin:24px 0 0; }}
-    .nticker-label {{ flex-shrink:0;display:flex;align-items:center;gap:7px;
-        padding:10px 16px;font-size:9px;font-weight:800;letter-spacing:0.16em;
+    .nticker-label {{ flex-shrink:0;display:flex;align-items:center;gap:8px;
+        padding:12px 18px;font-size:8.5px;font-weight:800;letter-spacing:0.18em;
         text-transform:uppercase;color:#F59E0B;
-        background:rgba(245,158,11,0.13);border-right:1px solid rgba(245,158,11,0.20); }}
-    .nticker-dot {{ width:6px;height:6px;border-radius:50%;background:#F59E0B;
+        background:linear-gradient(135deg,rgba(245,158,11,0.18),rgba(245,158,11,0.08));
+        border-right:1px solid rgba(245,158,11,0.22); }}
+    .nticker-dot {{ width:7px;height:7px;border-radius:50%;background:#F59E0B;
+        box-shadow:0 0 8px #F59E0B;
         animation:sbcPulse 1.8s ease-in-out infinite;flex-shrink:0; }}
-    .nticker-track {{ overflow:hidden;flex:1; }}
+    .nticker-track {{ overflow:hidden;flex:1;
+        mask-image:linear-gradient(90deg,transparent 0%,black 5%,black 95%,transparent 100%);
+        -webkit-mask-image:linear-gradient(90deg,transparent 0%,black 5%,black 95%,transparent 100%); }}
     .nticker-inner {{ display:flex;width:max-content;
-        animation:nticker 36s linear infinite;padding:10px 0; }}
+        animation:nticker 38s linear infinite;padding:12px 0; }}
     .nticker-inner:hover {{ animation-play-state:paused; }}
     .nticker-item {{ display:flex;align-items:center;gap:10px;
-        padding:0 44px;white-space:nowrap;
-        font-size:12.5px;color:rgba(255,255,255,0.70);font-weight:500; }}
-    .nticker-sep {{ color:rgba(245,158,11,0.40);margin-left:4px; }}
-    .ntag {{ font-size:8.5px;font-weight:800;padding:2px 8px;border-radius:5px;
-        text-transform:uppercase;letter-spacing:0.08em;flex-shrink:0; }}
+        padding:0 48px;white-space:nowrap;
+        font-size:13px;color:rgba(255,255,255,0.68);font-weight:500; }}
+    .nticker-sep {{ color:rgba(245,158,11,0.35);font-size:18px;margin-left:6px; }}
+    .ntag {{ font-size:8px;font-weight:800;padding:3px 8px;border-radius:5px;
+        text-transform:uppercase;letter-spacing:0.09em;flex-shrink:0; }}
     .ntag-a {{ background:rgba(244,63,94,0.18);color:#FB7185;border:1px solid rgba(244,63,94,0.28); }}
     .ntag-u {{ background:rgba(14,165,233,0.18);color:#38BDF8;border:1px solid rgba(14,165,233,0.28); }}
     .ntag-n {{ background:rgba(52,211,153,0.18);color:#34D399;border:1px solid rgba(52,211,153,0.28); }}
     .ntag-r {{ background:rgba(245,158,11,0.18);color:#FCD34D;border:1px solid rgba(245,158,11,0.28); }}
 
     /* ══ NEWS GRID ══ */
-    .nws-grid {{ display:grid;grid-template-columns:1.65fr 1fr;
-        grid-template-rows:auto auto;gap:14px;
-        margin:20px 0 32px;animation:fadeUp 1.05s ease both; }}
-    .ncard-feat {{ grid-row:1/3; }}
+    .nws-grid {{ display:grid;grid-template-columns:1.6fr 1fr;
+        grid-template-rows:1fr 1fr;gap:14px;
+        margin:20px 0 34px;animation:fadeUp 1.05s ease both; }}
 
-    .ncard {{ position:relative;overflow:hidden;border-radius:20px;
-        padding:26px 28px;display:flex;flex-direction:column;
-        background:linear-gradient(145deg,rgba(255,255,255,0.06) 0%,rgba(255,255,255,0.015) 100%);
-        border:1px solid rgba(255,255,255,0.09);
-        box-shadow:0 12px 32px rgba(0,0,0,0.28),inset 0 1px 0 rgba(255,255,255,0.06);
-        transition:transform .28s cubic-bezier(.2,.8,.2,1),border-color .28s ease,background .28s ease; }}
-    .ncard:hover {{ transform:translateY(-5px);border-color:rgba(255,255,255,0.22);
-        background:rgba(255,255,255,0.08); }}
+    /* BASE CARD */
+    .ncard {{ position:relative;overflow:hidden;border-radius:22px;
+        padding:24px 26px;display:flex;flex-direction:column;
+        border:1px solid rgba(255,255,255,0.08);
+        box-shadow:0 14px 36px rgba(0,0,0,0.30),inset 0 1px 0 rgba(255,255,255,0.06);
+        backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+        transition:transform .30s cubic-bezier(.2,.8,.2,1),box-shadow .30s ease,border-color .30s ease; }}
 
-    /* Noticia destacada */
-    .ncard-feat {{ padding:34px 32px 28px;
-        background:linear-gradient(145deg,rgba(245,158,11,0.11) 0%,rgba(245,158,11,0.03) 55%,rgba(14,165,233,0.06) 100%);
-        border-color:rgba(245,158,11,0.24); }}
-    .ncard-feat:hover {{ border-color:rgba(245,158,11,0.48);
-        box-shadow:0 24px 60px rgba(0,0,0,0.40),0 0 40px -12px rgba(245,158,11,0.18); }}
-    .ncard-ghost {{ position:absolute;bottom:-18px;right:-10px;
-        font-family:'Space Grotesk',sans-serif;font-size:168px;font-weight:900;
-        line-height:1;color:rgba(245,158,11,0.055);pointer-events:none;
-        user-select:none;letter-spacing:-8px;z-index:0; }}
+    /* Color-coded small cards */
+    .ncard-logro {{ background:linear-gradient(145deg,rgba(52,211,153,0.09) 0%,rgba(52,211,153,0.02) 60%,rgba(255,255,255,0.01) 100%);
+        border-left:3px solid rgba(52,211,153,0.60); }}
+    .ncard-logro:hover {{ transform:translateY(-5px);border-color:rgba(52,211,153,0.55);
+        box-shadow:0 22px 52px rgba(0,0,0,0.38),-4px 0 28px -6px rgba(52,211,153,0.22),inset 0 1px 0 rgba(255,255,255,0.08); }}
+    .ncard-record {{ background:linear-gradient(145deg,rgba(245,158,11,0.09) 0%,rgba(245,158,11,0.02) 60%,rgba(255,255,255,0.01) 100%);
+        border-left:3px solid rgba(245,158,11,0.55); }}
+    .ncard-record:hover {{ transform:translateY(-5px);border-color:rgba(245,158,11,0.55);
+        box-shadow:0 22px 52px rgba(0,0,0,0.38),-4px 0 28px -6px rgba(245,158,11,0.22),inset 0 1px 0 rgba(255,255,255,0.08); }}
 
+    /* FEATURED CARD */
+    .ncard-feat {{ grid-row:1/3;padding:0;
+        background:linear-gradient(160deg,rgba(245,158,11,0.13) 0%,rgba(245,158,11,0.04) 45%,rgba(14,165,233,0.07) 100%);
+        border-color:rgba(245,158,11,0.26);
+        box-shadow:0 20px 60px rgba(0,0,0,0.40),0 0 0 1px rgba(245,158,11,0.10),inset 0 1px 0 rgba(255,255,255,0.08); }}
+    .ncard-feat::before {{ content:'';position:absolute;top:0;left:15%;right:15%;height:1px;
+        background:linear-gradient(90deg,transparent,rgba(245,158,11,0.75),transparent);z-index:2; }}
+    .ncard-feat:hover {{ transform:translateY(-6px);border-color:rgba(245,158,11,0.52);
+        box-shadow:0 32px 80px rgba(0,0,0,0.50),0 0 50px -10px rgba(245,158,11,0.22),inset 0 1px 0 rgba(255,255,255,0.10); }}
+
+    /* Abstract viz header inside featured */
+    .ncard-vis {{ position:relative;overflow:hidden;height:88px;margin:0;
+        background:
+            radial-gradient(ellipse 60% 100% at 15% 50%,rgba(14,165,233,0.38) 0%,transparent 65%),
+            radial-gradient(ellipse 50% 100% at 82% 30%,rgba(245,158,11,0.32) 0%,transparent 60%),
+            radial-gradient(ellipse 45% 100% at 55% 90%,rgba(129,140,248,0.26) 0%,transparent 60%),
+            linear-gradient(135deg,rgba(245,158,11,0.06),rgba(14,165,233,0.04));
+        flex-shrink:0; }}
+    .ncard-vis::before {{ content:'';position:absolute;inset:0;
+        background-image:linear-gradient(rgba(255,255,255,0.055) 1px,transparent 1px),
+                         linear-gradient(90deg,rgba(255,255,255,0.055) 1px,transparent 1px);
+        background-size:20px 20px; }}
+    .ncard-vis::after {{ content:'';position:absolute;bottom:0;left:0;right:0;height:40px;
+        background:linear-gradient(to bottom,transparent,rgba(10,8,19,0.65)); }}
+
+    .ncard-feat-body {{ padding:28px 30px 26px;display:flex;flex-direction:column;flex:1;position:relative; }}
+    .ncard-ghost {{ position:absolute;bottom:-30px;right:-18px;
+        font-family:'Space Grotesk',sans-serif;font-size:210px;font-weight:900;
+        line-height:1;color:rgba(245,158,11,0.058);pointer-events:none;
+        user-select:none;letter-spacing:-12px;z-index:0;transform:rotate(-5deg); }}
+
+    /* Card content elements */
     .ncard-eyebrow {{ display:flex;align-items:center;gap:9px;
-        margin-bottom:14px;position:relative;z-index:1; }}
-    .ncard-date {{ font-size:10px;font-weight:600;letter-spacing:0.06em;
-        color:rgba(255,255,255,0.32);text-transform:uppercase; }}
+        margin-bottom:12px;position:relative;z-index:1; }}
+    .ncard-date {{ font-size:10px;font-weight:600;letter-spacing:0.07em;
+        color:rgba(255,255,255,0.30);text-transform:uppercase; }}
     .ncard-title-feat {{ font-family:'Space Grotesk',sans-serif;
-        font-size:22px;font-weight:700;color:white;
-        line-height:1.28;letter-spacing:-0.4px;
-        margin-bottom:14px;flex:1;position:relative;z-index:1; }}
-    .ncard-body {{ font-size:13px;color:rgba(255,255,255,0.48);
-        line-height:1.65;flex:1;position:relative;z-index:1; }}
-    .ncard-title {{ font-size:13.5px;font-weight:700;color:rgba(255,255,255,0.88);
-        line-height:1.40;letter-spacing:-0.1px;position:relative;z-index:1; }}
-    .ncard-body-sm {{ font-size:12.5px;color:rgba(255,255,255,0.46);
-        line-height:1.58;position:relative;z-index:1;margin-top:6px; }}
+        font-size:23px;font-weight:700;color:white;
+        line-height:1.26;letter-spacing:-0.5px;
+        margin-bottom:13px;position:relative;z-index:1; }}
+    .ncard-body {{ font-size:13px;color:rgba(255,255,255,0.46);
+        line-height:1.68;flex:1;position:relative;z-index:1;margin-bottom:20px; }}
+    .ncard-title {{ font-size:14px;font-weight:700;color:rgba(255,255,255,0.88);
+        line-height:1.38;letter-spacing:-0.15px;position:relative;z-index:1; }}
+    .ncard-body-sm {{ font-size:12.5px;color:rgba(255,255,255,0.44);
+        line-height:1.60;position:relative;z-index:1;margin-top:8px;flex:1; }}
 
-    .ncard-footer {{ display:flex;align-items:center;gap:10px;
-        margin-top:auto;padding-top:18px;
-        border-top:1px solid rgba(255,255,255,0.07);position:relative;z-index:1; }}
-    .ncard-avatar {{ width:30px;height:30px;border-radius:9px;
-        background:linear-gradient(135deg,#F59E0B,#FB923C);
+    .ncard-footer {{ display:flex;align-items:center;gap:11px;
+        padding:16px 0 0;border-top:1px solid rgba(255,255,255,0.08);
+        position:relative;z-index:1; }}
+    .ncard-avatar {{ width:34px;height:34px;border-radius:10px;flex-shrink:0;
+        background:linear-gradient(135deg,#F59E0B 0%,#FB923C 100%);
+        display:flex;align-items:center;justify-content:center;font-size:16px;
+        box-shadow:0 6px 16px rgba(245,158,11,0.40); }}
+    .ncard-byline {{ font-size:10.5px;color:rgba(255,255,255,0.36);line-height:1.35; }}
+    .ncard-byline strong {{ font-size:12px;font-weight:700;
+        color:rgba(255,255,255,0.75);display:block;margin-bottom:1px; }}
+    .ncard-arrow {{ margin-left:auto;width:34px;height:34px;border-radius:10px;
+        background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.25);
         display:flex;align-items:center;justify-content:center;
-        font-size:14px;flex-shrink:0; }}
-    .ncard-byline {{ font-size:10.5px;color:rgba(255,255,255,0.38);line-height:1.3; }}
-    .ncard-byline strong {{ font-size:11.5px;font-weight:700;
-        color:rgba(255,255,255,0.72);display:block;margin-bottom:1px; }}
-    .ncard-arrow {{ margin-left:auto;font-size:18px;
-        color:rgba(245,158,11,0.55);transition:transform .2s ease,color .2s ease; }}
-    .ncard-feat:hover .ncard-arrow {{ transform:translateX(4px);color:#F59E0B; }}
+        font-size:16px;color:#F59E0B;flex-shrink:0;
+        transition:transform .22s ease,background .22s ease,box-shadow .22s ease; }}
+    .ncard-feat:hover .ncard-arrow {{ transform:translateX(3px);
+        background:rgba(245,158,11,0.22);box-shadow:0 6px 18px -4px rgba(245,158,11,0.40); }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -489,21 +528,23 @@ st.markdown(
 "<div class='sec-lbl' style='margin-top:30px'>Noticias · Pulso WFM</div>"
 "<div class='nws-grid'>"
 "<div class='ncard ncard-feat'>"
+"<div class='ncard-vis'></div>"
+"<div class='ncard-feat-body'>"
 "<div class='ncard-ghost'>01</div>"
 "<div class='ncard-eyebrow'><span class='ntag ntag-u'>Actualización</span><span class='ncard-date'>Jun 2026</span></div>"
 "<div class='ncard-title-feat'>El módulo de Ocupación ya está disponible para todos los equipos WFM</div>"
-"<div class='ncard-body'>A partir de esta semana el equipo puede monitorear en tiempo real la ocupación y el contacto de cada experto. Incluye tendencias por supervisor, tiempo programado efectivo, detalle de llamadas y distribución de abandonos. Accede desde la pantalla principal.</div>"
+"<div class='ncard-body'>A partir de esta semana el equipo puede monitorear en tiempo real la ocupación y el contacto de cada experto. Incluye tendencias por supervisor, tiempo programado efectivo, detalle de llamadas y distribución de abandonos por equipo. Accede desde la pantalla principal del dashboard.</div>"
 "<div class='ncard-footer'>"
 "<div class='ncard-avatar'>⚡</div>"
 "<div class='ncard-byline'><strong>Equipo Workforce Management</strong>Scala Learning · Uniminuto</div>"
-"<span class='ncard-arrow'>→</span>"
-"</div></div>"
-"<div class='ncard'>"
+"<div class='ncard-arrow'>→</div>"
+"</div></div></div>"
+"<div class='ncard ncard-logro'>"
 "<div class='ncard-eyebrow'><span class='ntag ntag-n'>Logro</span><span class='ncard-date'>Sem 22 · Jun 2026</span></div>"
 "<div class='ncard-title'>Adherencia supera la meta del 90% por tercer período consecutivo</div>"
-"<div class='ncard-body-sm'>El equipo consolidó un promedio de 90.8%. Ana Milena (92.9%) y Karen Julieth (91.5%) lideran el ranking de supervisores.</div>"
+"<div class='ncard-body-sm'>El equipo consolidó un promedio de 90.8%. Ana Milena (92.9%) y Karen Julieth (91.5%) lideran el ranking.</div>"
 "</div>"
-"<div class='ncard'>"
+"<div class='ncard ncard-record'>"
 "<div class='ncard-eyebrow'><span class='ntag ntag-r'>Recordatorio</span><span class='ncard-date'>Sem 25 · Jun 2026</span></div>"
 "<div class='ncard-title'>Capacitación obligatoria y revisión de horarios — semana 25</div>"
 "<div class='ncard-body-sm'>Confirmar asignación de turnos antes del lunes. Sesión para nuevos expertos el miércoles 18 de junio a las 2:00 p.m.</div>"
