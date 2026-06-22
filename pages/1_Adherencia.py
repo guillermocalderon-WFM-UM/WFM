@@ -1499,7 +1499,7 @@ st.markdown(f"""<div class='tbl-hdr' style='background:linear-gradient(135deg,{C
     <span class='tbl-hdr-icon'>⚠️</span>
     <div class='tbl-hdr-body'>
         <div class='tbl-hdr-title'>Estados y Excesos</div>
-        <div class='tbl-hdr-desc'>Tiempos excedidos por actividad · Total excesos consolidado en h:mm:ss</div>
+        <div class='tbl-hdr-desc'>Login · Tiempos por estado · Excesos por actividad en h:mm:ss</div>
     </div>
     <span class='tbl-hdr-badge'>Excesos</span>
 </div>""", unsafe_allow_html=True)
@@ -1509,8 +1509,52 @@ exc_cols     = ["Exceso Almuerzo", "Exceso Descanso", "Exceso Seguimiento",
 exc_min_cols = [c + "_min" for c in exc_cols]
 exc_min_disp = [c for c in exc_min_cols if c in dff.columns]
 
+_estado_cols = [
+    "Alertas tempranas", "Almuerzo", "Ausente", "Break", "Calidad",
+    "Disponible", "En Línea No ACD", "Entrenamiento", "Niveles de riesgo",
+    "Recorrido de Aula", "Retroalimentación", "Seguimiento", "Seguimiento Aulas",
+    "Toilette", "WhatsApp", "webchat",
+]
+
+def _fmt_hora(v):
+    if v is None or (not isinstance(v, object)) or str(v) in ("nan", "NaT", "None"):
+        return "-"
+    try:
+        import datetime
+        if isinstance(v, (datetime.time, datetime.datetime)):
+            return v.strftime("%H:%M")
+        s = str(v)
+        return s[:5] if len(s) >= 5 else s
+    except Exception:
+        return "-"
+
+def _fmt_td(v):
+    try:
+        import pandas as _pd
+        if _pd.isna(v):
+            return "-"
+    except Exception:
+        pass
+    try:
+        return seg_a_hhmmss(int(v.total_seconds()))
+    except Exception:
+        return "-"
+
 t3 = dff.rename(columns={"Nombre": "Agente", "Campana": "Campaña"}).copy()
 t3["Fecha"] = t3["Fecha"].dt.strftime("%d/%m/%Y")
+
+login_cols = []
+for col in ["Hora Login", "Hora Deslogueo"]:
+    if col in t3.columns:
+        t3[col] = t3[col].apply(_fmt_hora)
+        login_cols.append(col)
+
+estado_disp = []
+for col in _estado_cols:
+    if col in t3.columns:
+        t3[col] = t3[col].apply(_fmt_td)
+        estado_disp.append(col)
+
 exc_fmt_cols = []
 for orig, min_col in zip(exc_cols, exc_min_cols):
     if min_col in t3.columns:
@@ -1521,7 +1565,13 @@ if exc_min_disp:
     total_s = t3[exc_min_disp].sum(axis=1) * 60
     t3["Total excesos"] = total_s.apply(seg_a_hhmmss)
 
-cols_t3 = ["Fecha", "Agente", "Supervisor", "Campaña"] + exc_fmt_cols + (["Total excesos"] if exc_min_disp else [])
+cols_t3 = (
+    ["Fecha", "Agente", "Supervisor", "Campaña"]
+    + login_cols
+    + estado_disp
+    + exc_fmt_cols
+    + (["Total excesos"] if exc_min_disp else [])
+)
 t3_show = t3[cols_t3].sort_values(["Fecha", "Agente"]).reset_index(drop=True)
 df_descarga(t3_show, "estados_excesos.xlsx", use_container_width=True, hide_index=True, height=350)
 
