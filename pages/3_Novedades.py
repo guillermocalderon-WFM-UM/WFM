@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import base64
 import urllib.parse
-from streamlit_autorefresh import st_autorefresh
 
 COLOR_PRIMARY = "#28053F"
 COLOR_ACCENT  = "#0EA5E9"
@@ -159,8 +158,8 @@ def _render_tab(df: pd.DataFrame, acento: str):
 
 # ─────────────────────────────────────────────
 # AUTO-REFRESH
-# ─────────────────────────────────────────────
-st_autorefresh(interval=60_000, key="nov_refresh")
+# ── Auto-refresh cada 60 s (sin dependencias externas) ───────────
+st.markdown('<meta http-equiv="refresh" content="60">', unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────
 # SIDEBAR
