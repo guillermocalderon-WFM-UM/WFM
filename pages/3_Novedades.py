@@ -4,7 +4,6 @@ import pandas as pd
 import base64
 import io
 import urllib.parse
-from datetime import date
 
 COLOR_PRIMARY = "#28053F"
 COLOR_ACCENT  = "#0EA5E9"
@@ -92,7 +91,7 @@ _DEMO = pd.DataFrame([
 # ─────────────────────────────────────────────
 # RENDER TAB
 # ─────────────────────────────────────────────
-def _render_tab(df: pd.DataFrame, sup_sel, tipo_sel, buscar, fecha_desde, fecha_hasta, agrupar, periodo_sel):
+def _render_tab(df: pd.DataFrame, sup_sel, exp_sel, buscar, fecha_desde, fecha_hasta, agrupar, periodo_sel):
     if "_error" in df.columns:
         st.error(f"No se pudo cargar la hoja: {df['_error'].iloc[0]}")
         return
@@ -113,7 +112,13 @@ def _render_tab(df: pd.DataFrame, sup_sel, tipo_sel, buscar, fecha_desde, fecha_
 
     df = df.copy()
     if "Fecha inicio" in df.columns:
-        df["_fecha_dt"] = pd.to_datetime(df["Fecha inicio"], dayfirst=True, errors="coerce")
+        # Intentar ISO (2026-07-01) y USA (7/1/2026) — ambos sin dayfirst
+        _parsed = pd.to_datetime(df["Fecha inicio"], errors="coerce", dayfirst=False)
+        # Para celdas que no se parsearon, intentar con dayfirst=True (DD/MM/YYYY)
+        _null = _parsed.isna()
+        if _null.any():
+            _parsed[_null] = pd.to_datetime(df.loc[_null, "Fecha inicio"], errors="coerce", dayfirst=True)
+        df["_fecha_dt"] = _parsed
     else:
         df["_fecha_dt"] = pd.NaT
 
@@ -143,14 +148,10 @@ def _render_tab(df: pd.DataFrame, sup_sel, tipo_sel, buscar, fecha_desde, fecha_
 
     if sup_sel != "Todos" and "Supervisor" in df.columns:
         df = df[df["Supervisor"] == sup_sel]
-    if tipo_sel != "Todos" and "Tipo de novedad" in df.columns:
-        df = df[df["Tipo de novedad"] == tipo_sel]
-    if buscar:
-        mask = pd.Series(False, index=df.index)
-        for c in ["Nombre", "Cédula", "Novedad específica"]:
-            if c in df.columns:
-                mask |= df[c].astype(str).str.contains(buscar, case=False, na=False)
-        df = df[mask]
+    if exp_sel != "Todos" and "Nombre" in df.columns:
+        df = df[df["Nombre"] == exp_sel]
+    if buscar and "ID Novedad" in df.columns:
+        df = df[df["ID Novedad"].astype(str).str.strip().str.upper() == buscar.strip().upper()]
 
     for c in ["Fecha inicio", "Fecha fin", "Fecha procesamiento"]:
         if c in df.columns:
@@ -254,8 +255,8 @@ def _get_opts(col):
             vals += df[col].dropna().astype(str).unique().tolist()
     return sorted(set(vals)) or (sorted(_DEMO[col].dropna().unique().tolist()) if col in _DEMO.columns else [])
 
-_sups  = _get_opts("Supervisor")
-_tipos = _get_opts("Tipo de novedad")
+_sups    = _get_opts("Supervisor")
+_expertos = _get_opts("Nombre")
 
 # ─────────────────────────────────────────────
 # SIDEBAR
@@ -304,9 +305,9 @@ with st.sidebar:
 
     c1, c2 = st.columns(2)
     with c1:
-        fecha_desde = st.date_input("Desde", value=date(2026, 4, 1), key="sb_desde")
+        fecha_desde = st.date_input("Desde", value=None, key="sb_desde")
     with c2:
-        fecha_hasta = st.date_input("Hasta", value=date.today(), key="sb_hasta")
+        fecha_hasta = st.date_input("Hasta", value=None, key="sb_hasta")
 
     # ── 02 FILTROS ───────────────────────────────────
     st.markdown("""<div class='sbh'>
@@ -315,9 +316,9 @@ with st.sidebar:
         <div class='sbh-rule'></div>
     </div>""", unsafe_allow_html=True)
 
-    sup_sel  = st.selectbox("Supervisor",      ["Todos"] + _sups,  key="sb_sup")
-    tipo_sel = st.selectbox("Tipo de novedad", ["Todos"] + _tipos, key="sb_tipo")
-    buscar   = st.text_input("Buscar", placeholder="Nombre, cédula o novedad...", key="sb_bus")
+    sup_sel  = st.selectbox("Supervisor", ["Todos"] + _sups,     key="sb_sup")
+    exp_sel  = st.selectbox("Experto",    ["Todos"] + _expertos, key="sb_exp")
+    buscar   = st.text_input("Buscar por ID", placeholder="WFM-ID-000000", key="sb_bus")
 
     if st.button("🔄  Actualizar datos", key="sb_refresh", use_container_width=True):
         _cargar_hoja.clear()
@@ -644,17 +645,67 @@ st.markdown(f"""
 
     /* ── Tabs ── */
     [data-testid="stTabs"] [role="tablist"] {{
-        background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);
-        border-radius:14px;padding:4px;gap:4px; }}
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 16px; padding: 5px; gap: 3px;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 4px 20px rgba(0,0,0,0.30);
+    }}
     [data-testid="stTabs"] [role="tab"] {{
-        border-radius:10px!important;font-weight:700!important;font-size:13px!important;
-        color:rgba(255,255,255,0.45)!important;padding:9px 22px!important;
-        transition:all .2s ease!important;border:none!important; }}
-    [data-testid="stTabs"] [role="tab"][aria-selected="true"] {{
-        background:rgba(255,255,255,0.10)!important;color:white!important;
-        box-shadow:0 2px 14px rgba(0,0,0,0.28)!important; }}
-    [data-testid="stTabs"] [role="tab"]:hover {{ color:rgba(255,255,255,0.80)!important; }}
-    [data-testid="stTabPanel"] {{ padding-top:22px!important; }}
+        border-radius: 11px !important;
+        font-weight: 700 !important; font-size: 12.5px !important;
+        color: rgba(255,255,255,0.38) !important;
+        padding: 10px 24px !important;
+        transition: all .22s ease !important;
+        border: 1px solid transparent !important;
+        position: relative !important;
+        letter-spacing: 0.01em !important;
+    }}
+    [data-testid="stTabs"] [role="tab"]:hover {{
+        color: rgba(255,255,255,0.72) !important;
+        background: rgba(255,255,255,0.05) !important;
+        border-color: rgba(255,255,255,0.08) !important;
+    }}
+    /* Tiempo real — rojo */
+    [data-testid="stTabs"] [role="tab"]:nth-child(1)[aria-selected="true"] {{
+        background: linear-gradient(135deg, rgba(239,68,68,0.18), rgba(239,68,68,0.07)) !important;
+        border-color: rgba(239,68,68,0.40) !important;
+        color: #FCA5A5 !important;
+        box-shadow: 0 0 18px -6px rgba(239,68,68,0.45), inset 0 1px 0 rgba(255,255,255,0.10) !important;
+    }}
+    /* Planificación — azul */
+    [data-testid="stTabs"] [role="tab"]:nth-child(2)[aria-selected="true"] {{
+        background: linear-gradient(135deg, rgba(56,189,248,0.18), rgba(56,189,248,0.07)) !important;
+        border-color: rgba(56,189,248,0.40) !important;
+        color: #7DD3FC !important;
+        box-shadow: 0 0 18px -6px rgba(56,189,248,0.45), inset 0 1px 0 rgba(255,255,255,0.10) !important;
+    }}
+    /* Históricas — verde */
+    [data-testid="stTabs"] [role="tab"]:nth-child(3)[aria-selected="true"] {{
+        background: linear-gradient(135deg, rgba(52,211,153,0.18), rgba(52,211,153,0.07)) !important;
+        border-color: rgba(52,211,153,0.40) !important;
+        color: #6EE7B7 !important;
+        box-shadow: 0 0 18px -6px rgba(52,211,153,0.45), inset 0 1px 0 rgba(255,255,255,0.10) !important;
+    }}
+    [data-testid="stTabPanel"] {{ padding-top:24px !important; }}
+
+    /* ── Botón Actualizar datos ── */
+    .st-key-sb_refresh button {{
+        background: linear-gradient(135deg, rgba(56,189,248,0.18), rgba(99,102,241,0.14)) !important;
+        border: 1px solid rgba(56,189,248,0.35) !important;
+        border-radius: 10px !important;
+        color: #7DD3FC !important;
+        font-size: 11px !important; font-weight: 700 !important;
+        letter-spacing: 0.04em !important;
+        transition: all .2s ease !important;
+        box-shadow: 0 0 14px -6px rgba(56,189,248,0.40), inset 0 1px 0 rgba(255,255,255,0.10) !important;
+    }}
+    .st-key-sb_refresh button:hover {{
+        background: linear-gradient(135deg, rgba(56,189,248,0.28), rgba(99,102,241,0.20)) !important;
+        border-color: rgba(56,189,248,0.60) !important;
+        box-shadow: 0 0 22px -4px rgba(56,189,248,0.55), inset 0 1px 0 rgba(255,255,255,0.14) !important;
+        transform: translateY(-1px) !important;
+    }}
+    .st-key-sb_refresh button p {{ color: #7DD3FC !important; }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -699,7 +750,7 @@ def _sec_label(texto, color):
     )
 
 _filter_args = dict(
-    sup_sel=sup_sel, tipo_sel=tipo_sel, buscar=buscar,
+    sup_sel=sup_sel, exp_sel=exp_sel, buscar=buscar,
     fecha_desde=fecha_desde, fecha_hasta=fecha_hasta,
     agrupar=agrupar, periodo_sel=periodo_sel,
 )
