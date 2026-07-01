@@ -552,38 +552,47 @@ st.markdown(
 "<div class='nticker-shell'>"
 "<div class='nticker-label'><span class='nticker-dot'></span>EN VIVO</div>"
 "<div class='nticker-track'><div class='nticker-inner'>"
-"<div class='nticker-item'><span class='ntag ntag-n'>Logro</span>Adherencia supera meta del 90% en semana 22 <span class='nticker-sep'>·</span></div>"
-"<div class='nticker-item'><span class='ntag ntag-u'>Actualización</span>Módulo de Ocupación disponible desde esta semana <span class='nticker-sep'>·</span></div>"
-"<div class='nticker-item'><span class='ntag ntag-r'>Recordatorio</span>Capacitación obligatoria — miércoles 18 de junio, 2 p.m. <span class='nticker-sep'>·</span></div>"
-"<div class='nticker-item'><span class='ntag ntag-a'>Atención</span>Verificar turnos antes del inicio de semana 25 <span class='nticker-sep'>·</span></div>"
-"<div class='nticker-item'><span class='ntag ntag-n'>Logro</span>Adherencia supera meta del 90% en semana 22 <span class='nticker-sep'>·</span></div>"
-"<div class='nticker-item'><span class='ntag ntag-u'>Actualización</span>Módulo de Ocupación disponible desde esta semana <span class='nticker-sep'>·</span></div>"
-"<div class='nticker-item'><span class='ntag ntag-r'>Recordatorio</span>Capacitación obligatoria — miércoles 18 de junio, 2 p.m. <span class='nticker-sep'>·</span></div>"
-"<div class='nticker-item'><span class='ntag ntag-a'>Atención</span>Verificar turnos antes del inicio de semana 25 <span class='nticker-sep'>·</span></div>"
+"<div class='nticker-item'><span class='ntag ntag-u'>Nuevo</span>Módulo de Novedades disponible — registra tus novedades en tiempo real <span class='nticker-sep'>·</span></div>"
+"<div class='nticker-item'><span class='ntag ntag-n'>Logro</span>Junio 2026 — Claudia Daniela Arévalo lidera adherencia con 93.2% <span class='nticker-sep'>·</span></div>"
+"<div class='nticker-item'><span class='ntag ntag-r'>Recordatorio</span>Registra tu novedad en el módulo — tu supervisor la aprobará y WFM la validará <span class='nticker-sep'>·</span></div>"
+"<div class='nticker-item'><span class='ntag ntag-n'>Logro</span>Junio 2026 — Karen Julieth Barreto alcanzó 91.8% de adherencia <span class='nticker-sep'>·</span></div>"
+"<div class='nticker-item'><span class='ntag ntag-u'>Nuevo</span>Módulo de Novedades disponible — registra tus novedades en tiempo real <span class='nticker-sep'>·</span></div>"
+"<div class='nticker-item'><span class='ntag ntag-n'>Logro</span>Junio 2026 — Claudia Daniela Arévalo lidera adherencia con 93.2% <span class='nticker-sep'>·</span></div>"
+"<div class='nticker-item'><span class='ntag ntag-r'>Recordatorio</span>Registra tu novedad en el módulo — tu supervisor la aprobará y WFM la validará <span class='nticker-sep'>·</span></div>"
+"<div class='nticker-item'><span class='ntag ntag-n'>Logro</span>Junio 2026 — Karen Julieth Barreto alcanzó 91.8% de adherencia <span class='nticker-sep'>·</span></div>"
 "</div></div></div>"
 "<div class='sec-lbl' style='margin-top:30px'>Noticias · Pulso WFM</div>"
 "<div class='nws-grid'>"
 "<div class='ncard ncard-feat'>"
 "<div class='ncard-vis'></div>"
 "<div class='ncard-feat-body'>"
-"<div class='ncard-ghost'>01</div>"
-"<div class='ncard-eyebrow'><span class='ntag ntag-u'>Actualización</span><span class='ncard-date'>Jun 2026</span></div>"
-"<div class='ncard-title-feat'>El módulo de Ocupación ya está disponible para todos los equipos WFM</div>"
-"<div class='ncard-body'>A partir de esta semana el equipo puede monitorear en tiempo real la ocupación y el contacto de cada experto. Incluye tendencias por supervisor, tiempo programado efectivo, detalle de llamadas y distribución de abandonos por equipo. Accede desde la pantalla principal del dashboard.</div>"
+"<div class='ncard-ghost'>📢</div>"
+"<div class='ncard-eyebrow'><span class='ntag ntag-u'>Nuevo</span><span class='ncard-date'>Jul 2026</span></div>"
+"<div class='ncard-title-feat'>El módulo de Novedades ya está disponible para todo el equipo</div>"
+"<div class='ncard-body'>Cada experto puede registrar sus novedades operativas directamente desde el dashboard. Una vez registrada, la novedad pasa por un proceso de aprobación en dos etapas: primero el supervisor la revisa y aprueba por correo electrónico, y finalmente Workforce Management realiza la validación definitiva. Accede desde el menú principal.</div>"
 "<div class='ncard-footer'>"
-"<div class='ncard-avatar'>⚡</div>"
+"<div class='ncard-avatar'>📢</div>"
 "<div class='ncard-byline'><strong>Equipo Workforce Management</strong>Scala Learning · Uniminuto</div>"
 "<div class='ncard-arrow'>→</div>"
 "</div></div></div>"
 "<div class='ncard ncard-logro'>"
-"<div class='ncard-eyebrow'><span class='ntag ntag-n'>Logro</span><span class='ncard-date'>Sem 22 · Jun 2026</span></div>"
-"<div class='ncard-title'>Adherencia supera la meta del 90% por tercer período consecutivo</div>"
-"<div class='ncard-body-sm'>El equipo consolidó un promedio de 90.8%. Ana Milena (92.9%) y Karen Julieth (91.5%) lideran el ranking.</div>"
+"<div class='ncard-eyebrow'><span class='ntag ntag-n'>Logro</span><span class='ncard-date'>Junio 2026</span></div>"
+"<div class='ncard-title'>Los mejores supervisores en adherencia — cierre de junio</div>"
+"<div class='ncard-body-sm'>"
+"🥇 <b style='color:rgba(255,255,255,0.85)'>Claudia Daniela Arévalo</b> · 93.2%<br>"
+"🥈 <b style='color:rgba(255,255,255,0.85)'>Karen Julieth Barreto</b> · 91.8%<br>"
+"🥉 <b style='color:rgba(255,255,255,0.85)'>Johan Sebastian López</b> · 90.5%<br>"
+"<span style='color:rgba(255,255,255,0.35);font-size:11px'>Meta equipo: 90% · Promedio general: 90.4%</span>"
+"</div>"
 "</div>"
 "<div class='ncard ncard-record'>"
-"<div class='ncard-eyebrow'><span class='ntag ntag-r'>Recordatorio</span><span class='ncard-date'>Sem 25 · Jun 2026</span></div>"
-"<div class='ncard-title'>Capacitación obligatoria y revisión de horarios — semana 25</div>"
-"<div class='ncard-body-sm'>Confirmar asignación de turnos antes del lunes. Sesión para nuevos expertos el miércoles 18 de junio a las 2:00 p.m.</div>"
+"<div class='ncard-eyebrow'><span class='ntag ntag-r'>Recordatorio</span><span class='ncard-date'>Jul 2026</span></div>"
+"<div class='ncard-title'>¿Cómo registrar y gestionar una novedad?</div>"
+"<div class='ncard-body-sm'>"
+"<b style='color:rgba(255,255,255,0.75)'>① Experto</b> registra la novedad en el módulo.<br>"
+"<b style='color:rgba(255,255,255,0.75)'>② Supervisor</b> revisa y aprueba vía correo electrónico.<br>"
+"<b style='color:rgba(255,255,255,0.75)'>③ WFM</b> realiza la validación y cierre definitivo."
+"</div>"
 "</div>"
 "</div>",
 unsafe_allow_html=True)
@@ -684,33 +693,33 @@ with col2:
 with col3:
     st.markdown("""
     <div class='mod' style='
-        --accent:linear-gradient(90deg,#F59E0B,#FB923C);
-        --accent-solid:#FBBF24;
-        --glow:rgba(245,158,11,0.55);
-        --icobg:linear-gradient(135deg,rgba(245,158,11,0.22),rgba(251,146,60,0.10));'>
+        --accent:linear-gradient(90deg,#34D399,#059669);
+        --accent-solid:#34D399;
+        --glow:rgba(52,211,153,0.55);
+        --icobg:linear-gradient(135deg,rgba(52,211,153,0.22),rgba(5,150,105,0.10));'>
         <div class='mod-glow'></div>
         <div class='mod-head'>
             <div class='mod-ico'>📢</div>
-            <span class='mod-badge' style='background:rgba(245,158,11,0.14);color:#FBBF24;border:1px solid rgba(245,158,11,0.30);'>
-                <span class='mod-badge-dot' style='background:#FBBF24'></span>En Desarrollo
+            <span class='mod-badge' style='background:rgba(52,211,153,0.14);color:#34D399;border:1px solid rgba(52,211,153,0.30);'>
+                <span class='mod-badge-dot' style='background:#34D399'></span>Disponible
             </span>
         </div>
         <div class='mod-title'>Novedades</div>
         <div class='mod-desc'>
-            Comunicados, anuncios y registro de cambios del tablero.
-            Mantente al día con las últimas actualizaciones del equipo Workforce Management.
+            Registra y gestiona las novedades operativas del equipo. Cada novedad sigue un flujo
+            de aprobación: experto → supervisor → WFM.
         </div>
         <div class='mod-feats'>
-            <div class='mfeat'><span class='mfeat-ck'>✓</span>Anuncios y comunicados del equipo</div>
-            <div class='mfeat'><span class='mfeat-ck'>✓</span>Registro de cambios del tablero</div>
-            <div class='mfeat'><span class='mfeat-ck'>✓</span>Alertas y recordatorios</div>
-            <div class='mfeat'><span class='mfeat-ck'>✓</span>Próximamente disponible</div>
+            <div class='mfeat'><span class='mfeat-ck'>✓</span>Registro de novedades en tiempo real</div>
+            <div class='mfeat'><span class='mfeat-ck'>✓</span>Vista por estado: pendientes, aprobadas e históricas</div>
+            <div class='mfeat'><span class='mfeat-ck'>✓</span>Filtros por supervisor, experto y período</div>
+            <div class='mfeat'><span class='mfeat-ck'>✓</span>Descarga en Excel y sincronización con Google Sheets</div>
         </div>
         <div class='mod-div'></div>
         <div class='mod-foot'>
             <div class='mod-chips'>
-                <span class='mchip'>🆕 <b>v1.0</b></span>
-                <span class='mchip'>📅 <b>2026</b></span>
+                <span class='mchip'>🟢 <b>Live</b></span>
+                <span class='mchip'>📊 <b>3</b>&nbsp;vistas</span>
             </div>
             <div class='mspark'>
                 <span style='height:45%'></span><span style='height:70%'></span>
@@ -721,8 +730,8 @@ with col3:
         </div>
     </div>
     """, unsafe_allow_html=True)
-    if st.button("📢  Ver Novedades →", key="btn_nov",
-                 use_container_width=True, type="secondary"):
+    if st.button("📢  Abrir módulo de Novedades →", key="btn_nov",
+                 use_container_width=True, type="primary"):
         st.switch_page(nov_pg)
 
 # ── STATS ─────────────────────────────────
