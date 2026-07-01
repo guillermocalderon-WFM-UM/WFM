@@ -22,7 +22,7 @@ _logo_src = _cargar_logo()
 # ─────────────────────────────────────────────
 # CONEXIÓN GOOGLE SHEETS (CSV export)
 # ─────────────────────────────────────────────
-_SHEET_ID = st.secrets["sheets"]["sheet_id"]
+_SHEET_ID = "1-Ld6qxNvCl2g3u7_qmqnvljPoRYr_sgGyovGiOJ_Riw"
 
 @st.cache_data(ttl=60, show_spinner=False)
 def _cargar_hoja(nombre_hoja: str) -> pd.DataFrame:
