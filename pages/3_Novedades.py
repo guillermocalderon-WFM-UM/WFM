@@ -1,9 +1,10 @@
-# v6
+# v7
 import streamlit as st
 import pandas as pd
 import base64
 import io
 import urllib.parse
+import plotly.graph_objects as go
 
 COLOR_PRIMARY = "#28053F"
 COLOR_ACCENT  = "#0EA5E9"
@@ -87,6 +88,103 @@ _DEMO = pd.DataFrame([
     {"ID Novedad":"NOV-005",      "Estado":"Pendiente",           "Nombre":"Valentina Herrera Cruz",      "Cédula":"1045678901","Supervisor":"Camila Maldonado",               "Tipo de novedad":"Tiempo real",  "Novedad específica":"Ausente",            "Fecha inicio":"01/07/2026","Hora inicio":"06:55","Fecha fin":"01/07/2026","Hora fin":"15:00","Horas":"8:05","Comentarios":"No se reportó"},
     {"ID Novedad":"NOV-006",      "Estado":"Aprobado",           "Nombre":"Diego Fernando Ruiz",         "Cédula":"1056789012","Supervisor":"Ana Milena Carvajal",             "Tipo de novedad":"Históricas",  "Novedad específica":"Retiro",             "Fecha inicio":"25/06/2026","Hora inicio":"06:00","Fecha fin":"25/06/2026","Hora fin":"15:00","Horas":"9:00","Comentarios":"Procesado en nómina"},
 ])
+
+# ─────────────────────────────────────────────
+# GRÁFICOS
+# ─────────────────────────────────────────────
+_ESTADO_COLOR = {
+    "Pendiente":           "#F59E0B",
+    "Aprobado supervisor": "#10B981",
+    "Aprobado":            "#10B981",
+    "Rechazado":           "#EF4444",
+}
+_ESTADO_ORDER = ["Aprobado supervisor", "Aprobado", "Pendiente", "Rechazado"]
+
+_CHART_LAYOUT = dict(
+    paper_bgcolor="rgba(0,0,0,0)",
+    plot_bgcolor="rgba(0,0,0,0)",
+    font=dict(family="Inter, sans-serif"),
+    margin=dict(l=0, r=10, t=30, b=0),
+    legend=dict(
+        orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0,
+        font=dict(color="rgba(255,255,255,0.55)", size=10),
+        bgcolor="rgba(0,0,0,0)",
+        bordercolor="rgba(255,255,255,0.08)", borderwidth=1,
+    ),
+)
+
+def _chart_por_supervisor(df):
+    if "Supervisor" not in df.columns or "Estado" not in df.columns or df.empty:
+        return
+    grp   = df.groupby(["Supervisor", "Estado"]).size().reset_index(name="n")
+    sups  = (grp.groupby("Supervisor")["n"].sum()
+               .sort_values(ascending=True).index.tolist())
+    uniq  = grp["Estado"].unique().tolist()
+    orden = [e for e in _ESTADO_ORDER if e in uniq] + [e for e in uniq if e not in _ESTADO_ORDER]
+
+    fig = go.Figure()
+    for estado in orden:
+        sub  = grp[grp["Estado"] == estado].set_index("Supervisor")["n"]
+        vals = [int(sub.get(s, 0)) for s in sups]
+        fig.add_trace(go.Bar(
+            name=estado, y=sups, x=vals, orientation="h",
+            marker_color=_ESTADO_COLOR.get(estado, "#64748B"),
+            marker_line_width=0,
+            hovertemplate="<b>%{y}</b><br>" + estado + ": %{x}<extra></extra>",
+        ))
+
+    fig.update_layout(
+        **_CHART_LAYOUT,
+        barmode="stack",
+        height=max(180, len(sups) * 44 + 60),
+        xaxis=dict(
+            showgrid=True, gridcolor="rgba(255,255,255,0.06)",
+            zeroline=False, tickfont=dict(color="rgba(255,255,255,0.38)", size=10),
+        ),
+        yaxis=dict(
+            showgrid=False,
+            tickfont=dict(color="rgba(255,255,255,0.70)", size=10),
+            ticksuffix="  ",
+        ),
+    )
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+
+
+def _chart_por_tipo(df):
+    if "Tipo de novedad" not in df.columns or "Estado" not in df.columns or df.empty:
+        return
+    grp   = df.groupby(["Tipo de novedad", "Estado"]).size().reset_index(name="n")
+    tipos = (grp.groupby("Tipo de novedad")["n"].sum()
+               .sort_values(ascending=False).index.tolist())
+    uniq  = grp["Estado"].unique().tolist()
+    orden = [e for e in _ESTADO_ORDER if e in uniq] + [e for e in uniq if e not in _ESTADO_ORDER]
+
+    fig = go.Figure()
+    for estado in orden:
+        sub  = grp[grp["Estado"] == estado].set_index("Tipo de novedad")["n"]
+        vals = [int(sub.get(t, 0)) for t in tipos]
+        fig.add_trace(go.Bar(
+            name=estado, x=tipos, y=vals,
+            marker_color=_ESTADO_COLOR.get(estado, "#64748B"),
+            marker_line_width=0,
+            hovertemplate="<b>%{x}</b><br>" + estado + ": %{y}<extra></extra>",
+        ))
+
+    fig.update_layout(
+        **_CHART_LAYOUT,
+        barmode="group",
+        height=260,
+        xaxis=dict(
+            showgrid=False,
+            tickfont=dict(color="rgba(255,255,255,0.70)", size=11),
+        ),
+        yaxis=dict(
+            showgrid=True, gridcolor="rgba(255,255,255,0.06)",
+            zeroline=False, tickfont=dict(color="rgba(255,255,255,0.38)", size=10),
+        ),
+    )
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+
 
 # ─────────────────────────────────────────────
 # RENDER TAB
@@ -212,6 +310,17 @@ def _render_tab(df: pd.DataFrame, sup_sel, exp_sel, buscar, fecha_desde, fecha_h
 
     st.markdown("<div style='margin-top:20px'></div>", unsafe_allow_html=True)
 
+    # ── Gráfico 1: novedades por supervisor ───────────
+    st.markdown(
+        "<div style='font-size:10px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;"
+        "color:rgba(255,255,255,0.35);margin-bottom:6px'>"
+        "<span style='display:inline-block;width:18px;height:2px;background:#38BDF8;"
+        "border-radius:2px;vertical-align:middle;margin-right:8px'></span>"
+        "Novedades por supervisor</div>",
+        unsafe_allow_html=True,
+    )
+    _chart_por_supervisor(df)
+
     # ── Tabla ─────────────────────────────────────────
     _COLS = [c for c in [
         "ID Novedad", "Estado", "Nombre", "Cédula", "Supervisor",
@@ -240,6 +349,17 @@ def _render_tab(df: pd.DataFrame, sup_sel, exp_sel, buscar, fecha_desde, fecha_h
         st.caption("👁️ Vista previa con datos de muestra — conectado a Google Sheets")
     else:
         st.caption(f"📋 {len(df)} registros · Google Sheets · recarga la página para actualizar")
+
+    # ── Gráfico 3: novedades por tipo ─────────────────
+    st.markdown(
+        "<div style='font-size:10px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;"
+        "color:rgba(255,255,255,0.35);margin-top:18px;margin-bottom:6px'>"
+        "<span style='display:inline-block;width:18px;height:2px;background:#34D399;"
+        "border-radius:2px;vertical-align:middle;margin-right:8px'></span>"
+        "Distribución por tipo de novedad</div>",
+        unsafe_allow_html=True,
+    )
+    _chart_por_tipo(df)
 
 # ─────────────────────────────────────────────
 # CARGAR DATOS
