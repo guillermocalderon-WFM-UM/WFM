@@ -1,7 +1,8 @@
-# v5
+# v6
 import streamlit as st
 import pandas as pd
 import base64
+import io
 import urllib.parse
 from datetime import date
 
@@ -12,6 +13,26 @@ COLOR_WARNING = "#F59E0B"
 COLOR_DANGER  = "#EF4444"
 
 _LOGO_PATH = "logo-scala-learning-transformacion-digital-universidades.webp"
+
+@st.cache_data(show_spinner=False)
+def _excel_bytes(df):
+    buf = io.BytesIO()
+    df.to_excel(buf, index=False, engine="openpyxl")
+    return buf.getvalue()
+
+def _df_descarga(df, nombre_archivo, **kwargs):
+    st.dataframe(df, **kwargs)
+    b64 = base64.b64encode(_excel_bytes(df)).decode()
+    st.markdown(
+        f'<div style="text-align:right;margin-top:-6px;margin-bottom:8px">'
+        f'<a href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{b64}" '
+        f'download="{nombre_archivo}" '
+        f'style="font-size:0.72rem;color:rgba(255,255,255,0.35);text-decoration:none;letter-spacing:0.03em" '
+        f'onmouseover="this.style.color=\'rgba(255,255,255,0.75)\'" '
+        f'onmouseout="this.style.color=\'rgba(255,255,255,0.35)\'">'
+        f'↓ Exportar Excel</a></div>',
+        unsafe_allow_html=True,
+    )
 
 @st.cache_data(show_spinner=False)
 def _cargar_logo():
@@ -28,7 +49,7 @@ _logo_src = _cargar_logo()
 # ─────────────────────────────────────────────
 _SHEET_ID = "1-Ld6qxNvCl2g3u7_qmqnvljPoRYr_sgGyovGiOJ_Riw"
 
-@st.cache_data(ttl=300, show_spinner=False)
+@st.cache_data(ttl=60, show_spinner=False)
 def _cargar_hoja(nombre_hoja: str) -> pd.DataFrame:
     url = (
         f"https://docs.google.com/spreadsheets/d/{_SHEET_ID}"
@@ -207,11 +228,12 @@ def _render_tab(df: pd.DataFrame, sup_sel, tipo_sel, buscar, fecha_desde, fecha_
         <span class='tbl-hdr-badge'>{total} registros</span>
     </div>""", unsafe_allow_html=True)
 
-    st.dataframe(
+    _df_descarga(
         df[_COLS].reset_index(drop=True),
+        "novedades_operativas.xlsx",
         use_container_width=True,
         hide_index=True,
-        height=min(80 + len(df) * 35, 500),
+        height=350,
     )
     if es_demo:
         st.caption("👁️ Vista previa con datos de muestra — conectado a Google Sheets")
@@ -296,6 +318,10 @@ with st.sidebar:
     sup_sel  = st.selectbox("Supervisor",      ["Todos"] + _sups,  key="sb_sup")
     tipo_sel = st.selectbox("Tipo de novedad", ["Todos"] + _tipos, key="sb_tipo")
     buscar   = st.text_input("Buscar", placeholder="Nombre, cédula o novedad...", key="sb_bus")
+
+    if st.button("🔄  Actualizar datos", key="sb_refresh", use_container_width=True):
+        _cargar_hoja.clear()
+        st.rerun()
 
     # ── Usuario ──────────────────────────────────────
     st.markdown("""
