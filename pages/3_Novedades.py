@@ -97,21 +97,25 @@ _ESTADO_COLOR = {
     "Aprobado supervisor": "#10B981",
     "Aprobado":            "#10B981",
     "Rechazado":           "#EF4444",
+    "Aprobado WFM":        "#38BDF8",
+    "Rechazado supervisor":"#F87171",
 }
-_ESTADO_ORDER = ["Aprobado supervisor", "Aprobado", "Pendiente", "Rechazado"]
+_ESTADO_ORDER = ["Aprobado WFM", "Aprobado supervisor", "Aprobado", "Pendiente", "Rechazado", "Rechazado supervisor"]
 
-_CHART_LAYOUT = dict(
+_TIPO_COLOR = {
+    "Tiempo real":   "#EF4444",
+    "Planificación": "#38BDF8",
+    "Históricas":    "#34D399",
+}
+
+_BASE_LAYOUT = dict(
     paper_bgcolor="rgba(0,0,0,0)",
     plot_bgcolor="rgba(0,0,0,0)",
-    font=dict(family="Inter, sans-serif"),
-    margin=dict(l=0, r=10, t=30, b=0),
-    legend=dict(
-        orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0,
-        font=dict(color="rgba(255,255,255,0.55)", size=10),
-        bgcolor="rgba(0,0,0,0)",
-        bordercolor="rgba(255,255,255,0.08)", borderwidth=1,
-    ),
+    font=dict(family="Inter, sans-serif", color="rgba(255,255,255,0.60)"),
+    margin=dict(l=0, r=10, t=36, b=0),
+    height=350,
 )
+
 
 def _chart_por_supervisor(df):
     if "Supervisor" not in df.columns or "Estado" not in df.columns or df.empty:
@@ -128,60 +132,81 @@ def _chart_por_supervisor(df):
         vals = [int(sub.get(s, 0)) for s in sups]
         fig.add_trace(go.Bar(
             name=estado, y=sups, x=vals, orientation="h",
-            marker_color=_ESTADO_COLOR.get(estado, "#64748B"),
-            marker_line_width=0,
-            hovertemplate="<b>%{y}</b><br>" + estado + ": %{x}<extra></extra>",
+            marker=dict(
+                color=_ESTADO_COLOR.get(estado, "#64748B"),
+                line=dict(width=0),
+                opacity=0.88,
+            ),
+            width=0.42,
+            hovertemplate="<b>%{y}</b><br>" + estado + ": <b>%{x}</b><extra></extra>",
         ))
 
     fig.update_layout(
-        **_CHART_LAYOUT,
+        **_BASE_LAYOUT,
         barmode="stack",
-        height=max(180, len(sups) * 44 + 60),
+        bargap=0.50,
+        legend=dict(
+            orientation="h", yanchor="bottom", y=1.01, xanchor="left", x=0,
+            font=dict(size=10, color="rgba(255,255,255,0.50)"),
+            bgcolor="rgba(0,0,0,0)",
+            bordercolor="rgba(255,255,255,0.07)", borderwidth=1,
+            traceorder="reversed",
+        ),
         xaxis=dict(
-            showgrid=True, gridcolor="rgba(255,255,255,0.06)",
-            zeroline=False, tickfont=dict(color="rgba(255,255,255,0.38)", size=10),
+            showgrid=True, gridcolor="rgba(255,255,255,0.05)", gridwidth=1,
+            zeroline=False,
+            tickfont=dict(color="rgba(255,255,255,0.32)", size=9),
+            showline=False,
         ),
         yaxis=dict(
             showgrid=False,
-            tickfont=dict(color="rgba(255,255,255,0.70)", size=10),
+            tickfont=dict(color="rgba(255,255,255,0.65)", size=10),
             ticksuffix="  ",
+            automargin=True,
         ),
     )
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
 
 def _chart_por_tipo(df):
-    if "Tipo de novedad" not in df.columns or "Estado" not in df.columns or df.empty:
+    if "Tipo de novedad" not in df.columns or df.empty:
         return
-    grp   = df.groupby(["Tipo de novedad", "Estado"]).size().reset_index(name="n")
-    tipos = (grp.groupby("Tipo de novedad")["n"].sum()
-               .sort_values(ascending=False).index.tolist())
-    uniq  = grp["Estado"].unique().tolist()
-    orden = [e for e in _ESTADO_ORDER if e in uniq] + [e for e in uniq if e not in _ESTADO_ORDER]
+    grp   = df.groupby("Tipo de novedad").size().reset_index(name="n")
+    tipos = grp["Tipo de novedad"].tolist()
+    vals  = grp["n"].tolist()
+    total = sum(vals)
+    colors = [_TIPO_COLOR.get(t, "#64748B") for t in tipos]
 
-    fig = go.Figure()
-    for estado in orden:
-        sub  = grp[grp["Estado"] == estado].set_index("Tipo de novedad")["n"]
-        vals = [int(sub.get(t, 0)) for t in tipos]
-        fig.add_trace(go.Bar(
-            name=estado, x=tipos, y=vals,
-            marker_color=_ESTADO_COLOR.get(estado, "#64748B"),
-            marker_line_width=0,
-            hovertemplate="<b>%{x}</b><br>" + estado + ": %{y}<extra></extra>",
-        ))
+    fig = go.Figure(go.Pie(
+        labels=tipos,
+        values=vals,
+        hole=0.62,
+        marker=dict(
+            colors=colors,
+            line=dict(color="rgba(10,8,19,1)", width=3),
+        ),
+        textinfo="label+percent",
+        textfont=dict(size=11, color="rgba(255,255,255,0.80)"),
+        insidetextorientation="radial",
+        hovertemplate="<b>%{label}</b><br>%{value} novedades · %{percent}<extra></extra>",
+        pull=[0.04] * len(tipos),
+    ))
 
     fig.update_layout(
-        **_CHART_LAYOUT,
-        barmode="group",
-        height=260,
-        xaxis=dict(
-            showgrid=False,
-            tickfont=dict(color="rgba(255,255,255,0.70)", size=11),
+        **_BASE_LAYOUT,
+        annotations=[dict(
+            text=f"<b style='font-size:22px'>{total}</b><br>novedades",
+            x=0.5, y=0.5, showarrow=False,
+            font=dict(size=14, color="rgba(255,255,255,0.80)"),
+            align="center",
+        )],
+        legend=dict(
+            orientation="v", yanchor="middle", y=0.5, xanchor="left", x=0.82,
+            font=dict(size=11, color="rgba(255,255,255,0.55)"),
+            bgcolor="rgba(0,0,0,0)",
         ),
-        yaxis=dict(
-            showgrid=True, gridcolor="rgba(255,255,255,0.06)",
-            zeroline=False, tickfont=dict(color="rgba(255,255,255,0.38)", size=10),
-        ),
+        margin=dict(l=0, r=80, t=36, b=0),
+        showlegend=True,
     )
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
