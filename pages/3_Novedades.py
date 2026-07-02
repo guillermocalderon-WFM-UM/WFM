@@ -813,49 +813,82 @@ st.markdown(f"""
     }}
 
     /* ── Tabs ── */
+    [data-testid="stTabs"] > div:first-child {{
+        display: flex !important;
+        justify-content: center !important;
+    }}
     [data-testid="stTabs"] [role="tablist"] {{
-        background: rgba(255,255,255,0.03);
-        border: 1px solid rgba(255,255,255,0.07);
-        border-radius: 16px; padding: 5px; gap: 3px;
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 4px 20px rgba(0,0,0,0.30);
+        display: inline-flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        width: auto !important;
+        background: linear-gradient(160deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 100%) !important;
+        border: 1px solid rgba(255,255,255,0.10) !important;
+        border-top-color: rgba(255,255,255,0.16) !important;
+        border-radius: 22px !important;
+        padding: 6px !important;
+        gap: 5px !important;
+        box-shadow:
+            0 12px 40px -12px rgba(0,0,0,0.55),
+            0 2px 0 rgba(255,255,255,0.04) inset !important;
+        backdrop-filter: blur(14px) !important;
+        -webkit-backdrop-filter: blur(14px) !important;
     }}
     [data-testid="stTabs"] [role="tab"] {{
-        border-radius: 11px !important;
-        font-weight: 700 !important; font-size: 12.5px !important;
-        color: rgba(255,255,255,0.38) !important;
-        padding: 10px 24px !important;
+        border-radius: 16px !important;
+        font-weight: 700 !important;
+        font-size: 13px !important;
+        color: rgba(255,255,255,0.32) !important;
+        padding: 13px 36px !important;
         transition: all .22s ease !important;
         border: 1px solid transparent !important;
         position: relative !important;
-        letter-spacing: 0.01em !important;
+        letter-spacing: 0.03em !important;
+        white-space: nowrap !important;
+        background: transparent !important;
     }}
     [data-testid="stTabs"] [role="tab"]:hover {{
-        color: rgba(255,255,255,0.72) !important;
-        background: rgba(255,255,255,0.05) !important;
-        border-color: rgba(255,255,255,0.08) !important;
+        color: rgba(255,255,255,0.70) !important;
+        background: rgba(255,255,255,0.055) !important;
+        border-color: rgba(255,255,255,0.10) !important;
     }}
     /* Tiempo real — rojo */
     [data-testid="stTabs"] [role="tab"]:nth-child(1)[aria-selected="true"] {{
-        background: linear-gradient(135deg, rgba(239,68,68,0.18), rgba(239,68,68,0.07)) !important;
-        border-color: rgba(239,68,68,0.40) !important;
+        background: linear-gradient(150deg, rgba(239,68,68,0.26) 0%, rgba(239,68,68,0.08) 100%) !important;
+        border-color: rgba(239,68,68,0.50) !important;
+        border-top-color: rgba(252,165,165,0.55) !important;
         color: #FCA5A5 !important;
-        box-shadow: 0 0 18px -6px rgba(239,68,68,0.45), inset 0 1px 0 rgba(255,255,255,0.10) !important;
+        box-shadow:
+            0 0 32px -8px rgba(239,68,68,0.65),
+            0 6px 20px -10px rgba(239,68,68,0.50),
+            inset 0 1px 0 rgba(255,180,180,0.18) !important;
+        text-shadow: 0 0 16px rgba(252,165,165,0.60) !important;
     }}
     /* Planificación — azul */
     [data-testid="stTabs"] [role="tab"]:nth-child(2)[aria-selected="true"] {{
-        background: linear-gradient(135deg, rgba(56,189,248,0.18), rgba(56,189,248,0.07)) !important;
-        border-color: rgba(56,189,248,0.40) !important;
+        background: linear-gradient(150deg, rgba(56,189,248,0.26) 0%, rgba(56,189,248,0.08) 100%) !important;
+        border-color: rgba(56,189,248,0.50) !important;
+        border-top-color: rgba(125,211,252,0.55) !important;
         color: #7DD3FC !important;
-        box-shadow: 0 0 18px -6px rgba(56,189,248,0.45), inset 0 1px 0 rgba(255,255,255,0.10) !important;
+        box-shadow:
+            0 0 32px -8px rgba(56,189,248,0.65),
+            0 6px 20px -10px rgba(56,189,248,0.50),
+            inset 0 1px 0 rgba(125,211,252,0.18) !important;
+        text-shadow: 0 0 16px rgba(125,211,252,0.60) !important;
     }}
     /* Históricas — verde */
     [data-testid="stTabs"] [role="tab"]:nth-child(3)[aria-selected="true"] {{
-        background: linear-gradient(135deg, rgba(52,211,153,0.18), rgba(52,211,153,0.07)) !important;
-        border-color: rgba(52,211,153,0.40) !important;
+        background: linear-gradient(150deg, rgba(52,211,153,0.26) 0%, rgba(52,211,153,0.08) 100%) !important;
+        border-color: rgba(52,211,153,0.50) !important;
+        border-top-color: rgba(110,231,183,0.55) !important;
         color: #6EE7B7 !important;
-        box-shadow: 0 0 18px -6px rgba(52,211,153,0.45), inset 0 1px 0 rgba(255,255,255,0.10) !important;
+        box-shadow:
+            0 0 32px -8px rgba(52,211,153,0.65),
+            0 6px 20px -10px rgba(52,211,153,0.50),
+            inset 0 1px 0 rgba(110,231,183,0.18) !important;
+        text-shadow: 0 0 16px rgba(110,231,183,0.60) !important;
     }}
-    [data-testid="stTabPanel"] {{ padding-top:24px !important; }}
+    [data-testid="stTabPanel"] {{ padding-top:28px !important; }}
 
     /* ── Botón Actualizar datos ── */
     .st-key-sb_refresh button {{
