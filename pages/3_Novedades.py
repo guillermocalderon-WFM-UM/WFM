@@ -186,44 +186,49 @@ def _chart_por_supervisor(df):
     )
 
 
+_ESTADO_GLOW = {
+    "Pendiente":            "rgba(245,158,11,0.72)",
+    "Aprobado supervisor":  "rgba(16,185,129,0.72)",
+    "Aprobado":             "rgba(16,185,129,0.72)",
+    "Aprobado WFM":         "rgba(56,189,248,0.72)",
+    "Rechazado":            "rgba(239,68,68,0.72)",
+    "Rechazado supervisor": "rgba(248,113,113,0.68)",
+}
+
 def _chart_por_tipo(df):
-    if "Tipo de novedad" not in df.columns or df.empty:
+    if "Estado" not in df.columns or df.empty:
         return
 
-    ids, labels, parents, values, colors_tm = ["_root"], [""], [""], [len(df)], ["rgba(0,0,0,0)"]
-
-    grp_tipo = df.groupby("Tipo de novedad").size().reset_index(name="n")
-    for _, row in grp_tipo.iterrows():
-        tipo = row["Tipo de novedad"]
-        n    = int(row["n"])
-        ids.append(tipo);     labels.append(tipo);   parents.append("_root")
-        values.append(n);     colors_tm.append(_TIPO_COLOR.get(tipo, "#64748B"))
-
-        if "Estado" in df.columns:
-            sub = df[df["Tipo de novedad"] == tipo].groupby("Estado").size().reset_index(name="n")
-            for _, sr in sub.iterrows():
-                ids.append(f"{tipo}|{sr['Estado']}")
-                labels.append(sr["Estado"])
-                parents.append(tipo)
-                values.append(int(sr["n"]))
-                colors_tm.append(_ESTADO_COLOR.get(sr["Estado"], "#64748B"))
+    grp   = df.groupby("Estado").size().reset_index(name="n")
+    grp   = grp.sort_values("n", ascending=False)
+    total = int(grp["n"].sum()) or 1
+    labels = grp["Estado"].tolist()
+    vals   = grp["n"].tolist()
+    colors = [_ESTADO_GLOW.get(e, "rgba(100,116,139,0.65)") for e in labels]
 
     fig = go.Figure(go.Treemap(
-        ids=ids, labels=labels, parents=parents, values=values,
+        labels=labels,
+        parents=[""] * len(labels),
+        values=vals,
         marker=dict(
-            colors=colors_tm,
-            line=dict(color="rgba(8,6,15,0.90)", width=2),
+            colors=colors,
+            line=dict(color="rgba(6,4,12,1)", width=4),
+            pad=dict(t=28, l=4, r=4, b=4),
         ),
-        textfont=dict(color="rgba(255,255,255,0.88)", size=12, family="Inter, sans-serif"),
-        hovertemplate="<b>%{label}</b><br>%{value} novedades<extra></extra>",
-        branchvalues="total",
-        maxdepth=2,
-        tiling=dict(packing="squarify", pad=3),
+        texttemplate=(
+            "<b style='font-size:14px'>%{label}</b><br>"
+            "<span style='font-size:20px;font-weight:900'>%{value}</span>"
+            "<span style='font-size:11px'>  ·  %{percentRoot:.0%}</span>"
+        ),
+        textposition="middle center",
+        textfont=dict(color="rgba(255,255,255,0.92)", family="Inter, sans-serif"),
+        hovertemplate="<b>%{label}</b><br>%{value} novedades · %{percentRoot:.1%}<extra></extra>",
+        tiling=dict(packing="squarify", pad=4),
     ))
 
     fig.update_layout(
         **_DARK_BG,
-        height=350,
+        height=320,
         margin=dict(l=0, r=0, t=0, b=0),
         font=dict(family="Inter, sans-serif"),
     )
