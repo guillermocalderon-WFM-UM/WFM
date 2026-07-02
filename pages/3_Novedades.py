@@ -1,10 +1,12 @@
-# v7
+# v8
 import streamlit as st
 import pandas as pd
 import base64
 import io
 import urllib.parse
 import plotly.graph_objects as go
+import plotly.io as pio
+import streamlit.components.v1 as components
 
 COLOR_PRIMARY = "#28053F"
 COLOR_ACCENT  = "#0EA5E9"
@@ -120,9 +122,8 @@ def _chart_por_supervisor(df):
     uniq  = grp["Estado"].unique().tolist()
     orden = [e for e in _ESTADO_ORDER if e in uniq] + [e for e in uniq if e not in _ESTADO_ORDER]
 
-    # Mostrar hasta 8 supervisores visibles; si hay más el usuario puede hacer scroll
-    visible = 8
-    y_range = [-0.5, min(visible, len(sups)) - 0.5]
+    # La figura crece con los datos; el iframe queda en 350px con scrollbar real
+    fig_h = max(360, len(sups) * 52 + 90)
 
     fig = go.Figure()
     for estado in orden:
@@ -143,8 +144,8 @@ def _chart_por_supervisor(df):
         **_DARK_BG,
         barmode="stack",
         bargap=0.50,
-        height=350,
-        margin=dict(l=0, r=10, t=36, b=0),
+        height=fig_h,
+        margin=dict(l=0, r=10, t=36, b=10),
         font=dict(family="Inter, sans-serif"),
         legend=dict(
             orientation="h", yanchor="bottom", y=1.01, xanchor="left", x=0,
@@ -164,57 +165,108 @@ def _chart_por_supervisor(df):
             tickfont=dict(color="rgba(255,255,255,0.65)", size=10),
             ticksuffix="  ",
             automargin=True,
-            range=y_range,
-            fixedrange=False,
         ),
     )
-    st.plotly_chart(
-        fig, use_container_width=True,
-        config={"displayModeBar": False, "scrollZoom": True},
+
+    plot_div = pio.to_html(
+        fig, include_plotlyjs="cdn", full_html=False,
+        config={"displayModeBar": False},
+    )
+    components.html(
+        f"""<!DOCTYPE html><html><head>
+        <style>
+          html,body{{margin:0;padding:0;background:transparent;overflow-x:hidden;}}
+          ::-webkit-scrollbar{{width:5px;}}
+          ::-webkit-scrollbar-track{{background:rgba(255,255,255,0.04);}}
+          ::-webkit-scrollbar-thumb{{background:rgba(56,189,248,0.40);border-radius:99px;}}
+        </style></head>
+        <body>{plot_div}</body></html>""",
+        height=350,
+        scrolling=True,
     )
 
 
 def _chart_por_tipo(df):
     if "Tipo de novedad" not in df.columns or df.empty:
         return
-    grp   = df.groupby("Tipo de novedad").size().reset_index(name="n")
-    tipos = grp["Tipo de novedad"].tolist()
-    vals  = grp["n"].tolist()
-    total = sum(vals)
-    colors = [_TIPO_COLOR.get(t, "#64748B") for t in tipos]
 
-    fig = go.Figure(go.Pie(
-        labels=tipos,
-        values=vals,
-        hole=0.62,
+    grp_total  = df.groupby("Tipo de novedad").size().reset_index(name="n")
+    grp_estado = (df.groupby(["Tipo de novedad", "Estado"]).size().reset_index(name="n")
+                  if "Estado" in df.columns else pd.DataFrame())
+
+    tipos  = grp_total["Tipo de novedad"].tolist()
+    vals   = grp_total["n"].tolist()
+    total  = sum(vals) or 1
+    colors = [_TIPO_COLOR.get(t, "#64748B") for t in tipos]
+    max_v  = max(vals) if vals else 1
+
+    # Hover con desglose por estado
+    hover_texts = []
+    for tipo in tipos:
+        if not grp_estado.empty:
+            sub   = grp_estado[grp_estado["Tipo de novedad"] == tipo]
+            lines = [f"<b>{tipo}</b>"]
+            for _, row in sub.iterrows():
+                lines.append(f"  {row['Estado']}: {int(row['n'])}")
+            hover_texts.append("<br>".join(lines))
+        else:
+            hover_texts.append(tipo)
+
+    fig = go.Figure()
+
+    # Pista de fondo (track gris tenue)
+    fig.add_trace(go.Bar(
+        y=tipos, x=[max_v * 1.35] * len(tipos), orientation="h",
+        marker=dict(color="rgba(255,255,255,0.04)", line=dict(width=0)),
+        width=0.07, showlegend=False, hoverinfo="skip",
+    ))
+
+    # Tallo del lollipop (barra muy delgada, coloreada)
+    fig.add_trace(go.Bar(
+        y=tipos, x=vals, orientation="h",
+        marker=dict(color=colors, opacity=0.35, line=dict(width=0)),
+        width=0.07, showlegend=False, hoverinfo="skip",
+    ))
+
+    # Círculo final (dot)
+    dot_sizes = [max(18, 10 + (v / max_v) * 22) for v in vals]
+    fig.add_trace(go.Scatter(
+        y=tipos, x=vals,
+        mode="markers+text",
         marker=dict(
-            colors=colors,
-            line=dict(color="rgba(10,8,19,1)", width=3),
+            color=colors,
+            size=dot_sizes,
+            symbol="circle",
+            line=dict(color="rgba(255,255,255,0.22)", width=2),
+            opacity=0.95,
         ),
-        textinfo="label+percent",
-        textfont=dict(size=11, color="rgba(255,255,255,0.80)"),
-        insidetextorientation="radial",
-        hovertemplate="<b>%{label}</b><br>%{value} novedades · %{percent}<extra></extra>",
-        pull=[0.04] * len(tipos),
+        text=[f"  <b>{v}</b>  {v/total*100:.0f}%" for v in vals],
+        textposition="middle right",
+        textfont=dict(size=12, color="rgba(255,255,255,0.72)"),
+        hovertext=hover_texts,
+        hoverinfo="text",
+        showlegend=False,
     ))
 
     fig.update_layout(
         **_DARK_BG,
+        barmode="overlay",
         height=350,
-        margin=dict(l=0, r=80, t=36, b=0),
+        margin=dict(l=0, r=110, t=10, b=10),
         font=dict(family="Inter, sans-serif"),
-        annotations=[dict(
-            text=f"{total}<br>total",
-            x=0.5, y=0.5, showarrow=False,
-            font=dict(size=16, color="rgba(255,255,255,0.80)"),
-            align="center",
-        )],
-        legend=dict(
-            orientation="v", yanchor="middle", y=0.5, xanchor="left", x=0.82,
-            font=dict(size=11, color="rgba(255,255,255,0.55)"),
-            bgcolor="rgba(0,0,0,0)",
+        xaxis=dict(
+            showgrid=True, gridcolor="rgba(255,255,255,0.05)",
+            zeroline=False, range=[0, max_v * 1.65],
+            tickfont=dict(color="rgba(255,255,255,0.28)", size=9),
+            showticklabels=False,
         ),
-        showlegend=True,
+        yaxis=dict(
+            showgrid=False,
+            tickfont=dict(color="rgba(255,255,255,0.72)", size=12),
+            ticksuffix="  ",
+            categoryorder="array",
+            categoryarray=tipos,
+        ),
     )
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
