@@ -122,8 +122,8 @@ def _chart_por_supervisor(df):
     uniq  = grp["Estado"].unique().tolist()
     orden = [e for e in _ESTADO_ORDER if e in uniq] + [e for e in uniq if e not in _ESTADO_ORDER]
 
-    # La figura crece con los datos; el iframe queda en 350px con scrollbar real
-    fig_h = max(360, len(sups) * 52 + 90)
+    # Cada supervisor ocupa 30px → barras delgadas y juntas; iframe fijo 350px con scroll
+    fig_h = max(320, len(sups) * 30 + 70)
 
     fig = go.Figure()
     for estado in orden:
@@ -136,14 +136,14 @@ def _chart_por_supervisor(df):
                 line=dict(width=0),
                 opacity=0.88,
             ),
-            width=0.42,
+            width=0.22,
             hovertemplate="<b>%{y}</b><br>" + estado + ": <b>%{x}</b><extra></extra>",
         ))
 
     fig.update_layout(
         **_DARK_BG,
         barmode="stack",
-        bargap=0.50,
+        bargap=0.12,
         height=fig_h,
         margin=dict(l=0, r=10, t=36, b=10),
         font=dict(family="Inter, sans-serif"),
@@ -190,83 +190,42 @@ def _chart_por_tipo(df):
     if "Tipo de novedad" not in df.columns or df.empty:
         return
 
-    grp_total  = df.groupby("Tipo de novedad").size().reset_index(name="n")
-    grp_estado = (df.groupby(["Tipo de novedad", "Estado"]).size().reset_index(name="n")
-                  if "Estado" in df.columns else pd.DataFrame())
+    ids, labels, parents, values, colors_tm = ["_root"], [""], [""], [len(df)], ["rgba(0,0,0,0)"]
 
-    tipos  = grp_total["Tipo de novedad"].tolist()
-    vals   = grp_total["n"].tolist()
-    total  = sum(vals) or 1
-    colors = [_TIPO_COLOR.get(t, "#64748B") for t in tipos]
-    max_v  = max(vals) if vals else 1
+    grp_tipo = df.groupby("Tipo de novedad").size().reset_index(name="n")
+    for _, row in grp_tipo.iterrows():
+        tipo = row["Tipo de novedad"]
+        n    = int(row["n"])
+        ids.append(tipo);     labels.append(tipo);   parents.append("_root")
+        values.append(n);     colors_tm.append(_TIPO_COLOR.get(tipo, "#64748B"))
 
-    # Hover con desglose por estado
-    hover_texts = []
-    for tipo in tipos:
-        if not grp_estado.empty:
-            sub   = grp_estado[grp_estado["Tipo de novedad"] == tipo]
-            lines = [f"<b>{tipo}</b>"]
-            for _, row in sub.iterrows():
-                lines.append(f"  {row['Estado']}: {int(row['n'])}")
-            hover_texts.append("<br>".join(lines))
-        else:
-            hover_texts.append(tipo)
+        if "Estado" in df.columns:
+            sub = df[df["Tipo de novedad"] == tipo].groupby("Estado").size().reset_index(name="n")
+            for _, sr in sub.iterrows():
+                ids.append(f"{tipo}|{sr['Estado']}")
+                labels.append(sr["Estado"])
+                parents.append(tipo)
+                values.append(int(sr["n"]))
+                colors_tm.append(_ESTADO_COLOR.get(sr["Estado"], "#64748B"))
 
-    fig = go.Figure()
-
-    # Pista de fondo (track gris tenue)
-    fig.add_trace(go.Bar(
-        y=tipos, x=[max_v * 1.35] * len(tipos), orientation="h",
-        marker=dict(color="rgba(255,255,255,0.04)", line=dict(width=0)),
-        width=0.07, showlegend=False, hoverinfo="skip",
-    ))
-
-    # Tallo del lollipop (barra muy delgada, coloreada)
-    fig.add_trace(go.Bar(
-        y=tipos, x=vals, orientation="h",
-        marker=dict(color=colors, opacity=0.35, line=dict(width=0)),
-        width=0.07, showlegend=False, hoverinfo="skip",
-    ))
-
-    # Círculo final (dot)
-    dot_sizes = [max(18, 10 + (v / max_v) * 22) for v in vals]
-    fig.add_trace(go.Scatter(
-        y=tipos, x=vals,
-        mode="markers+text",
+    fig = go.Figure(go.Treemap(
+        ids=ids, labels=labels, parents=parents, values=values,
         marker=dict(
-            color=colors,
-            size=dot_sizes,
-            symbol="circle",
-            line=dict(color="rgba(255,255,255,0.22)", width=2),
-            opacity=0.95,
+            colors=colors_tm,
+            line=dict(color="rgba(8,6,15,0.90)", width=2),
         ),
-        text=[f"  <b>{v}</b>  {v/total*100:.0f}%" for v in vals],
-        textposition="middle right",
-        textfont=dict(size=12, color="rgba(255,255,255,0.72)"),
-        hovertext=hover_texts,
-        hoverinfo="text",
-        showlegend=False,
+        textfont=dict(color="rgba(255,255,255,0.88)", size=12, family="Inter, sans-serif"),
+        hovertemplate="<b>%{label}</b><br>%{value} novedades<extra></extra>",
+        branchvalues="total",
+        maxdepth=2,
+        tiling=dict(packing="squarify", pad=3),
     ))
 
     fig.update_layout(
         **_DARK_BG,
-        barmode="overlay",
         height=350,
-        margin=dict(l=0, r=110, t=10, b=10),
+        margin=dict(l=0, r=0, t=0, b=0),
         font=dict(family="Inter, sans-serif"),
-        xaxis=dict(
-            showgrid=True, gridcolor="rgba(255,255,255,0.05)",
-            zeroline=False, range=[0, max_v * 1.65],
-            tickfont=dict(color="rgba(255,255,255,0.28)", size=9),
-            showticklabels=False,
-        ),
-        yaxis=dict(
-            showgrid=False,
-            tickfont=dict(color="rgba(255,255,255,0.72)", size=12),
-            ticksuffix="  ",
-            categoryorder="array",
-            categoryarray=tipos,
-        ),
     )
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
