@@ -145,13 +145,15 @@ def _chart_por_supervisor(df):
         barmode="stack",
         bargap=0.12,
         height=fig_h,
-        margin=dict(l=0, r=10, t=36, b=10),
+        margin=dict(l=180, r=120, t=10, b=10),
         font=dict(family="Inter, sans-serif"),
         legend=dict(
-            orientation="h", yanchor="bottom", y=1.01, xanchor="left", x=0,
-            font=dict(size=10, color="rgba(255,255,255,0.50)"),
-            bgcolor="rgba(0,0,0,0)",
-            bordercolor="rgba(255,255,255,0.07)", borderwidth=1,
+            orientation="v",
+            yanchor="top", y=1.0,
+            xanchor="left", x=1.02,
+            font=dict(size=10, color="rgba(255,255,255,0.55)"),
+            bgcolor="rgba(255,255,255,0.04)",
+            bordercolor="rgba(255,255,255,0.08)", borderwidth=1,
             traceorder="reversed",
         ),
         xaxis=dict(
@@ -162,9 +164,8 @@ def _chart_por_supervisor(df):
         ),
         yaxis=dict(
             showgrid=False,
-            tickfont=dict(color="rgba(255,255,255,0.65)", size=10),
-            ticksuffix="  ",
-            automargin=True,
+            tickfont=dict(color="rgba(255,255,255,0.70)", size=10),
+            automargin=False,
         ),
     )
 
@@ -817,7 +818,11 @@ st.markdown(f"""
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
-        background: linear-gradient(160deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 100%) !important;
+        background:
+            radial-gradient(ellipse 90% 160% at 2% 50%,  rgba(14,165,233,0.22) 0%, transparent 60%),
+            radial-gradient(ellipse 90% 160% at 98% 50%, rgba(129,140,248,0.22) 0%, transparent 60%),
+            radial-gradient(ellipse 70% 130% at 50% 120%,rgba(52,211,153,0.10) 0%, transparent 60%),
+            linear-gradient(155deg, #0B0518 0%, #14082b 55%, #0A0414 100%) !important;
         border: 1px solid rgba(255,255,255,0.10) !important;
         border-top-color: rgba(255,255,255,0.16) !important;
         border-radius: 22px !important;
@@ -825,9 +830,7 @@ st.markdown(f"""
         gap: 5px !important;
         box-shadow:
             0 12px 40px -12px rgba(0,0,0,0.55),
-            0 2px 0 rgba(255,255,255,0.04) inset !important;
-        backdrop-filter: blur(14px) !important;
-        -webkit-backdrop-filter: blur(14px) !important;
+            inset 0 1px 0 rgba(255,255,255,0.08) !important;
     }}
     [data-testid="stTabs"] [role="tab"] {{
         border-radius: 16px !important;
