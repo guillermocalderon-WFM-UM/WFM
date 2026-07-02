@@ -108,13 +108,7 @@ _TIPO_COLOR = {
     "Históricas":    "#34D399",
 }
 
-_BASE_LAYOUT = dict(
-    paper_bgcolor="rgba(0,0,0,0)",
-    plot_bgcolor="rgba(0,0,0,0)",
-    font=dict(family="Inter, sans-serif", color="rgba(255,255,255,0.60)"),
-    margin=dict(l=0, r=10, t=36, b=0),
-    height=350,
-)
+_DARK_BG = dict(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
 
 
 def _chart_por_supervisor(df):
@@ -125,6 +119,10 @@ def _chart_por_supervisor(df):
                .sort_values(ascending=True).index.tolist())
     uniq  = grp["Estado"].unique().tolist()
     orden = [e for e in _ESTADO_ORDER if e in uniq] + [e for e in uniq if e not in _ESTADO_ORDER]
+
+    # Mostrar hasta 8 supervisores visibles; si hay más el usuario puede hacer scroll
+    visible = 8
+    y_range = [-0.5, min(visible, len(sups)) - 0.5]
 
     fig = go.Figure()
     for estado in orden:
@@ -142,9 +140,12 @@ def _chart_por_supervisor(df):
         ))
 
     fig.update_layout(
-        **_BASE_LAYOUT,
+        **_DARK_BG,
         barmode="stack",
         bargap=0.50,
+        height=350,
+        margin=dict(l=0, r=10, t=36, b=0),
+        font=dict(family="Inter, sans-serif"),
         legend=dict(
             orientation="h", yanchor="bottom", y=1.01, xanchor="left", x=0,
             font=dict(size=10, color="rgba(255,255,255,0.50)"),
@@ -156,16 +157,21 @@ def _chart_por_supervisor(df):
             showgrid=True, gridcolor="rgba(255,255,255,0.05)", gridwidth=1,
             zeroline=False,
             tickfont=dict(color="rgba(255,255,255,0.32)", size=9),
-            showline=False,
+            showline=False, fixedrange=True,
         ),
         yaxis=dict(
             showgrid=False,
             tickfont=dict(color="rgba(255,255,255,0.65)", size=10),
             ticksuffix="  ",
             automargin=True,
+            range=y_range,
+            fixedrange=False,
         ),
     )
-    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+    st.plotly_chart(
+        fig, use_container_width=True,
+        config={"displayModeBar": False, "scrollZoom": True},
+    )
 
 
 def _chart_por_tipo(df):
@@ -193,11 +199,14 @@ def _chart_por_tipo(df):
     ))
 
     fig.update_layout(
-        **_BASE_LAYOUT,
+        **_DARK_BG,
+        height=350,
+        margin=dict(l=0, r=80, t=36, b=0),
+        font=dict(family="Inter, sans-serif"),
         annotations=[dict(
-            text=f"<b style='font-size:22px'>{total}</b><br>novedades",
+            text=f"{total}<br>total",
             x=0.5, y=0.5, showarrow=False,
-            font=dict(size=14, color="rgba(255,255,255,0.80)"),
+            font=dict(size=16, color="rgba(255,255,255,0.80)"),
             align="center",
         )],
         legend=dict(
@@ -205,7 +214,6 @@ def _chart_por_tipo(df):
             font=dict(size=11, color="rgba(255,255,255,0.55)"),
             bgcolor="rgba(0,0,0,0)",
         ),
-        margin=dict(l=0, r=80, t=36, b=0),
         showlegend=True,
     )
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
