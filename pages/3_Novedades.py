@@ -813,15 +813,10 @@ st.markdown(f"""
     }}
 
     /* ── Tabs ── */
-    [data-testid="stTabs"] > div:first-child {{
+    [data-testid="stTabs"] [role="tablist"] {{
         display: flex !important;
         justify-content: center !important;
-    }}
-    [data-testid="stTabs"] [role="tablist"] {{
-        display: inline-flex !important;
-        justify-content: center !important;
         align-items: center !important;
-        width: auto !important;
         background: linear-gradient(160deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 100%) !important;
         border: 1px solid rgba(255,255,255,0.10) !important;
         border-top-color: rgba(255,255,255,0.16) !important;
