@@ -290,12 +290,15 @@ def _pct_meta(pct):
     return COLOR_DANGER, "🔴", f"{pct:.0f}%"
 
 
-def _kpis_tiempo(df, col_dias, col_pendiente, titulo_prom="Promedio validación",
+def _kpis_tiempo(df, col_dias, col_pendiente, col_dias_pendiente=None, titulo_prom="Promedio validación",
                  titulo_criticos="Envejecimiento crítico", desc_criticos="Pendientes con 2+ días"):
+    """col_dias_pendiente permite usar una base distinta para el envejecimiento de los pendientes
+    (p. ej. el reloj de una cola empieza a correr en un momento distinto al de la métrica de cierre)."""
+    col_dias_pendiente = col_dias_pendiente or col_dias
     if col_dias not in df.columns:
         return
     validadas = df.loc[~df[col_pendiente], col_dias].dropna()
-    pendientes = df.loc[df[col_pendiente], col_dias].dropna()
+    pendientes = df.loc[df[col_pendiente], col_dias_pendiente].dropna()
     if validadas.empty and pendientes.empty:
         return
 
@@ -550,6 +553,14 @@ def _render_tab(df: pd.DataFrame, sup_sel, exp_sel, buscar, fecha_desde, fecha_h
         df.loc[_mask_ciclo_pend, "_dias_ciclo"] = (_hoy - _env[_mask_ciclo_pend]).dt.days.clip(lower=0)
         df["_dias_ciclo"] = pd.to_numeric(df["_dias_ciclo"], errors="coerce")
 
+        # Días en cola de WFM: se cuentan desde que el supervisor respondió (Fecha sup),
+        # no desde el envío original del experto — así refleja el tiempo real de espera en WFM.
+        _inicio_cola = df["_fecha_sup"].where(df["_fecha_sup"].notna(), _env)
+        df["_dias_cola_wfm"] = pd.NA
+        _mask_cola = df["_pendiente_wfm"] & _inicio_cola.notna()
+        df.loc[_mask_cola, "_dias_cola_wfm"] = (_hoy - _inicio_cola[_mask_cola]).dt.days.clip(lower=0)
+        df["_dias_cola_wfm"] = pd.to_numeric(df["_dias_cola_wfm"], errors="coerce")
+
         # Rechazo final (en cualquiera de las dos etapas)
         _rechazada_sup = _estado_sup.str.contains("Rechazado", case=False, na=False)
         _rechazada_wfm = _estado_wfm.str.contains("Rechazado", case=False, na=False)
@@ -717,10 +728,10 @@ def _render_tab(df: pd.DataFrame, sup_sel, exp_sel, buscar, fecha_desde, fecha_h
 
         st.markdown("<div style='margin-top:14px'></div>", unsafe_allow_html=True)
         _kpis_tiempo(
-            df, "_dias_ciclo", "_pendiente_wfm",
+            df, "_dias_ciclo", "_pendiente_wfm", col_dias_pendiente="_dias_cola_wfm",
             titulo_prom="Promedio ciclo completo",
             titulo_criticos="Críticos en cola WFM",
-            desc_criticos="Esperando WFM con 2+ días",
+            desc_criticos="En cola WFM con 2+ días",
         )
         _chart_ranking_zonas(
             df.dropna(subset=["_dias_ciclo"]).groupby("Supervisor")["_dias_ciclo"].mean(),
@@ -739,7 +750,7 @@ def _render_tab(df: pd.DataFrame, sup_sel, exp_sel, buscar, fecha_desde, fecha_h
                 <span class='tbl-hdr-badge'>{n_pend_wfm} pendientes</span>
             </div>""", unsafe_allow_html=True)
             st.markdown("<div style='margin-top:12px'></div>", unsafe_allow_html=True)
-            _lista_pendientes(df, "_pendiente_wfm", "_dias_ciclo", _sla_meta)
+            _lista_pendientes(df, "_pendiente_wfm", "_dias_cola_wfm", _sla_meta)
 
     # ── Gráfico 4: tendencia temporal ──
     if "_dias_verif" in df.columns:
