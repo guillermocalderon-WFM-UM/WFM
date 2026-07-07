@@ -1,5 +1,8 @@
 import streamlit as st
+import pandas as pd
 import base64
+import glob
+import os
 
 COLOR_PRIMARY = "#28053F"
 COLOR_ACCENT  = "#0EA5E9"
@@ -8,6 +11,79 @@ COLOR_ACCENT  = "#0EA5E9"
 adh_pg = st.Page("pages/1_Adherencia.py", title="Adherencia", icon="🎯")
 ocu_pg = st.Page("pages/2_Ocupacion.py",  title="Ocupación",  icon="📊")
 nov_pg = st.Page("pages/3_Novedades.py",  title="Novedades",  icon="📢")
+
+_MESES_ABR = {1: "Ene", 2: "Feb", 3: "Mar", 4: "Abr", 5: "May", 6: "Jun",
+              7: "Jul", 8: "Ago", 9: "Sep", 10: "Oct", 11: "Nov", 12: "Dic"}
+
+
+@st.cache_data(ttl=86400, show_spinner=False)
+def _datos_adherencia_dia():
+    """Estadísticas del último día con datos cargados en los Consolidado_*.xlsx.
+
+    Se recalcula una vez al día (ttl=86400): misma fuente y fórmula que usa el módulo de Adherencia
+    (ADH = suma de tiempo adherido / suma de tiempo programado), pero acotada al día más reciente
+    en lugar del rango completo, para reflejar el desempeño más actual. Los Excel son pesados, así
+    que se leen una sola vez y de aquí se derivan tanto el top de supervisores como el de asesores.
+    """
+    archivos = [f for f in glob.glob("Consolidado_*.xlsx") if "_O_" not in os.path.basename(f)]
+    if not archivos:
+        return None
+
+    partes = []
+    for archivo in archivos:
+        try:
+            partes.append(pd.read_excel(archivo, sheet_name="Detalle", engine="openpyxl"))
+        except Exception:
+            continue
+    if not partes:
+        return None
+
+    df = pd.concat(partes, ignore_index=True)
+    if "Fecha" not in df.columns or "Supervisor" not in df.columns or "Nombre" not in df.columns:
+        return None
+    df["Fecha"] = pd.to_datetime(df["Fecha"], errors="coerce")
+    df = df.dropna(subset=["Fecha"])
+    if df.empty:
+        return None
+
+    df["adh_s"]  = pd.to_timedelta(df["ADH aplicada"], errors="coerce").dt.total_seconds()
+    df["prog_s"] = pd.to_timedelta(df["Tiempo programado"], errors="coerce").dt.total_seconds()
+
+    ultimo_dia = df["Fecha"].max().normalize()
+    dia = df[
+        (df["Fecha"].dt.normalize() == ultimo_dia)
+        & (df["prog_s"] > 0)
+        & (df["Validador Llegada"] != "Ausente")
+    ]
+    if dia.empty:
+        return None
+
+    top_sup = (
+        dia.groupby("Supervisor")
+        .apply(lambda g: g["adh_s"].sum() / g["prog_s"].sum() if g["prog_s"].sum() > 0 else 0)
+        .reset_index(name="ADH")
+        .sort_values("ADH", ascending=False)
+    )
+    if top_sup.empty:
+        return None
+
+    # Bottom 5 asesores con menor adherencia, excluyendo 0% (sin datos reales ese día, no bajo desempeño)
+    bottom_ases = (
+        dia.groupby(["Nombre", "Supervisor"])
+        .apply(lambda g: g["adh_s"].sum() / g["prog_s"].sum() if g["prog_s"].sum() > 0 else 0)
+        .reset_index(name="ADH")
+    )
+    bottom_ases = bottom_ases[bottom_ases["ADH"] > 0].sort_values("ADH", ascending=True)
+
+    total_prog = dia["prog_s"].sum()
+    promedio_general = (dia["adh_s"].sum() / total_prog) if total_prog > 0 else 0
+
+    return {
+        "fecha": ultimo_dia,
+        "top3_supervisores": top_sup.head(3).to_dict("records"),
+        "bottom5_asesores": bottom_ases.head(5).to_dict("records"),
+        "promedio_general": promedio_general,
+    }
 
 # ── Logo base64 ──────────────────────────
 _LOGO_PATH = "logo-scala-learning-transformacion-digital-universidades.webp"
@@ -400,7 +476,7 @@ st.markdown(f"""
     .ntag-a {{ background:rgba(244,63,94,0.18);color:#FB7185;border:1px solid rgba(244,63,94,0.28); }}
     .ntag-u {{ background:rgba(14,165,233,0.18);color:#38BDF8;border:1px solid rgba(14,165,233,0.28); }}
     .ntag-n {{ background:rgba(52,211,153,0.18);color:#34D399;border:1px solid rgba(52,211,153,0.28); }}
-    .ntag-r {{ background:rgba(245,158,11,0.18);color:#FCD34D;border:1px solid rgba(245,158,11,0.28); }}
+    .ntag-p {{ background:rgba(245,158,11,0.18);color:#FCD34D;border:1px solid rgba(245,158,11,0.28); }}
 
     /* ══ NEWS GRID ══ */
     .nws-grid {{ display:grid;grid-template-columns:1.6fr 1fr;
@@ -416,32 +492,36 @@ st.markdown(f"""
         transition:transform .30s cubic-bezier(.2,.8,.2,1),box-shadow .30s ease,border-color .30s ease; }}
 
     /* Color-coded small cards */
+    .ncard-nuevo {{ background:linear-gradient(145deg,rgba(14,165,233,0.09) 0%,rgba(14,165,233,0.02) 60%,rgba(255,255,255,0.01) 100%);
+        border-left:3px solid rgba(14,165,233,0.60); }}
+    .ncard-nuevo:hover {{ transform:translateY(-5px);border-color:rgba(14,165,233,0.55);
+        box-shadow:0 22px 52px rgba(0,0,0,0.38),-4px 0 28px -6px rgba(14,165,233,0.22),inset 0 1px 0 rgba(255,255,255,0.08); }}
     .ncard-logro {{ background:linear-gradient(145deg,rgba(52,211,153,0.09) 0%,rgba(52,211,153,0.02) 60%,rgba(255,255,255,0.01) 100%);
         border-left:3px solid rgba(52,211,153,0.60); }}
     .ncard-logro:hover {{ transform:translateY(-5px);border-color:rgba(52,211,153,0.55);
         box-shadow:0 22px 52px rgba(0,0,0,0.38),-4px 0 28px -6px rgba(52,211,153,0.22),inset 0 1px 0 rgba(255,255,255,0.08); }}
-    .ncard-record {{ background:linear-gradient(145deg,rgba(245,158,11,0.09) 0%,rgba(245,158,11,0.02) 60%,rgba(255,255,255,0.01) 100%);
+    .ncard-potenciar {{ background:linear-gradient(145deg,rgba(245,158,11,0.09) 0%,rgba(245,158,11,0.02) 60%,rgba(255,255,255,0.01) 100%);
         border-left:3px solid rgba(245,158,11,0.55); }}
-    .ncard-record:hover {{ transform:translateY(-5px);border-color:rgba(245,158,11,0.55);
+    .ncard-potenciar:hover {{ transform:translateY(-5px);border-color:rgba(245,158,11,0.55);
         box-shadow:0 22px 52px rgba(0,0,0,0.38),-4px 0 28px -6px rgba(245,158,11,0.22),inset 0 1px 0 rgba(255,255,255,0.08); }}
 
-    /* FEATURED CARD */
+    /* FEATURED CARD (Logro del día) */
     .ncard-feat {{ grid-row:1/3;padding:0;
-        background:linear-gradient(160deg,rgba(245,158,11,0.13) 0%,rgba(245,158,11,0.04) 45%,rgba(14,165,233,0.07) 100%);
-        border-color:rgba(245,158,11,0.26);
-        box-shadow:0 20px 60px rgba(0,0,0,0.40),0 0 0 1px rgba(245,158,11,0.10),inset 0 1px 0 rgba(255,255,255,0.08); }}
+        background:linear-gradient(160deg,rgba(52,211,153,0.13) 0%,rgba(52,211,153,0.04) 45%,rgba(14,165,233,0.07) 100%);
+        border-color:rgba(52,211,153,0.26);
+        box-shadow:0 20px 60px rgba(0,0,0,0.40),0 0 0 1px rgba(52,211,153,0.10),inset 0 1px 0 rgba(255,255,255,0.08); }}
     .ncard-feat::before {{ content:'';position:absolute;top:0;left:15%;right:15%;height:1px;
-        background:linear-gradient(90deg,transparent,rgba(245,158,11,0.75),transparent);z-index:2; }}
-    .ncard-feat:hover {{ transform:translateY(-6px);border-color:rgba(245,158,11,0.52);
-        box-shadow:0 32px 80px rgba(0,0,0,0.50),0 0 50px -10px rgba(245,158,11,0.22),inset 0 1px 0 rgba(255,255,255,0.10); }}
+        background:linear-gradient(90deg,transparent,rgba(52,211,153,0.75),transparent);z-index:2; }}
+    .ncard-feat:hover {{ transform:translateY(-6px);border-color:rgba(52,211,153,0.52);
+        box-shadow:0 32px 80px rgba(0,0,0,0.50),0 0 50px -10px rgba(52,211,153,0.22),inset 0 1px 0 rgba(255,255,255,0.10); }}
 
     /* Abstract viz header inside featured */
     .ncard-vis {{ position:relative;overflow:hidden;height:88px;margin:0;
         background:
             radial-gradient(ellipse 60% 100% at 15% 50%,rgba(14,165,233,0.38) 0%,transparent 65%),
-            radial-gradient(ellipse 50% 100% at 82% 30%,rgba(245,158,11,0.32) 0%,transparent 60%),
+            radial-gradient(ellipse 50% 100% at 82% 30%,rgba(52,211,153,0.32) 0%,transparent 60%),
             radial-gradient(ellipse 45% 100% at 55% 90%,rgba(129,140,248,0.26) 0%,transparent 60%),
-            linear-gradient(135deg,rgba(245,158,11,0.06),rgba(14,165,233,0.04));
+            linear-gradient(135deg,rgba(52,211,153,0.06),rgba(14,165,233,0.04));
         flex-shrink:0; }}
     .ncard-vis::before {{ content:'';position:absolute;inset:0;
         background-image:linear-gradient(rgba(255,255,255,0.055) 1px,transparent 1px),
@@ -453,7 +533,7 @@ st.markdown(f"""
     .ncard-feat-body {{ padding:28px 30px 26px;display:flex;flex-direction:column;flex:1;position:relative; }}
     .ncard-ghost {{ position:absolute;bottom:-30px;right:-18px;
         font-family:'Space Grotesk',sans-serif;font-size:210px;font-weight:900;
-        line-height:1;color:rgba(245,158,11,0.058);pointer-events:none;
+        line-height:1;color:rgba(52,211,153,0.058);pointer-events:none;
         user-select:none;letter-spacing:-12px;z-index:0;transform:rotate(-5deg); }}
 
     /* Card content elements */
@@ -476,19 +556,19 @@ st.markdown(f"""
         padding:16px 0 0;border-top:1px solid rgba(255,255,255,0.08);
         position:relative;z-index:1; }}
     .ncard-avatar {{ width:34px;height:34px;border-radius:10px;flex-shrink:0;
-        background:linear-gradient(135deg,#F59E0B 0%,#FB923C 100%);
+        background:linear-gradient(135deg,#34D399 0%,#10B981 100%);
         display:flex;align-items:center;justify-content:center;font-size:16px;
-        box-shadow:0 6px 16px rgba(245,158,11,0.40); }}
+        box-shadow:0 6px 16px rgba(52,211,153,0.40); }}
     .ncard-byline {{ font-size:10.5px;color:rgba(255,255,255,0.36);line-height:1.35; }}
     .ncard-byline strong {{ font-size:12px;font-weight:700;
         color:rgba(255,255,255,0.75);display:block;margin-bottom:1px; }}
     .ncard-arrow {{ margin-left:auto;width:34px;height:34px;border-radius:10px;
-        background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.25);
+        background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.25);
         display:flex;align-items:center;justify-content:center;
-        font-size:16px;color:#F59E0B;flex-shrink:0;
+        font-size:16px;color:#34D399;flex-shrink:0;
         transition:transform .22s ease,background .22s ease,box-shadow .22s ease; }}
     .ncard-feat:hover .ncard-arrow {{ transform:translateX(3px);
-        background:rgba(245,158,11,0.22);box-shadow:0 6px 18px -4px rgba(245,158,11,0.40); }}
+        background:rgba(52,211,153,0.22);box-shadow:0 6px 18px -4px rgba(52,211,153,0.40); }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -548,50 +628,76 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ── NOTICIAS ─────────────────────────────
+_datos_dia = _datos_adherencia_dia()
+_medallas = ["🥇", "🥈", "🥉"]
+
+if _datos_dia:
+    _fecha_dia = _datos_dia["fecha"]
+    _fecha_str = f"{_fecha_dia.day:02d} {_MESES_ABR[_fecha_dia.month]} {_fecha_dia.year}"
+
+    _lineas_top3 = "".join(
+        f"{_medallas[i]} <b style='color:rgba(255,255,255,0.85)'>{row['Supervisor']}</b> · {row['ADH'] * 100:.1f}%<br>"
+        for i, row in enumerate(_datos_dia["top3_supervisores"])
+    )
+    _promedio_str = f"{_datos_dia['promedio_general'] * 100:.1f}%"
+    _top1_nombre = _datos_dia["top3_supervisores"][0]["Supervisor"]
+    _top1_pct = f"{_datos_dia['top3_supervisores'][0]['ADH'] * 100:.1f}"
+    _ticker_logro = f"{_fecha_str} — {_top1_nombre} lidera adherencia con {_top1_pct}%"
+
+    _bottom5 = _datos_dia["bottom5_asesores"]
+    if _bottom5:
+        _lineas_bottom5 = "".join(
+            f"<b style='color:rgba(255,255,255,0.75)'>{i + 1}.</b> {row['Nombre']} · "
+            f"<span style='color:#FCD34D'>{row['ADH'] * 100:.1f}%</span><br>"
+            for i, row in enumerate(_bottom5)
+        )
+        _ticker_potenciar = f"{_fecha_str} — {len(_bottom5)} asesores por debajo de la meta necesitan refuerzo"
+    else:
+        _lineas_bottom5 = "<span style='color:rgba(255,255,255,0.40)'>Sin suficientes datos para el ranking de hoy.</span>"
+        _ticker_potenciar = "Aún no hay suficientes datos para el ranking de refuerzo"
+else:
+    _fecha_str = "Sin datos"
+    _lineas_top3 = "<span style='color:rgba(255,255,255,0.40)'>Aún no hay datos de adherencia cargados para calcular el ranking del día.</span>"
+    _promedio_str = "—"
+    _ticker_logro = "Aún no hay datos de adherencia cargados"
+    _lineas_bottom5 = "<span style='color:rgba(255,255,255,0.40)'>Aún no hay datos de adherencia cargados.</span>"
+    _ticker_potenciar = "Aún no hay datos de adherencia cargados"
+
 st.markdown(
 "<div class='nticker-shell'>"
 "<div class='nticker-label'><span class='nticker-dot'></span>EN VIVO</div>"
 "<div class='nticker-track'><div class='nticker-inner'>"
+f"<div class='nticker-item'><span class='ntag ntag-n'>Logro</span>{_ticker_logro} <span class='nticker-sep'>·</span></div>"
 "<div class='nticker-item'><span class='ntag ntag-u'>Nuevo</span>Módulo de Novedades disponible — registra tus novedades en tiempo real <span class='nticker-sep'>·</span></div>"
-"<div class='nticker-item'><span class='ntag ntag-n'>Logro</span>Junio 2026 — Claudia Daniela Arévalo lidera adherencia con 93.2% <span class='nticker-sep'>·</span></div>"
-"<div class='nticker-item'><span class='ntag ntag-r'>Recordatorio</span>Registra tu novedad en el módulo — tu supervisor la aprobará y WFM la validará <span class='nticker-sep'>·</span></div>"
-"<div class='nticker-item'><span class='ntag ntag-n'>Logro</span>Junio 2026 — Karen Julieth Barreto alcanzó 91.8% de adherencia <span class='nticker-sep'>·</span></div>"
+f"<div class='nticker-item'><span class='ntag ntag-p'>Potenciar</span>{_ticker_potenciar} <span class='nticker-sep'>·</span></div>"
+f"<div class='nticker-item'><span class='ntag ntag-n'>Logro</span>{_ticker_logro} <span class='nticker-sep'>·</span></div>"
 "<div class='nticker-item'><span class='ntag ntag-u'>Nuevo</span>Módulo de Novedades disponible — registra tus novedades en tiempo real <span class='nticker-sep'>·</span></div>"
-"<div class='nticker-item'><span class='ntag ntag-n'>Logro</span>Junio 2026 — Claudia Daniela Arévalo lidera adherencia con 93.2% <span class='nticker-sep'>·</span></div>"
-"<div class='nticker-item'><span class='ntag ntag-r'>Recordatorio</span>Registra tu novedad en el módulo — tu supervisor la aprobará y WFM la validará <span class='nticker-sep'>·</span></div>"
-"<div class='nticker-item'><span class='ntag ntag-n'>Logro</span>Junio 2026 — Karen Julieth Barreto alcanzó 91.8% de adherencia <span class='nticker-sep'>·</span></div>"
+f"<div class='nticker-item'><span class='ntag ntag-p'>Potenciar</span>{_ticker_potenciar} <span class='nticker-sep'>·</span></div>"
 "</div></div></div>"
 "<div class='sec-lbl' style='margin-top:30px'>Noticias · Pulso WFM</div>"
 "<div class='nws-grid'>"
 "<div class='ncard ncard-feat'>"
 "<div class='ncard-vis'></div>"
 "<div class='ncard-feat-body'>"
-"<div class='ncard-ghost'>📢</div>"
-"<div class='ncard-eyebrow'><span class='ntag ntag-u'>Nuevo</span><span class='ncard-date'>Jul 2026</span></div>"
-"<div class='ncard-title-feat'>El módulo de Novedades ya está disponible para todo el equipo</div>"
-"<div class='ncard-body'>Cada experto puede registrar sus novedades operativas directamente desde el dashboard. Una vez registrada, la novedad pasa por un proceso de aprobación en dos etapas: primero el supervisor la revisa y aprueba por correo electrónico, y finalmente Workforce Management realiza la validación definitiva. Accede desde el menú principal.</div>"
+"<div class='ncard-ghost'>🏆</div>"
+f"<div class='ncard-eyebrow'><span class='ntag ntag-n'>Logro</span><span class='ncard-date'>{_fecha_str}</span></div>"
+"<div class='ncard-title-feat'>Los mejores del día — Top 3 en adherencia</div>"
+f"<div class='ncard-body' style='margin-bottom:14px'>{_lineas_top3}</div>"
+f"<div class='ncard-body' style='margin-top:-8px'><span style='color:rgba(255,255,255,0.35);font-size:11px'>Meta equipo: 90% · Promedio general: {_promedio_str}</span></div>"
 "<div class='ncard-footer'>"
-"<div class='ncard-avatar'>📢</div>"
-"<div class='ncard-byline'><strong>Equipo Workforce Management</strong>Scala Learning · Uniminuto</div>"
-"<div class='ncard-arrow'>→</div>"
+"<div class='ncard-avatar'>🏆</div>"
+"<div class='ncard-byline'><strong>Ranking automático diario</strong>Calculado desde el último día cargado en Adherencia</div>"
 "</div></div></div>"
-"<div class='ncard ncard-logro'>"
-"<div class='ncard-eyebrow'><span class='ntag ntag-n'>Logro</span><span class='ncard-date'>Junio 2026</span></div>"
-"<div class='ncard-title'>Los mejores supervisores en adherencia — cierre de junio</div>"
-"<div class='ncard-body-sm'>"
-"🥇 <b style='color:rgba(255,255,255,0.85)'>Claudia Daniela Arévalo</b> · 93.2%<br>"
-"🥈 <b style='color:rgba(255,255,255,0.85)'>Karen Julieth Barreto</b> · 91.8%<br>"
-"🥉 <b style='color:rgba(255,255,255,0.85)'>Johan Sebastian López</b> · 90.5%<br>"
-"<span style='color:rgba(255,255,255,0.35);font-size:11px'>Meta equipo: 90% · Promedio general: 90.4%</span>"
+"<div class='ncard ncard-nuevo'>"
+"<div class='ncard-eyebrow'><span class='ntag ntag-u'>Nuevo</span><span class='ncard-date'>Jul 2026</span></div>"
+"<div class='ncard-title'>El módulo de Novedades ya está disponible</div>"
+"<div class='ncard-body-sm'>Cada experto puede registrar sus novedades operativas desde el dashboard. Pasa por aprobación en dos etapas: supervisor y luego Workforce Management.</div>"
 "</div>"
-"</div>"
-"<div class='ncard ncard-record'>"
-"<div class='ncard-eyebrow'><span class='ntag ntag-r'>Recordatorio</span><span class='ncard-date'>Jul 2026</span></div>"
-"<div class='ncard-title'>¿Cómo registrar y gestionar una novedad?</div>"
-"<div class='ncard-body-sm'>"
-"<b style='color:rgba(255,255,255,0.75)'>① Experto</b> registra la novedad en el módulo.<br>"
-"<b style='color:rgba(255,255,255,0.75)'>② Supervisor</b> revisa y aprueba vía correo electrónico.<br>"
-"<b style='color:rgba(255,255,255,0.75)'>③ WFM</b> realiza la validación y cierre definitivo."
+"<div class='ncard ncard-potenciar'>"
+f"<div class='ncard-eyebrow'><span class='ntag ntag-p'>Potenciar</span><span class='ncard-date'>{_fecha_str}</span></div>"
+"<div class='ncard-title'>Asesores a impulsar — menor adherencia del día</div>"
+f"<div class='ncard-body-sm'>{_lineas_bottom5}"
+"<span style='color:rgba(255,255,255,0.35);font-size:11px'>Se excluyen 0% (sin datos ese día)</span>"
 "</div>"
 "</div>"
 "</div>",
