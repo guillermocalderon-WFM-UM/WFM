@@ -64,6 +64,19 @@ def _cargar_hoja(nombre_hoja: str) -> pd.DataFrame:
     except Exception as e:
         return pd.DataFrame({"_error": [str(e)]})
 
+@st.cache_data(ttl=60, show_spinner=False)
+def _cargar_maestro_wfm() -> pd.DataFrame:
+    """Timestamp de envío del experto y fechas de validación (supervisor y WFM), por ID Novedad."""
+    df = _cargar_hoja("Novedades WFM")
+    if "_error" in df.columns or df.empty or "ID" not in df.columns:
+        return pd.DataFrame()
+    out = df[["ID", "Timestamp", "Estado supervisor", "Fecha sup", "Estado WFM", "Fecha WFM"]].copy()
+    out = out.rename(columns={"ID": "ID Novedad"})
+    out["_ts_envio"] = pd.to_datetime(out["Timestamp"], dayfirst=True, errors="coerce")
+    out["_fecha_sup"] = pd.to_datetime(out["Fecha sup"], dayfirst=True, errors="coerce")
+    out["_fecha_wfm"] = pd.to_datetime(out["Fecha WFM"], dayfirst=True, errors="coerce")
+    return out[["ID Novedad", "_ts_envio", "Estado supervisor", "_fecha_sup", "Estado WFM", "_fecha_wfm"]]
+
 # ─────────────────────────────────────────────
 # HELPERS
 # ─────────────────────────────────────────────
@@ -117,13 +130,14 @@ def _chart_por_supervisor(df):
     if "Supervisor" not in df.columns or "Estado" not in df.columns or df.empty:
         return
     grp   = df.groupby(["Supervisor", "Estado"]).size().reset_index(name="n")
-    sups  = (grp.groupby("Supervisor")["n"].sum()
-               .sort_values(ascending=True).index.tolist())
+    tot_por_sup = grp.groupby("Supervisor")["n"].sum()
+    sups  = tot_por_sup.sort_values(ascending=True).index.tolist()
     uniq  = grp["Estado"].unique().tolist()
     orden = [e for e in _ESTADO_ORDER if e in uniq] + [e for e in uniq if e not in _ESTADO_ORDER]
 
     # Cada supervisor ocupa 30px → barras delgadas y juntas; iframe fijo 350px con scroll
     fig_h = max(320, len(sups) * 30 + 70)
+    x_max = tot_por_sup.max() * 1.22 if not tot_por_sup.empty else 1
 
     fig = go.Figure()
     for estado in orden:
@@ -133,17 +147,26 @@ def _chart_por_supervisor(df):
             name=estado, y=sups, x=vals, orientation="h",
             marker=dict(
                 color=_ESTADO_COLOR.get(estado, "#64748B"),
-                line=dict(width=0),
-                opacity=0.88,
+                line=dict(color="rgba(8,6,15,0.85)", width=1.4),
+                opacity=0.90,
+                cornerradius=4,
             ),
-            width=0.22,
+            width=0.55,
             hovertemplate="<b>%{y}</b><br>" + estado + ": <b>%{x}</b><extra></extra>",
         ))
+
+    # Etiqueta de total al final de cada barra apilada
+    for s, t in tot_por_sup.items():
+        fig.add_annotation(
+            x=t, y=s, xref="x", yref="y", xanchor="left", yanchor="middle", xshift=8,
+            text=f"<b>{int(t)}</b>", showarrow=False,
+            font=dict(family="Space Grotesk, sans-serif", size=11, color="rgba(255,255,255,0.72)"),
+        )
 
     fig.update_layout(
         **_DARK_BG,
         barmode="stack",
-        bargap=0.12,
+        bargap=0.42,
         height=fig_h,
         margin=dict(l=180, r=120, t=10, b=10),
         font=dict(family="Inter, sans-serif"),
@@ -157,6 +180,7 @@ def _chart_por_supervisor(df):
             traceorder="reversed",
         ),
         xaxis=dict(
+            range=[0, x_max],
             showgrid=True, gridcolor="rgba(255,255,255,0.05)", gridwidth=1,
             zeroline=False,
             tickfont=dict(color="rgba(255,255,255,0.32)", size=9),
@@ -236,6 +260,242 @@ def _chart_por_tipo(df):
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
 
+_SLA_ZONAS = [
+    (0, 1, COLOR_SUCCESS, "A tiempo"),
+    (1, 2, COLOR_WARNING, "Alerta"),
+    (2, None, COLOR_DANGER, "Crítico"),
+]
+_PCT_ZONAS = [
+    (0, 10, COLOR_SUCCESS, "Bajo"),
+    (10, 25, COLOR_WARNING, "Moderado"),
+    (25, None, COLOR_DANGER, "Alto"),
+]
+
+
+def _sla_meta(dias):
+    """(color, icono, etiqueta) para un valor de días transcurridos."""
+    if dias <= 0:
+        return COLOR_SUCCESS, "🆕", "Hoy"
+    elif dias <= 1:
+        return COLOR_WARNING, "⏳", "1 día"
+    return COLOR_DANGER, "🚨", f"{int(dias)} días"
+
+
+def _pct_meta(pct):
+    """(color, icono, etiqueta) para una tasa de rechazo (%)."""
+    if pct <= 10:
+        return COLOR_SUCCESS, "✅", f"{pct:.0f}%"
+    elif pct <= 25:
+        return COLOR_WARNING, "⚠️", f"{pct:.0f}%"
+    return COLOR_DANGER, "🔴", f"{pct:.0f}%"
+
+
+def _kpis_tiempo(df, col_dias, col_pendiente, titulo_prom="Promedio validación",
+                 titulo_criticos="Envejecimiento crítico", desc_criticos="Pendientes con 2+ días"):
+    if col_dias not in df.columns:
+        return
+    validadas = df.loc[~df[col_pendiente], col_dias].dropna()
+    pendientes = df.loc[df[col_pendiente], col_dias].dropna()
+    if validadas.empty and pendientes.empty:
+        return
+
+    total_val = len(validadas)
+    a_tiempo = int((validadas <= 0).sum()) if total_val else 0
+    pct_sla = (a_tiempo / total_val * 100) if total_val else 0.0
+    prom_dias = validadas.mean() if total_val else 0.0
+    criticos = int((pendientes >= 2).sum())
+
+    k1, k2, k3 = st.columns(3)
+    with k1:
+        st.markdown(f"""<div class='kpi-card' style='--kc:{COLOR_ACCENT}'>
+            <div class='kpi-bg-icon'>🎯</div>
+            <div>
+                <div class='kpi-label'>SLA cumplido</div>
+                <div class='kpi-value' style='color:#7DD3FC'>{pct_sla:.0f}%</div>
+                <div class='kpi-sub'>Validadas el mismo día</div>
+            </div>
+            {_kpi_bar(pct_sla, COLOR_ACCENT, 100)}
+        </div>""", unsafe_allow_html=True)
+    with k2:
+        st.markdown(f"""<div class='kpi-card' style='--kc:{COLOR_WARNING}'>
+            <div class='kpi-bg-icon'>⏱️</div>
+            <div>
+                <div class='kpi-label'>{titulo_prom}</div>
+                <div class='kpi-value' style='color:{COLOR_WARNING}'>{prom_dias:.1f}<span style='font-size:16px'>d</span></div>
+                <div class='kpi-sub'>Días · casos ya validados</div>
+            </div>
+            {_kpi_bar(prom_dias, COLOR_WARNING, max(prom_dias, 2))}
+        </div>""", unsafe_allow_html=True)
+    with k3:
+        st.markdown(f"""<div class='kpi-card' style='--kc:{COLOR_DANGER}'>
+            <div class='kpi-bg-icon'>🚨</div>
+            <div>
+                <div class='kpi-label'>{titulo_criticos}</div>
+                <div class='kpi-value' style='color:{COLOR_DANGER}'>{criticos}</div>
+                <div class='kpi-sub'>{desc_criticos}</div>
+            </div>
+            {_kpi_bar(criticos, COLOR_DANGER, max(len(pendientes), 1))}
+        </div>""", unsafe_allow_html=True)
+    st.markdown("<div style='margin-top:16px'></div>", unsafe_allow_html=True)
+
+
+def _chart_ranking_zonas(valores, zonas, meta_fn, eje_titulo, value_fmt, alto_fila=36):
+    """Ranking horizontal genérico: barras delgadas redondeadas + zonas de contexto sombreadas."""
+    if valores is None or valores.empty:
+        return
+    valores = valores.sort_values(ascending=True)
+    cats = valores.index.tolist()
+    vals = valores.tolist()
+    colors = [meta_fn(v)[0] for v in vals]
+    tope = zonas[-1][1] if zonas[-1][1] is not None else zonas[-1][0] + 1
+    x_max = max(vals + [tope]) * 1.22
+
+    fig = go.Figure(go.Bar(
+        y=cats, x=vals, orientation="h",
+        marker=dict(color=colors, opacity=0.92, line=dict(width=0), cornerradius=6),
+        width=0.55,
+        text=[value_fmt(v) for v in vals],
+        textposition="outside",
+        textfont=dict(color="rgba(255,255,255,0.78)", size=11, family="Space Grotesk, sans-serif"),
+        cliponaxis=False,
+        hovertemplate="<b>%{y}</b><br>" + eje_titulo + ": <b>%{x}</b><extra></extra>",
+    ))
+
+    # Zonas de contexto como washes de fondo (~8% opacidad), dibujadas antes que las barras
+    for x0, x1, color, _ in zonas:
+        fig.add_vrect(
+            x0=x0, x1=x1 if x1 is not None else x_max,
+            fillcolor=color, opacity=0.07, line_width=0, layer="below",
+        )
+    for x0, x1, color, label in zonas:
+        centro = (x0 + (x1 if x1 is not None else x_max)) / 2
+        fig.add_annotation(
+            x=centro, y=1.06, xref="x", yref="paper", showarrow=False,
+            text=label.upper(), font=dict(size=8, color=color, family="Inter, sans-serif"),
+            opacity=0.55,
+        )
+
+    fig_h = max(260, len(cats) * alto_fila + 70)
+    fig.update_layout(
+        **_DARK_BG,
+        height=fig_h,
+        margin=dict(l=190, r=60, t=34, b=10),
+        font=dict(family="Inter, sans-serif"),
+        showlegend=False,
+        bargap=0.42,
+        xaxis=dict(
+            range=[0, x_max],
+            showgrid=True, gridcolor="rgba(255,255,255,0.045)", gridwidth=1, zeroline=False,
+            tickfont=dict(color="rgba(255,255,255,0.32)", size=9), fixedrange=True,
+            title=dict(text=eje_titulo, font=dict(size=10, color="rgba(255,255,255,0.35)")),
+        ),
+        yaxis=dict(showgrid=False, tickfont=dict(color="rgba(255,255,255,0.72)", size=10.5), fixedrange=True),
+    )
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+
+
+def _iniciales(nombre):
+    partes = str(nombre).strip().split()
+    if not partes:
+        return "?"
+    return (partes[0][0] + (partes[1][0] if len(partes) > 1 else "")).upper()
+
+
+def _lista_pendientes(df, col_pendiente, col_dias, meta_fn=_sla_meta):
+    if col_pendiente not in df.columns:
+        return
+    pend = df[df[col_pendiente]].copy()
+    if pend.empty:
+        return
+    pend = pend.sort_values(col_dias, ascending=False).head(8)
+
+    filas = []
+    for i, (_, row) in enumerate(pend.iterrows(), start=1):
+        nombre = row.get("Nombre", "—")
+        supervisor = row.get("Supervisor", "—")
+        id_nov = row.get("ID Novedad", "—")
+        color, icono, etiqueta = meta_fn(row[col_dias])
+        filas.append(f"""
+        <div class='verif-row' style='--vc:{color}'>
+            <span class='verif-rank'>{i:02d}</span>
+            <div class='verif-avatar'>{_iniciales(nombre)}</div>
+            <div class='verif-body'>
+                <div class='verif-name'>{nombre}</div>
+                <div class='verif-sup'>👤 {supervisor}</div>
+            </div>
+            <span class='verif-id'>{id_nov}</span>
+            <span class='verif-badge' style='background:{color}22;color:{color};border:1px solid {color}55'>
+                {icono} {etiqueta}
+            </span>
+        </div>""")
+
+    st.markdown(f"<div class='verif-list'>{''.join(filas)}</div>", unsafe_allow_html=True)
+
+
+def _chart_tendencia(df):
+    """Línea semanal comparando el tiempo de verificación del supervisor vs. el ciclo completo (WFM)."""
+    if "_ts_envio" not in df.columns:
+        return
+    base = df.dropna(subset=["_ts_envio"]).copy()
+    if base.empty:
+        return
+    base["_semana"] = base["_ts_envio"].dt.to_period("W").apply(lambda p: p.start_time)
+
+    serie_sup = (base.dropna(subset=["_dias_verif"]).groupby("_semana")["_dias_verif"].mean()
+                 if "_dias_verif" in base.columns else pd.Series(dtype=float))
+    serie_ciclo = (base.dropna(subset=["_dias_ciclo"]).groupby("_semana")["_dias_ciclo"].mean()
+                   if "_dias_ciclo" in base.columns else pd.Series(dtype=float))
+    if serie_sup.empty and serie_ciclo.empty:
+        return
+
+    fig = go.Figure()
+    if not serie_sup.empty:
+        fig.add_trace(go.Scatter(
+            x=serie_sup.index, y=serie_sup.values, mode="lines+markers", name="Verificación supervisor",
+            line=dict(color=COLOR_ACCENT, width=2),
+            marker=dict(size=8, color=COLOR_ACCENT, line=dict(color="rgba(8,6,15,0.85)", width=1.5)),
+            hovertemplate="Semana %{x|%d/%m}<br>Supervisor: <b>%{y:.1f} d</b><extra></extra>",
+        ))
+    if not serie_ciclo.empty:
+        fig.add_trace(go.Scatter(
+            x=serie_ciclo.index, y=serie_ciclo.values, mode="lines+markers", name="Ciclo completo (WFM)",
+            line=dict(color=COLOR_DANGER, width=2),
+            marker=dict(size=8, color=COLOR_DANGER, line=dict(color="rgba(8,6,15,0.85)", width=1.5)),
+            hovertemplate="Semana %{x|%d/%m}<br>Ciclo completo: <b>%{y:.1f} d</b><extra></extra>",
+        ))
+    fig.update_layout(
+        **_DARK_BG,
+        height=300,
+        margin=dict(l=50, r=20, t=10, b=40),
+        font=dict(family="Inter, sans-serif"),
+        legend=dict(
+            orientation="h", yanchor="bottom", y=1.04, xanchor="left", x=0,
+            font=dict(size=10, color="rgba(255,255,255,0.60)"), bgcolor="rgba(0,0,0,0)",
+        ),
+        xaxis=dict(showgrid=False, tickfont=dict(color="rgba(255,255,255,0.35)", size=9), fixedrange=True, tickformat="%d/%m"),
+        yaxis=dict(
+            showgrid=True, gridcolor="rgba(255,255,255,0.05)", zeroline=False,
+            tickfont=dict(color="rgba(255,255,255,0.32)", size=9), fixedrange=True,
+            title=dict(text="Días promedio", font=dict(size=10, color="rgba(255,255,255,0.35)")),
+        ),
+    )
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+
+
+def _tasa_rechazo(df, columna, min_casos=3):
+    """% de rechazo por categoría (solo casos ya finalizados), descartando categorías con pocos casos."""
+    if "_finalizada" not in df.columns or columna not in df.columns:
+        return None
+    base = df[df["_finalizada"]]
+    if base.empty:
+        return None
+    g = base.groupby(columna)["_rechazada"].agg(["mean", "size"])
+    g = g[g["size"] >= min_casos]
+    if g.empty:
+        return None
+    return (g["mean"] * 100).rename(None)
+
+
 # ─────────────────────────────────────────────
 # RENDER TAB
 # ─────────────────────────────────────────────
@@ -259,6 +519,43 @@ def _render_tab(df: pd.DataFrame, sup_sel, exp_sel, buscar, fecha_desde, fecha_h
         )
 
     df = df.copy()
+    if not es_demo and not df_maestro.empty and "ID Novedad" in df.columns:
+        df = df.merge(df_maestro, on="ID Novedad", how="left")
+        _hoy = pd.Timestamp.now().normalize()
+        _env = df["_ts_envio"].dt.normalize()
+        _estado_sup = df["Estado supervisor"].astype(str).str.strip()
+        _validado = (
+            _estado_sup.str.contains("Aprobado", case=False, na=False)
+            | _estado_sup.str.contains("Rechazado", case=False, na=False)
+        )
+        df["_pendiente_sup"] = (~_validado) & _env.notna()
+        df["_dias_verif"] = pd.NA
+        _mask_val = _validado & df["_fecha_sup"].notna() & _env.notna()
+        df.loc[_mask_val, "_dias_verif"] = (df.loc[_mask_val, "_fecha_sup"] - _env[_mask_val]).dt.days.clip(lower=0)
+        _mask_pend = df["_pendiente_sup"]
+        df.loc[_mask_pend, "_dias_verif"] = (_hoy - _env[_mask_pend]).dt.days.clip(lower=0)
+        df["_dias_verif"] = pd.to_numeric(df["_dias_verif"], errors="coerce")
+
+        # Ciclo completo (envío → decisión final de WFM)
+        _estado_wfm = df["Estado WFM"].astype(str).str.strip()
+        _validado_wfm = (
+            _estado_wfm.str.contains("Aprobado", case=False, na=False)
+            | _estado_wfm.str.contains("Rechazado", case=False, na=False)
+        )
+        df["_pendiente_wfm"] = _validado & (~_validado_wfm) & _env.notna()
+        df["_dias_ciclo"] = pd.NA
+        _mask_ciclo_val = _validado_wfm & df["_fecha_wfm"].notna() & _env.notna()
+        df.loc[_mask_ciclo_val, "_dias_ciclo"] = (df.loc[_mask_ciclo_val, "_fecha_wfm"] - _env[_mask_ciclo_val]).dt.days.clip(lower=0)
+        _mask_ciclo_pend = df["_pendiente_wfm"]
+        df.loc[_mask_ciclo_pend, "_dias_ciclo"] = (_hoy - _env[_mask_ciclo_pend]).dt.days.clip(lower=0)
+        df["_dias_ciclo"] = pd.to_numeric(df["_dias_ciclo"], errors="coerce")
+
+        # Rechazo final (en cualquiera de las dos etapas)
+        _rechazada_sup = _estado_sup.str.contains("Rechazado", case=False, na=False)
+        _rechazada_wfm = _estado_wfm.str.contains("Rechazado", case=False, na=False)
+        df["_rechazada"] = _rechazada_sup | _rechazada_wfm
+        df["_finalizada"] = df["_rechazada"] | _validado_wfm
+
     if "Fecha inicio" in df.columns:
         # Intentar ISO (2026-07-01) y USA (7/1/2026) — ambos sin dayfirst
         _parsed = pd.to_datetime(df["Fecha inicio"], errors="coerce", dayfirst=False)
@@ -371,6 +668,119 @@ def _render_tab(df: pd.DataFrame, sup_sel, exp_sel, buscar, fecha_desde, fecha_h
     )
     _chart_por_supervisor(df)
 
+    # ── Gráfico 2: tiempo de verificación por supervisor ──
+    if "_dias_verif" in df.columns:
+        st.markdown("<div style='margin-top:22px'></div>", unsafe_allow_html=True)
+        n_sup_verif = df.loc[~df["_dias_verif"].isna(), "Supervisor"].nunique()
+        st.markdown(f"""<div class='tbl-hdr' style='background:linear-gradient(135deg,{COLOR_PRIMARY} 0%,{COLOR_WARNING} 100%)'>
+            <span class='tbl-hdr-icon'>⏱️</span>
+            <div class='tbl-hdr-body'>
+                <div class='tbl-hdr-title'>Tiempo de Verificación por Supervisor</div>
+                <div class='tbl-hdr-desc'>Días desde el envío del experto hasta la validación · SLA: mismo día</div>
+            </div>
+            <span class='tbl-hdr-badge'>{n_sup_verif} supervisores</span>
+        </div>""", unsafe_allow_html=True)
+
+        st.markdown("<div style='margin-top:14px'></div>", unsafe_allow_html=True)
+        _kpis_tiempo(df, "_dias_verif", "_pendiente_sup")
+        _chart_ranking_zonas(
+            df.dropna(subset=["_dias_verif"]).groupby("Supervisor")["_dias_verif"].mean(),
+            _SLA_ZONAS, _sla_meta, "Días promedio de validación", lambda v: f"{v:.1f} d",
+        )
+
+        n_pend = int(df["_pendiente_sup"].sum())
+        if n_pend:
+            st.markdown("<div style='margin-top:20px'></div>", unsafe_allow_html=True)
+            st.markdown(f"""<div class='tbl-hdr' style='background:linear-gradient(135deg,{COLOR_DANGER} 0%,{COLOR_PRIMARY} 100%)'>
+                <span class='tbl-hdr-icon'>🚨</span>
+                <div class='tbl-hdr-body'>
+                    <div class='tbl-hdr-title'>Pendientes Más Antiguas</div>
+                    <div class='tbl-hdr-desc'>Novedades esperando validación del supervisor</div>
+                </div>
+                <span class='tbl-hdr-badge'>{n_pend} pendientes</span>
+            </div>""", unsafe_allow_html=True)
+            st.markdown("<div style='margin-top:12px'></div>", unsafe_allow_html=True)
+            _lista_pendientes(df, "_pendiente_sup", "_dias_verif", _sla_meta)
+
+    # ── Gráfico 3: ciclo completo (experto → supervisor → WFM) ──
+    if "_dias_ciclo" in df.columns:
+        st.markdown("<div style='margin-top:26px'></div>", unsafe_allow_html=True)
+        n_sup_ciclo = df.loc[~df["_dias_ciclo"].isna(), "Supervisor"].nunique()
+        st.markdown(f"""<div class='tbl-hdr' style='background:linear-gradient(135deg,{COLOR_PRIMARY} 0%,{COLOR_ACCENT} 100%)'>
+            <span class='tbl-hdr-icon'>🏁</span>
+            <div class='tbl-hdr-body'>
+                <div class='tbl-hdr-title'>Ciclo Completo · Experto → Supervisor → WFM</div>
+                <div class='tbl-hdr-desc'>Días desde el envío hasta la decisión final de WFM</div>
+            </div>
+            <span class='tbl-hdr-badge'>{n_sup_ciclo} supervisores</span>
+        </div>""", unsafe_allow_html=True)
+
+        st.markdown("<div style='margin-top:14px'></div>", unsafe_allow_html=True)
+        _kpis_tiempo(
+            df, "_dias_ciclo", "_pendiente_wfm",
+            titulo_prom="Promedio ciclo completo",
+            titulo_criticos="Críticos en cola WFM",
+            desc_criticos="Esperando WFM con 2+ días",
+        )
+        _chart_ranking_zonas(
+            df.dropna(subset=["_dias_ciclo"]).groupby("Supervisor")["_dias_ciclo"].mean(),
+            _SLA_ZONAS, _sla_meta, "Días promedio del ciclo completo", lambda v: f"{v:.1f} d",
+        )
+
+        n_pend_wfm = int(df["_pendiente_wfm"].sum())
+        if n_pend_wfm:
+            st.markdown("<div style='margin-top:20px'></div>", unsafe_allow_html=True)
+            st.markdown(f"""<div class='tbl-hdr' style='background:linear-gradient(135deg,{COLOR_DANGER} 0%,{COLOR_ACCENT} 100%)'>
+                <span class='tbl-hdr-icon'>📮</span>
+                <div class='tbl-hdr-body'>
+                    <div class='tbl-hdr-title'>Pendientes en Cola WFM</div>
+                    <div class='tbl-hdr-desc'>Ya aprobadas por el supervisor, esperando decisión final</div>
+                </div>
+                <span class='tbl-hdr-badge'>{n_pend_wfm} pendientes</span>
+            </div>""", unsafe_allow_html=True)
+            st.markdown("<div style='margin-top:12px'></div>", unsafe_allow_html=True)
+            _lista_pendientes(df, "_pendiente_wfm", "_dias_ciclo", _sla_meta)
+
+    # ── Gráfico 4: tendencia temporal ──
+    if "_dias_verif" in df.columns:
+        st.markdown("<div style='margin-top:26px'></div>", unsafe_allow_html=True)
+        st.markdown(f"""<div class='tbl-hdr' style='background:linear-gradient(135deg,{COLOR_ACCENT} 0%,{COLOR_SUCCESS} 100%)'>
+            <span class='tbl-hdr-icon'>📈</span>
+            <div class='tbl-hdr-body'>
+                <div class='tbl-hdr-title'>Tendencia Semanal de Verificación</div>
+                <div class='tbl-hdr-desc'>¿El tiempo de validación mejora o empeora semana a semana?</div>
+            </div>
+        </div>""", unsafe_allow_html=True)
+        st.markdown("<div style='margin-top:14px'></div>", unsafe_allow_html=True)
+        _chart_tendencia(df)
+
+    # ── Gráfico 5: tasa de rechazo ──
+    if "_rechazada" in df.columns:
+        rechazo_sup = _tasa_rechazo(df, "Supervisor")
+        rechazo_tipo = _tasa_rechazo(df, "Novedad específica") if "Novedad específica" in df.columns else None
+        if rechazo_sup is not None or rechazo_tipo is not None:
+            st.markdown("<div style='margin-top:26px'></div>", unsafe_allow_html=True)
+            n_final = int(df["_finalizada"].sum())
+            pct_global = (df.loc[df["_finalizada"], "_rechazada"].mean() * 100) if n_final else 0.0
+            st.markdown(f"""<div class='tbl-hdr' style='background:linear-gradient(135deg,{COLOR_DANGER} 0%,{COLOR_WARNING} 100%)'>
+                <span class='tbl-hdr-icon'>🚫</span>
+                <div class='tbl-hdr-body'>
+                    <div class='tbl-hdr-title'>Tasa de Rechazo</div>
+                    <div class='tbl-hdr-desc'>% de novedades rechazadas sobre casos ya finalizados</div>
+                </div>
+                <span class='tbl-hdr-badge'>{pct_global:.0f}% global</span>
+            </div>""", unsafe_allow_html=True)
+            st.markdown("<div style='margin-top:14px'></div>", unsafe_allow_html=True)
+
+            if rechazo_sup is not None:
+                st.markdown(_sec_label("Por supervisor", COLOR_DANGER), unsafe_allow_html=True)
+                _chart_ranking_zonas(rechazo_sup, _PCT_ZONAS, _pct_meta, "% de rechazo", lambda v: f"{v:.0f}%")
+            if rechazo_tipo is not None:
+                st.markdown("<div style='margin-top:10px'></div>", unsafe_allow_html=True)
+                st.markdown(_sec_label("Por tipo de novedad · mín. 3 casos", COLOR_WARNING), unsafe_allow_html=True)
+                _chart_ranking_zonas(rechazo_tipo, _PCT_ZONAS, _pct_meta, "% de rechazo", lambda v: f"{v:.0f}%")
+
+    st.markdown("<div style='margin-top:26px'></div>", unsafe_allow_html=True)
     # ── Tabla ─────────────────────────────────────────
     _COLS = [c for c in [
         "ID Novedad", "Estado", "Nombre", "Cédula", "Supervisor",
@@ -417,6 +827,7 @@ def _render_tab(df: pd.DataFrame, sup_sel, exp_sel, buscar, fecha_desde, fecha_h
 df_rt   = _cargar_hoja("Tiempo real")
 df_plan = _cargar_hoja("Planificación")
 df_hist = _cargar_hoja("Históricas")
+df_maestro = _cargar_maestro_wfm()
 
 def _get_opts(col):
     vals = []
@@ -906,6 +1317,50 @@ st.markdown(f"""
         transform: translateY(-1px) !important;
     }}
     .st-key-sb_refresh button p {{ color: #7DD3FC !important; }}
+
+    /* ── Lista de envejecimiento (pendientes de validación) ── */
+    .verif-list {{ display:flex; flex-direction:column; gap:7px; margin-top:2px; }}
+    .verif-row {{
+        position:relative; display:flex; align-items:center; gap:14px;
+        background: linear-gradient(160deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.018) 100%);
+        border:1px solid rgba(255,255,255,0.09);
+        border-radius:14px; padding:10px 18px;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+        transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }}
+    .verif-row:hover {{
+        transform: translateX(4px);
+        border-color: var(--vc, rgba(255,255,255,0.20));
+        box-shadow: 0 10px 26px -14px rgba(0,0,0,0.65), 0 0 22px -12px var(--vc, transparent), inset 0 1px 0 rgba(255,255,255,0.07);
+    }}
+    .verif-rank {{
+        font-family:'Space Grotesk',sans-serif!important; font-size:11px!important; font-weight:800!important;
+        color:rgba(255,255,255,0.24)!important; width:20px; flex-shrink:0; text-align:center;
+    }}
+    .verif-avatar {{
+        width:36px; height:36px; border-radius:11px; flex-shrink:0;
+        background: linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,255,255,0.04));
+        border:1px solid rgba(255,255,255,0.14);
+        display:flex; align-items:center; justify-content:center;
+        font-size:11px!important; font-weight:800!important; color:rgba(255,255,255,0.85)!important;
+    }}
+    .verif-body {{ flex:1; min-width:0; }}
+    .verif-name {{
+        font-size:12.5px!important; font-weight:700!important; color:rgba(255,255,255,0.90)!important;
+        white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }}
+    .verif-sup {{
+        font-size:10.5px!important; color:rgba(255,255,255,0.40)!important;
+        white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:1px;
+    }}
+    .verif-id {{
+        font-size:9.5px!important; color:rgba(255,255,255,0.26)!important;
+        font-family:'Space Grotesk',sans-serif!important; flex-shrink:0; white-space:nowrap;
+    }}
+    .verif-badge {{
+        flex-shrink:0; font-size:10.5px!important; font-weight:800!important;
+        padding:5px 12px; border-radius:99px; white-space:nowrap; letter-spacing:0.01em;
+    }}
 </style>
 """, unsafe_allow_html=True)
 
