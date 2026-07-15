@@ -1,4 +1,6 @@
-streamlit
+streamlit>=1.42
 pandas
 plotly
 openpyxl
+Authlib
+holidays
