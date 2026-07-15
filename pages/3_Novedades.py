@@ -7,6 +7,9 @@ import urllib.parse
 import plotly.graph_objects as go
 import plotly.io as pio
 import streamlit.components.v1 as components
+import holidays
+
+_CO_FESTIVOS = holidays.country_holidays("CO")
 
 COLOR_PRIMARY = "#28053F"
 COLOR_ACCENT  = "#0EA5E9"
@@ -91,6 +94,22 @@ def _kpi_bar(pct, color, max_val=100):
     return (f"<div class='kpi-bar-wrap'>"
             f"<div class='kpi-bar-fill' style='width:{fill:.0f}%;background:{color};'></div>"
             f"</div>")
+
+def _horas_habiles(inicio, fin):
+    """Horas transcurridas entre dos timestamps, excluyendo domingos y festivos (Colombia)."""
+    if pd.isna(inicio) or pd.isna(fin) or fin <= inicio:
+        return 0.0
+    total = 0.0
+    cur = inicio
+    fin_dia = cur.normalize() + pd.Timedelta(days=1)
+    while fin_dia < fin:
+        if cur.weekday() != 6 and cur.date() not in _CO_FESTIVOS:
+            total += (fin_dia - cur).total_seconds() / 3600
+        cur = fin_dia
+        fin_dia = cur + pd.Timedelta(days=1)
+    if cur.weekday() != 6 and cur.date() not in _CO_FESTIVOS:
+        total += (fin - cur).total_seconds() / 3600
+    return total
 
 _MESES_ES = ["Todos","Enero","Febrero","Marzo","Abril","Mayo","Junio",
              "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"]
@@ -261,9 +280,9 @@ def _chart_por_tipo(df):
 
 
 _SLA_ZONAS = [
-    (0, 1, COLOR_SUCCESS, "A tiempo"),
-    (1, 2, COLOR_WARNING, "Alerta"),
-    (2, None, COLOR_DANGER, "Crítico"),
+    (0, 24, COLOR_SUCCESS, "A tiempo"),
+    (24, 48, COLOR_WARNING, "Alerta"),
+    (48, None, COLOR_DANGER, "Crítico"),
 ]
 _PCT_ZONAS = [
     (0, 10, COLOR_SUCCESS, "Bajo"),
@@ -272,13 +291,13 @@ _PCT_ZONAS = [
 ]
 
 
-def _sla_meta(dias):
-    """(color, icono, etiqueta) para un valor de días transcurridos."""
-    if dias <= 0:
+def _sla_meta(horas):
+    """(color, icono, etiqueta) para horas hábiles transcurridas. SLA óptimo: 24 h."""
+    if horas <= 0:
         return COLOR_SUCCESS, "🆕", "Hoy"
-    elif dias <= 1:
-        return COLOR_WARNING, "⏳", "1 día"
-    return COLOR_DANGER, "🚨", f"{int(dias)} días"
+    elif horas <= 24:
+        return COLOR_WARNING, "⏳", f"{horas:.0f} h"
+    return COLOR_DANGER, "🚨", f"{horas:.0f} h"
 
 
 def _pct_meta(pct):
@@ -291,7 +310,7 @@ def _pct_meta(pct):
 
 
 def _kpis_tiempo(df, col_dias, col_pendiente, col_dias_pendiente=None, titulo_prom="Promedio validación",
-                 titulo_criticos="Envejecimiento crítico", desc_criticos="Pendientes con 2+ días"):
+                 titulo_criticos="Envejecimiento crítico", desc_criticos="Pendientes con 48+ horas"):
     """col_dias_pendiente permite usar una base distinta para el envejecimiento de los pendientes
     (p. ej. el reloj de una cola empieza a correr en un momento distinto al de la métrica de cierre)."""
     col_dias_pendiente = col_dias_pendiente or col_dias
@@ -303,10 +322,10 @@ def _kpis_tiempo(df, col_dias, col_pendiente, col_dias_pendiente=None, titulo_pr
         return
 
     total_val = len(validadas)
-    a_tiempo = int((validadas <= 0).sum()) if total_val else 0
+    a_tiempo = int((validadas <= 24).sum()) if total_val else 0
     pct_sla = (a_tiempo / total_val * 100) if total_val else 0.0
-    prom_dias = validadas.mean() if total_val else 0.0
-    criticos = int((pendientes >= 2).sum())
+    prom_horas = validadas.mean() if total_val else 0.0
+    criticos = int((pendientes >= 48).sum())
 
     k1, k2, k3 = st.columns(3)
     with k1:
@@ -315,7 +334,7 @@ def _kpis_tiempo(df, col_dias, col_pendiente, col_dias_pendiente=None, titulo_pr
             <div>
                 <div class='kpi-label'>SLA cumplido</div>
                 <div class='kpi-value' style='color:#7DD3FC'>{pct_sla:.0f}%</div>
-                <div class='kpi-sub'>Validadas el mismo día</div>
+                <div class='kpi-sub'>Validadas dentro de SLA (24 h)</div>
             </div>
             {_kpi_bar(pct_sla, COLOR_ACCENT, 100)}
         </div>""", unsafe_allow_html=True)
@@ -324,10 +343,10 @@ def _kpis_tiempo(df, col_dias, col_pendiente, col_dias_pendiente=None, titulo_pr
             <div class='kpi-bg-icon'>⏱️</div>
             <div>
                 <div class='kpi-label'>{titulo_prom}</div>
-                <div class='kpi-value' style='color:{COLOR_WARNING}'>{prom_dias:.1f}<span style='font-size:16px'>d</span></div>
-                <div class='kpi-sub'>Días · casos ya validados</div>
+                <div class='kpi-value' style='color:{COLOR_WARNING}'>{prom_horas:.1f}<span style='font-size:16px'>h</span></div>
+                <div class='kpi-sub'>Horas hábiles · casos ya validados</div>
             </div>
-            {_kpi_bar(prom_dias, COLOR_WARNING, max(prom_dias, 2))}
+            {_kpi_bar(prom_horas, COLOR_WARNING, max(prom_horas, 48))}
         </div>""", unsafe_allow_html=True)
     with k3:
         st.markdown(f"""<div class='kpi-card' style='--kc:{COLOR_DANGER}'>
@@ -444,10 +463,10 @@ def _chart_tendencia(df):
         return
     base["_semana"] = base["_ts_envio"].dt.to_period("W").apply(lambda p: p.start_time)
 
-    serie_sup = (base.dropna(subset=["_dias_verif"]).groupby("_semana")["_dias_verif"].mean()
-                 if "_dias_verif" in base.columns else pd.Series(dtype=float))
-    serie_ciclo = (base.dropna(subset=["_dias_ciclo"]).groupby("_semana")["_dias_ciclo"].mean()
-                   if "_dias_ciclo" in base.columns else pd.Series(dtype=float))
+    serie_sup = (base.dropna(subset=["_horas_verif"]).groupby("_semana")["_horas_verif"].mean()
+                 if "_horas_verif" in base.columns else pd.Series(dtype=float))
+    serie_ciclo = (base.dropna(subset=["_horas_ciclo"]).groupby("_semana")["_horas_ciclo"].mean()
+                   if "_horas_ciclo" in base.columns else pd.Series(dtype=float))
     if serie_sup.empty and serie_ciclo.empty:
         return
 
@@ -457,14 +476,14 @@ def _chart_tendencia(df):
             x=serie_sup.index, y=serie_sup.values, mode="lines+markers", name="Verificación supervisor",
             line=dict(color=COLOR_ACCENT, width=2),
             marker=dict(size=8, color=COLOR_ACCENT, line=dict(color="rgba(8,6,15,0.85)", width=1.5)),
-            hovertemplate="Semana %{x|%d/%m}<br>Supervisor: <b>%{y:.1f} d</b><extra></extra>",
+            hovertemplate="Semana %{x|%d/%m}<br>Supervisor: <b>%{y:.0f} h</b><extra></extra>",
         ))
     if not serie_ciclo.empty:
         fig.add_trace(go.Scatter(
             x=serie_ciclo.index, y=serie_ciclo.values, mode="lines+markers", name="Ciclo completo (WFM)",
             line=dict(color=COLOR_DANGER, width=2),
             marker=dict(size=8, color=COLOR_DANGER, line=dict(color="rgba(8,6,15,0.85)", width=1.5)),
-            hovertemplate="Semana %{x|%d/%m}<br>Ciclo completo: <b>%{y:.1f} d</b><extra></extra>",
+            hovertemplate="Semana %{x|%d/%m}<br>Ciclo completo: <b>%{y:.0f} h</b><extra></extra>",
         ))
     fig.update_layout(
         **_DARK_BG,
@@ -479,7 +498,7 @@ def _chart_tendencia(df):
         yaxis=dict(
             showgrid=True, gridcolor="rgba(255,255,255,0.05)", zeroline=False,
             tickfont=dict(color="rgba(255,255,255,0.32)", size=9), fixedrange=True,
-            title=dict(text="Días promedio", font=dict(size=10, color="rgba(255,255,255,0.35)")),
+            title=dict(text="Horas promedio", font=dict(size=10, color="rgba(255,255,255,0.35)")),
         ),
     )
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
@@ -524,20 +543,22 @@ def _render_tab(df: pd.DataFrame, sup_sel, exp_sel, buscar, fecha_desde, fecha_h
     df = df.copy()
     if not es_demo and not df_maestro.empty and "ID Novedad" in df.columns:
         df = df.merge(df_maestro, on="ID Novedad", how="left")
-        _hoy = pd.Timestamp.now().normalize()
-        _env = df["_ts_envio"].dt.normalize()
+        _hoy = pd.Timestamp.now()
+        _env = df["_ts_envio"]
         _estado_sup = df["Estado supervisor"].astype(str).str.strip()
         _validado = (
             _estado_sup.str.contains("Aprobado", case=False, na=False)
             | _estado_sup.str.contains("Rechazado", case=False, na=False)
         )
         df["_pendiente_sup"] = (~_validado) & _env.notna()
-        df["_dias_verif"] = pd.NA
+        df["_horas_verif"] = pd.NA
         _mask_val = _validado & df["_fecha_sup"].notna() & _env.notna()
-        df.loc[_mask_val, "_dias_verif"] = (df.loc[_mask_val, "_fecha_sup"] - _env[_mask_val]).dt.days.clip(lower=0)
+        df.loc[_mask_val, "_horas_verif"] = df.loc[_mask_val].apply(
+            lambda r: _horas_habiles(r["_ts_envio"], r["_fecha_sup"]), axis=1)
         _mask_pend = df["_pendiente_sup"]
-        df.loc[_mask_pend, "_dias_verif"] = (_hoy - _env[_mask_pend]).dt.days.clip(lower=0)
-        df["_dias_verif"] = pd.to_numeric(df["_dias_verif"], errors="coerce")
+        df.loc[_mask_pend, "_horas_verif"] = df.loc[_mask_pend, "_ts_envio"].apply(
+            lambda t: _horas_habiles(t, _hoy))
+        df["_horas_verif"] = pd.to_numeric(df["_horas_verif"], errors="coerce")
 
         # Ciclo completo (envío → decisión final de WFM)
         _estado_wfm = df["Estado WFM"].astype(str).str.strip()
@@ -545,21 +566,25 @@ def _render_tab(df: pd.DataFrame, sup_sel, exp_sel, buscar, fecha_desde, fecha_h
             _estado_wfm.str.contains("Aprobado", case=False, na=False)
             | _estado_wfm.str.contains("Rechazado", case=False, na=False)
         )
-        df["_pendiente_wfm"] = _validado & (~_validado_wfm) & _env.notna()
-        df["_dias_ciclo"] = pd.NA
+        _aprobada_sup = _estado_sup.str.contains("Aprobado", case=False, na=False)
+        df["_pendiente_wfm"] = _aprobada_sup & (~_validado_wfm) & _env.notna()
+        df["_horas_ciclo"] = pd.NA
         _mask_ciclo_val = _validado_wfm & df["_fecha_wfm"].notna() & _env.notna()
-        df.loc[_mask_ciclo_val, "_dias_ciclo"] = (df.loc[_mask_ciclo_val, "_fecha_wfm"] - _env[_mask_ciclo_val]).dt.days.clip(lower=0)
+        df.loc[_mask_ciclo_val, "_horas_ciclo"] = df.loc[_mask_ciclo_val].apply(
+            lambda r: _horas_habiles(r["_ts_envio"], r["_fecha_wfm"]), axis=1)
         _mask_ciclo_pend = df["_pendiente_wfm"]
-        df.loc[_mask_ciclo_pend, "_dias_ciclo"] = (_hoy - _env[_mask_ciclo_pend]).dt.days.clip(lower=0)
-        df["_dias_ciclo"] = pd.to_numeric(df["_dias_ciclo"], errors="coerce")
+        df.loc[_mask_ciclo_pend, "_horas_ciclo"] = df.loc[_mask_ciclo_pend, "_ts_envio"].apply(
+            lambda t: _horas_habiles(t, _hoy))
+        df["_horas_ciclo"] = pd.to_numeric(df["_horas_ciclo"], errors="coerce")
 
-        # Días en cola de WFM: se cuentan desde que el supervisor respondió (Fecha sup),
+        # Horas en cola de WFM: se cuentan desde que el supervisor respondió (Fecha sup),
         # no desde el envío original del experto — así refleja el tiempo real de espera en WFM.
         _inicio_cola = df["_fecha_sup"].where(df["_fecha_sup"].notna(), _env)
-        df["_dias_cola_wfm"] = pd.NA
+        df["_horas_cola_wfm"] = pd.NA
         _mask_cola = df["_pendiente_wfm"] & _inicio_cola.notna()
-        df.loc[_mask_cola, "_dias_cola_wfm"] = (_hoy - _inicio_cola[_mask_cola]).dt.days.clip(lower=0)
-        df["_dias_cola_wfm"] = pd.to_numeric(df["_dias_cola_wfm"], errors="coerce")
+        df.loc[_mask_cola, "_horas_cola_wfm"] = _inicio_cola[_mask_cola].apply(
+            lambda t: _horas_habiles(t, _hoy))
+        df["_horas_cola_wfm"] = pd.to_numeric(df["_horas_cola_wfm"], errors="coerce")
 
         # Rechazo final (en cualquiera de las dos etapas)
         _rechazada_sup = _estado_sup.str.contains("Rechazado", case=False, na=False)
@@ -680,23 +705,23 @@ def _render_tab(df: pd.DataFrame, sup_sel, exp_sel, buscar, fecha_desde, fecha_h
     _chart_por_supervisor(df)
 
     # ── Gráfico 2: tiempo de verificación por supervisor ──
-    if "_dias_verif" in df.columns:
+    if "_horas_verif" in df.columns:
         st.markdown("<div style='margin-top:22px'></div>", unsafe_allow_html=True)
-        n_sup_verif = df.loc[~df["_dias_verif"].isna(), "Supervisor"].nunique()
+        n_sup_verif = df.loc[~df["_horas_verif"].isna(), "Supervisor"].nunique()
         st.markdown(f"""<div class='tbl-hdr' style='background:linear-gradient(135deg,{COLOR_PRIMARY} 0%,{COLOR_WARNING} 100%)'>
             <span class='tbl-hdr-icon'>⏱️</span>
             <div class='tbl-hdr-body'>
                 <div class='tbl-hdr-title'>Tiempo de Verificación por Supervisor</div>
-                <div class='tbl-hdr-desc'>Días desde el envío del experto hasta la validación · SLA: mismo día</div>
+                <div class='tbl-hdr-desc'>Horas hábiles desde el envío del experto hasta la validación · SLA: 24 h (excluye domingos y festivos)</div>
             </div>
             <span class='tbl-hdr-badge'>{n_sup_verif} supervisores</span>
         </div>""", unsafe_allow_html=True)
 
         st.markdown("<div style='margin-top:14px'></div>", unsafe_allow_html=True)
-        _kpis_tiempo(df, "_dias_verif", "_pendiente_sup")
+        _kpis_tiempo(df, "_horas_verif", "_pendiente_sup")
         _chart_ranking_zonas(
-            df.dropna(subset=["_dias_verif"]).groupby("Supervisor")["_dias_verif"].mean(),
-            _SLA_ZONAS, _sla_meta, "Días promedio de validación", lambda v: f"{v:.1f} d",
+            df.dropna(subset=["_horas_verif"]).groupby("Supervisor")["_horas_verif"].mean(),
+            _SLA_ZONAS, _sla_meta, "Horas promedio de validación", lambda v: f"{v:.0f} h",
         )
 
         n_pend = int(df["_pendiente_sup"].sum())
@@ -711,31 +736,31 @@ def _render_tab(df: pd.DataFrame, sup_sel, exp_sel, buscar, fecha_desde, fecha_h
                 <span class='tbl-hdr-badge'>{n_pend} pendientes</span>
             </div>""", unsafe_allow_html=True)
             st.markdown("<div style='margin-top:12px'></div>", unsafe_allow_html=True)
-            _lista_pendientes(df, "_pendiente_sup", "_dias_verif", _sla_meta)
+            _lista_pendientes(df, "_pendiente_sup", "_horas_verif", _sla_meta)
 
     # ── Gráfico 3: ciclo completo (experto → supervisor → WFM) ──
-    if "_dias_ciclo" in df.columns:
+    if "_horas_ciclo" in df.columns:
         st.markdown("<div style='margin-top:26px'></div>", unsafe_allow_html=True)
-        n_sup_ciclo = df.loc[~df["_dias_ciclo"].isna(), "Supervisor"].nunique()
+        n_sup_ciclo = df.loc[~df["_horas_ciclo"].isna(), "Supervisor"].nunique()
         st.markdown(f"""<div class='tbl-hdr' style='background:linear-gradient(135deg,{COLOR_PRIMARY} 0%,{COLOR_ACCENT} 100%)'>
             <span class='tbl-hdr-icon'>🏁</span>
             <div class='tbl-hdr-body'>
                 <div class='tbl-hdr-title'>Ciclo Completo · Experto → Supervisor → WFM</div>
-                <div class='tbl-hdr-desc'>Días desde el envío hasta la decisión final de WFM</div>
+                <div class='tbl-hdr-desc'>Horas hábiles desde el envío hasta la decisión final de WFM</div>
             </div>
             <span class='tbl-hdr-badge'>{n_sup_ciclo} supervisores</span>
         </div>""", unsafe_allow_html=True)
 
         st.markdown("<div style='margin-top:14px'></div>", unsafe_allow_html=True)
         _kpis_tiempo(
-            df, "_dias_ciclo", "_pendiente_wfm", col_dias_pendiente="_dias_cola_wfm",
+            df, "_horas_ciclo", "_pendiente_wfm", col_dias_pendiente="_horas_cola_wfm",
             titulo_prom="Promedio ciclo completo",
             titulo_criticos="Críticos en cola WFM",
-            desc_criticos="En cola WFM con 2+ días",
+            desc_criticos="En cola WFM con 48+ horas",
         )
         _chart_ranking_zonas(
-            df.dropna(subset=["_dias_ciclo"]).groupby("Supervisor")["_dias_ciclo"].mean(),
-            _SLA_ZONAS, _sla_meta, "Días promedio del ciclo completo", lambda v: f"{v:.1f} d",
+            df.dropna(subset=["_horas_ciclo"]).groupby("Supervisor")["_horas_ciclo"].mean(),
+            _SLA_ZONAS, _sla_meta, "Horas promedio del ciclo completo", lambda v: f"{v:.0f} h",
         )
 
         n_pend_wfm = int(df["_pendiente_wfm"].sum())
@@ -750,10 +775,10 @@ def _render_tab(df: pd.DataFrame, sup_sel, exp_sel, buscar, fecha_desde, fecha_h
                 <span class='tbl-hdr-badge'>{n_pend_wfm} pendientes</span>
             </div>""", unsafe_allow_html=True)
             st.markdown("<div style='margin-top:12px'></div>", unsafe_allow_html=True)
-            _lista_pendientes(df, "_pendiente_wfm", "_dias_cola_wfm", _sla_meta)
+            _lista_pendientes(df, "_pendiente_wfm", "_horas_cola_wfm", _sla_meta)
 
     # ── Gráfico 4: tendencia temporal ──
-    if "_dias_verif" in df.columns:
+    if "_horas_verif" in df.columns:
         st.markdown("<div style='margin-top:26px'></div>", unsafe_allow_html=True)
         st.markdown(f"""<div class='tbl-hdr' style='background:linear-gradient(135deg,{COLOR_ACCENT} 0%,{COLOR_SUCCESS} 100%)'>
             <span class='tbl-hdr-icon'>📈</span>
