@@ -113,6 +113,72 @@ COLOR_DANGER  = "#EF4444"
 COLOR_BG      = "#F0F4F8"
 
 # ─────────────────────────────────────────────
+# RANKING HORIZONTAL (mismo lenguaje visual que el módulo Novedades:
+# barras delgadas y redondeadas + zonas de contexto, sin barra de fondo ni línea de meta)
+# ─────────────────────────────────────────────
+def _ranking_bar(valores, eje_titulo, value_fmt, zonas=None, color_fn=None, color_fija=None, alto_fila=42, extra=None, extra_label=None):
+    """valores: Series (index=categoría, values=métrica), ya ordenada ascendente.
+    zonas: lista opcional de (x0, x1, color, etiqueta) dibujada como washes de fondo.
+    color_fn: función valor→color por barra (si no hay zonas fijas de umbral).
+    extra: Series opcional (mismo índice que valores) con un dato adicional a mostrar en el hover."""
+    if valores is None or valores.empty:
+        return
+    cats = valores.index.tolist()
+    vals = valores.tolist()
+    if color_fn is not None:
+        colores = [color_fn(v) for v in vals]
+    else:
+        colores = color_fija or COLOR_ACCENT
+    tope = zonas[-1][1] if (zonas and zonas[-1][1] is not None) else max(vals)
+    x_max = max(vals + [tope]) * 1.22 if vals else 1
+
+    if extra is not None:
+        customdata = extra.reindex(valores.index).tolist()
+        hover = f"<b>%{{y}}</b><br>{extra_label or ''}: %{{customdata}}<br>{eje_titulo}: <b>%{{text}}</b><extra></extra>"
+    else:
+        customdata = None
+        hover = "<b>%{y}</b><br>" + eje_titulo + ": <b>%{text}</b><extra></extra>"
+
+    fig = go.Figure(go.Bar(
+        y=cats, x=vals, orientation="h",
+        marker=dict(color=colores, opacity=0.92, line=dict(width=0), cornerradius=6),
+        width=0.55,
+        text=[value_fmt(v) for v in vals],
+        textposition="outside",
+        textfont=dict(color="rgba(255,255,255,0.78)", size=11, family="Space Grotesk, sans-serif"),
+        cliponaxis=False,
+        customdata=customdata,
+        hovertemplate=hover,
+    ))
+    if zonas:
+        for x0, x1, zc, _ in zonas:
+            fig.add_vrect(x0=x0, x1=x1 if x1 is not None else x_max, fillcolor=zc, opacity=0.07, line_width=0, layer="below")
+        for x0, x1, zc, label in zonas:
+            centro = (x0 + (x1 if x1 is not None else x_max)) / 2
+            fig.add_annotation(x=centro, y=1.06, xref="x", yref="paper", showarrow=False,
+                                text=label.upper(), font=dict(size=8, color=zc, family="Inter, sans-serif"), opacity=0.55)
+
+    fig_h = max(260, len(cats) * alto_fila + 70)
+    fig.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+        height=fig_h,
+        margin=dict(l=190, r=60, t=34 if zonas else 16, b=10),
+        font=dict(family="Inter, sans-serif"),
+        showlegend=False, bargap=0.42,
+        xaxis=dict(
+            range=[0, x_max], showgrid=True, gridcolor="rgba(255,255,255,0.045)", gridwidth=1, zeroline=False,
+            tickfont=dict(color="rgba(255,255,255,0.32)", size=9), fixedrange=True,
+            title=dict(text=eje_titulo, font=dict(size=10, color="rgba(255,255,255,0.35)")),
+        ),
+        yaxis=dict(showgrid=False, tickfont=dict(color="rgba(255,255,255,0.72)", size=10.5), fixedrange=True),
+    )
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+
+_ADH_ZONAS = [(0, 0.80, COLOR_DANGER, "Bajo"), (0.80, 0.90, COLOR_WARNING, "Alerta"), (0.90, None, COLOR_SUCCESS, "Meta")]
+def _adh_color(v):
+    return COLOR_SUCCESS if v >= 0.90 else (COLOR_WARNING if v >= 0.80 else COLOR_DANGER)
+
+# ─────────────────────────────────────────────
 # LOGO BASE64
 # ─────────────────────────────────────────────
 _LOGO_PATH = "logo-scala-learning-transformacion-digital-universidades.webp"
@@ -603,32 +669,55 @@ st.markdown(f"""
     /* ── Leaderboard mini-cards (Top/Bottom expertos) ── */
     .lb-card {{
         background: linear-gradient(160deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.015) 100%);
-        border-radius: 16px;
-        padding: 14px 16px 6px;
+        border-radius: 18px;
+        padding: 20px 22px 16px;
         border: 1px solid rgba(255,255,255,0.10);
-        box-shadow: 0 12px 28px -14px rgba(0,0,0,0.6);
+        box-shadow: 0 16px 34px -16px rgba(0,0,0,0.6);
         height: 100%;
     }}
-    .lb-head {{ display:flex; align-items:center; gap:8px; margin-bottom:8px; }}
-    .lb-head-icon {{ font-size:15px; }}
-    .lb-head-title {{ font-size:12px; font-weight:800; color:#F1F4FF; flex:1; }}
-    .lb-head-badge {{ font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; }}
-    .lb-row {{
-        display: flex; align-items: center; gap: 10px;
-        padding: 7px 0;
-        border-bottom: 1px solid rgba(255,255,255,0.06);
+    .lb-head {{
+        display:flex; align-items:center; gap:10px; margin-bottom:14px;
+        padding-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.08);
     }}
-    .lb-row:last-child {{ border-bottom: none; }}
+    .lb-head-icon {{ font-size:17px; }}
+    .lb-head-title {{ font-size:13.5px; font-weight:800; color:#F1F4FF; flex:1; letter-spacing:-0.1px; }}
+    .lb-head-badge {{ font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:0.07em; }}
+    .lb-row {{
+        display: flex; align-items: center; gap: 14px;
+        padding: 11px 2px;
+        border-bottom: 1px solid rgba(255,255,255,0.055);
+    }}
+    .lb-row:last-child {{ border-bottom: none; padding-bottom: 2px; }}
     .lb-rank {{
-        width: 20px; height: 20px; border-radius: 6px;
+        width: 24px; height: 24px; border-radius: 7px;
         display: flex; align-items: center; justify-content: center;
-        font-size: 9px; font-weight: 800; color: white; flex-shrink: 0;
+        font-size: 10px; font-weight: 800; color: white; flex-shrink: 0;
         background: var(--lc, #64748B);
     }}
     .lb-info {{ flex: 1; min-width: 0; }}
-    .lb-name {{ font-size: 11.5px; font-weight: 700; color: #F1F4FF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
-    .lb-sup {{ font-size: 10px; color: rgba(255,255,255,0.42); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
-    .lb-pct {{ font-size: 12.5px; font-weight: 800; flex-shrink: 0; font-family:'Space Grotesk',sans-serif!important; }}
+    .lb-name {{ font-size: 13px; font-weight: 700; color: #F1F4FF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
+    .lb-sup {{ font-size: 10.5px; color: rgba(255,255,255,0.42); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }}
+    .lb-pct {{ font-size: 14.5px; font-weight: 800; flex-shrink: 0; font-family:'Space Grotesk',sans-serif!important; }}
+
+    /* ── Leyenda custom bajo el donut (evita el recorte de la leyenda nativa de Plotly) ── */
+    .donut-legend {{ display:flex; justify-content:center; gap:22px; margin-top:2px; }}
+    .dl-item {{ font-size:11.5px; color:rgba(255,255,255,0.60); display:flex; align-items:center; gap:7px; }}
+    .dl-item b {{ color:#F1F4FF; font-weight:800; margin-left:3px; }}
+    .dl-dot {{ width:9px; height:9px; border-radius:50%; display:inline-block; flex-shrink:0; }}
+
+    /* ── Tarjeta del donut de cumplimiento (mismo look que .lb-card, vía container key) ── */
+    .st-key-donut_card {{
+        background: linear-gradient(160deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.015) 100%);
+        border-radius: 18px;
+        padding: 20px 22px 18px;
+        border: 1px solid rgba(255,255,255,0.10);
+        box-shadow: 0 16px 34px -16px rgba(0,0,0,0.6);
+        height: 100%;
+    }}
+    .st-key-donut_card div[data-testid="stPlotlyChart"] {{
+        background: transparent !important; border: none !important;
+        box-shadow: none !important; padding: 0 !important;
+    }}
 
     /* ── Plotly chart: tarjeta de vidrio oscuro ── */
     div[data-testid="stPlotlyChart"] {{
@@ -1117,10 +1206,12 @@ st.markdown(f"""
 
 tend_sup = (
     dff_validos
-    .groupby(["_periodo","Supervisor"])
-    .apply(lambda g: g["adh_s"].sum() / g["prog_s"].sum() if g["prog_s"].sum() > 0 else 0)
-    .reset_index(name="ADH")
+    .groupby(["_periodo","Supervisor"])[["adh_s","prog_s"]]
+    .sum()
+    .reset_index()
 )
+tend_sup["ADH"] = (tend_sup["adh_s"] / tend_sup["prog_s"]).where(tend_sup["prog_s"] > 0, 0)
+tend_sup = tend_sup.drop(columns=["adh_s","prog_s"])
 tend_sup["_ord"] = tend_sup["_periodo"].map(_periodo_rank)
 tend_sup = tend_sup.sort_values(["Supervisor","_ord"]).drop(columns="_ord")
 
@@ -1204,14 +1295,12 @@ st.markdown(f"""
 
 sup_stats = (
     dff_validos.groupby("Supervisor")
-    .apply(lambda g: pd.Series({
-        "ADH":      g["adh_s"].sum() / g["prog_s"].sum() if g["prog_s"].sum() > 0 else 0,
-        "Agentes":  g["Nombre"].nunique(),
-        "Registros": len(g)
-    }))
+    .agg(adh_s=("adh_s", "sum"), prog_s=("prog_s", "sum"),
+         Agentes=("Nombre", "nunique"), Registros=("Nombre", "size"))
     .reset_index()
-    .sort_values("ADH", ascending=True)
 )
+sup_stats["ADH"] = (sup_stats["adh_s"] / sup_stats["prog_s"]).where(sup_stats["prog_s"] > 0, 0)
+sup_stats = sup_stats.drop(columns=["adh_s", "prog_s"]).sort_values("ADH", ascending=True)
 
 aus_sup   = dff[dff["Validador Llegada"] == "Ausente"].groupby("Supervisor").size().reset_index(name="Ausentes")
 tarde_sup = dff[dff["Validador Llegada"] == "Llegada tarde"].groupby("Supervisor").size().reset_index(name="Tardes")
@@ -1230,44 +1319,10 @@ with c_bar:
         </div>
         <span class='ch-tag'>Barras</span>
     </div>""", unsafe_allow_html=True)
-    sup_stats["Color"] = sup_stats["ADH"].apply(
-        lambda x: COLOR_SUCCESS if x >= 0.90 else (COLOR_WARNING if x >= 0.80 else COLOR_DANGER)
-    )
     sup_short = sup_stats.copy()
     sup_short["Supervisor"] = sup_short["Supervisor"].apply(lambda n: " ".join(n.split()[:2]))
-    n_sup = len(sup_stats)
-
-    fig_bar = go.Figure()
-    fig_bar.add_vrect(x0=0.90, x1=1.02, fillcolor="rgba(16,185,129,0.06)", layer="below", line_width=0)
-    fig_bar.add_trace(go.Bar(
-        x=[1.0] * n_sup, y=sup_short["Supervisor"], orientation="h",
-        marker=dict(color="rgba(255,255,255,0.07)", line=dict(width=0)),
-        showlegend=False, hoverinfo="skip", width=0.55
-    ))
-    fig_bar.add_trace(go.Bar(
-        x=sup_stats["ADH"], y=sup_short["Supervisor"], orientation="h",
-        marker=dict(color=sup_stats["Color"], line=dict(width=0)),
-        text=sup_stats["ADH"].apply(lambda x: f"{x:.1%}"),
-        textposition="outside",
-        constraintext="none",
-        textfont=dict(size=11, color="#CBD3F2", family="Inter"),
-        hovertemplate="<b>%{y}</b><br>Adherencia: %{x:.1%}<extra></extra>",
-        width=0.55
-    ))
-    fig_bar.add_vline(x=0.90, line_dash="dot", line_color="rgba(125,211,252,0.75)", line_width=1.5,
-                      annotation_text="Meta 90%",
-                      annotation_font=dict(size=10, color="#7DD3FC"),
-                      annotation_position="top left")
-    fig_bar.update_layout(
-        barmode="overlay", height=400,
-        margin=dict(l=0, r=55, t=20, b=0),
-        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-        xaxis=dict(tickformat=".0%", range=[0, 1.10], gridcolor="rgba(255,255,255,0.08)",
-                   showgrid=True, tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.62)")),
-        yaxis=dict(gridcolor="rgba(0,0,0,0)", tickfont=dict(size=11, family="Inter", color="rgba(255,255,255,0.75)")),
-        showlegend=False, font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)")
-    )
-    st.plotly_chart(fig_bar, use_container_width=True)
+    _serie_sup = sup_short.set_index("Supervisor")["ADH"]
+    _ranking_bar(_serie_sup, "Adherencia", lambda v: f"{v:.1%}", zonas=_ADH_ZONAS, color_fn=_adh_color, alto_fila=40)
 
 with c_gauge:
     st.markdown("""<div class='tbl-hdr' style='background:linear-gradient(135deg,#28053F 0%,#0EA5E9 100%)'>
@@ -1291,14 +1346,15 @@ with c_gauge:
 # ─────────────────────────────────────────────
 exp_stats = (
     dff_validos.groupby("Nombre")
-    .apply(lambda g: pd.Series({
-        "ADH":        g["adh_s"].sum() / g["prog_s"].sum() if g["prog_s"].sum() > 0 else 0,
-        "Supervisor": g["Supervisor"].mode().iat[0] if not g["Supervisor"].mode().empty else "-",
-        "Registros":  len(g)
-    }))
+    .agg(adh_s=("adh_s", "sum"), prog_s=("prog_s", "sum"), Registros=("adh_s", "size"))
     .reset_index()
-    .sort_values("ADH", ascending=True)
 )
+exp_stats["ADH"] = (exp_stats["adh_s"] / exp_stats["prog_s"]).where(exp_stats["prog_s"] > 0, 0)
+_sup_counts = dff_validos.groupby(["Nombre", "Supervisor"]).size().reset_index(name="_n")
+_sup_moda = _sup_counts.sort_values("_n", ascending=False).drop_duplicates("Nombre")[["Nombre", "Supervisor"]]
+exp_stats = exp_stats.merge(_sup_moda, on="Nombre", how="left")
+exp_stats["Supervisor"] = exp_stats["Supervisor"].fillna("-")
+exp_stats = exp_stats.drop(columns=["adh_s", "prog_s"]).sort_values("ADH", ascending=True)
 n_exp = len(exp_stats)
 _exp_tag = sup_sel if sup_sel != "Todos" else "Todos los equipos"
 
@@ -1327,43 +1383,10 @@ st.markdown(f"""<div class='chart-hdr' style='--cc:#EC4899'>
     <span class='ch-tag' style='color:#EC4899'>Barras</span>
 </div>""", unsafe_allow_html=True)
 
-exp_stats["Color"] = exp_stats["ADH"].apply(
-    lambda x: COLOR_SUCCESS if x >= 0.90 else (COLOR_WARNING if x >= 0.80 else COLOR_DANGER)
-)
-
-fig_exp = go.Figure()
-fig_exp.add_vrect(x0=0.90, x1=1.02, fillcolor="rgba(16,185,129,0.06)", layer="below", line_width=0)
-fig_exp.add_trace(go.Bar(
-    x=[1.0] * n_exp, y=exp_stats["Nombre"], orientation="h",
-    marker=dict(color="rgba(255,255,255,0.07)", line=dict(width=0)),
-    showlegend=False, hoverinfo="skip", width=0.6
-))
-fig_exp.add_trace(go.Bar(
-    x=exp_stats["ADH"], y=exp_stats["Nombre"], orientation="h",
-    marker=dict(color=exp_stats["Color"], line=dict(width=0)),
-    text=exp_stats["ADH"].apply(lambda x: f"{x:.1%}"),
-    textposition="outside",
-    constraintext="none",
-    textfont=dict(size=11, color="#CBD3F2", family="Inter"),
-    customdata=exp_stats["Supervisor"],
-    hovertemplate="<b>%{y}</b><br>Supervisor: %{customdata}<br>Adherencia: %{x:.1%}<extra></extra>",
-    width=0.6
-))
-fig_exp.add_vline(x=0.90, line_dash="dot", line_color="rgba(125,211,252,0.75)", line_width=1.5,
-                  annotation_text="Meta 90%",
-                  annotation_font=dict(size=10, color="#7DD3FC"),
-                  annotation_position="top left")
-fig_exp.update_layout(
-    barmode="overlay", height=max(420, n_exp * 32 + 60),
-    margin=dict(l=0, r=55, t=20, b=0),
-    paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-    xaxis=dict(tickformat=".0%", range=[0, 1.10], gridcolor="rgba(255,255,255,0.08)",
-               showgrid=True, tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.62)")),
-    yaxis=dict(gridcolor="rgba(0,0,0,0)", tickfont=dict(size=11, family="Inter", color="rgba(255,255,255,0.75)")),
-    showlegend=False, font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)")
-)
+_exp_idx = exp_stats.set_index("Nombre")
 with st.container(height=520, border=False):
-    st.plotly_chart(fig_exp, use_container_width=True)
+    _ranking_bar(_exp_idx["ADH"], "Adherencia", lambda v: f"{v:.1%}", zonas=_ADH_ZONAS, color_fn=_adh_color,
+                 alto_fila=38, extra=_exp_idx["Supervisor"], extra_label="Supervisor")
 
 # ─────────────────────────────────────────────
 # TENDENCIA + DISTRIBUCIÓN LLEGADAS
@@ -1386,10 +1409,12 @@ st.markdown(f"""
 
 tend = (
     dff_validos
-    .groupby("_periodo")
-    .apply(lambda g: g["adh_s"].sum() / g["prog_s"].sum() if g["prog_s"].sum() > 0 else 0)
-    .reset_index(name="ADH")
+    .groupby("_periodo")[["adh_s","prog_s"]]
+    .sum()
+    .reset_index()
 )
+tend["ADH"] = (tend["adh_s"] / tend["prog_s"]).where(tend["prog_s"] > 0, 0)
+tend = tend.drop(columns=["adh_s","prog_s"])
 tend["_ord"] = tend["_periodo"].map(_periodo_rank)
 tend = tend.sort_values("_ord").drop(columns="_ord")
 
@@ -1520,6 +1545,23 @@ def seg_a_hhmmss(s):
     m, sec = divmod(r, 60)
     return f"{h}:{m:02d}:{sec:02d}"
 
+def seg_a_hhmmss_vec(seconds):
+    """Versión vectorizada de seg_a_hhmmss para columnas completas (evita apply() celda por celda)."""
+    s = pd.to_numeric(seconds, errors="coerce")
+    valido = s.notna() & (s > 0)
+    out = pd.Series("-", index=s.index, dtype=object)
+    si = s[valido].astype(int)
+    h = si // 3600
+    m = (si % 3600) // 60
+    sec = si % 60
+    out.loc[valido] = h.astype(str) + ":" + m.astype(str).str.zfill(2) + ":" + sec.astype(str).str.zfill(2)
+    return out
+
+def fmt_td_vec(series):
+    """Formatea una columna de timedelta a h:mm:ss, vectorizado (equivalente a .apply(_fmt_td))."""
+    secs = pd.to_timedelta(series, errors="coerce").dt.total_seconds()
+    return seg_a_hhmmss_vec(secs)
+
 def fmt_plan(v):
     if pd.isna(v):
         return "-"
@@ -1586,29 +1628,35 @@ with col_donut:
     n_cumple    = int((exp_stats["ADH"] >= 0.90).sum())
     n_no_cumple = n_exp - n_cumple
     pct_cumple  = (n_cumple / n_exp * 100) if n_exp > 0 else 0
-    fig_meta = go.Figure(go.Pie(
-        labels=["Cumple meta", "No cumple"], values=[n_cumple, n_no_cumple], hole=0.62,
-        marker=dict(colors=["#22D3EE", COLOR_DANGER], line=dict(color="white", width=3)),
-        textinfo="value", textposition="inside",
-        textfont=dict(size=12, color="white", family="Inter"),
-        hovertemplate="<b>%{label}</b><br>%{value} expertos · %{percent}<extra></extra>",
-        sort=False
-    ))
-    fig_meta.add_annotation(
-        text=f"<b>{pct_cumple:.0f}%</b><br>cumple", x=0.5, y=0.5,
-        font=dict(size=15, color="#22D3EE", family="Inter"),
-        showarrow=False, align="center"
-    )
-    fig_meta.update_layout(
-        height=272, margin=dict(l=0, r=0, t=28, b=0),
-        paper_bgcolor="rgba(0,0,0,0)",
-        title=dict(text="Cumplimiento de Meta (≥90%)", font=dict(size=11, color="rgba(255,255,255,0.65)", family="Inter"), x=0.02),
-        showlegend=True,
-        legend=dict(orientation="h", yanchor="bottom", y=-0.12, xanchor="center", x=0.5,
-                    font=dict(size=9, family="Inter"), itemsizing="constant"),
-        font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)")
-    )
-    st.plotly_chart(fig_meta, use_container_width=True)
+    with st.container(key="donut_card"):
+        st.markdown("""<div class='lb-head'>
+            <span class='lb-head-icon'>🎯</span>
+            <span class='lb-head-title'>Cumplimiento de Meta</span>
+            <span class='lb-head-badge' style='color:#22D3EE'>≥90%</span>
+        </div>""", unsafe_allow_html=True)
+        fig_meta = go.Figure(go.Pie(
+            labels=["Cumple meta", "No cumple"], values=[n_cumple, n_no_cumple], hole=0.66,
+            marker=dict(colors=["#22D3EE", COLOR_DANGER], line=dict(color="#0B0518", width=3)),
+            textinfo="value", textposition="inside",
+            textfont=dict(size=13, color="white", family="Inter"),
+            hovertemplate="<b>%{label}</b><br>%{value} expertos · %{percent}<extra></extra>",
+            sort=False, showlegend=False
+        ))
+        fig_meta.add_annotation(
+            text=f"<b style='font-size:24px'>{pct_cumple:.0f}%</b><br><span style='font-size:11px'>cumple meta</span>",
+            x=0.5, y=0.5, font=dict(color="#22D3EE", family="Inter"),
+            showarrow=False, align="center"
+        )
+        fig_meta.update_layout(
+            height=210, margin=dict(l=0, r=0, t=0, b=0),
+            paper_bgcolor="rgba(0,0,0,0)", showlegend=False,
+            font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)")
+        )
+        st.plotly_chart(fig_meta, use_container_width=True, config={"displayModeBar": False})
+        st.markdown(f"""<div class='donut-legend'>
+            <div class='dl-item'><span class='dl-dot' style='background:#22D3EE'></span>Cumple<b>{n_cumple}</b></div>
+            <div class='dl-item'><span class='dl-dot' style='background:{COLOR_DANGER}'></span>No cumple<b>{n_no_cumple}</b></div>
+        </div>""", unsafe_allow_html=True)
 
 # ── Tabla 1: Resumen General ──────────────────
 st.markdown(f"""<div class='tbl-hdr' style='background:linear-gradient(135deg,{COLOR_SUCCESS} 0%,#059669 100%)'>
@@ -1624,10 +1672,10 @@ t1 = dff.copy()
 t1["Fecha"]             = t1["Fecha"].dt.strftime("%d/%m/%Y")
 t1["Retardo"]           = t1["Validador Llegada"].apply(lambda x: "Sí" if x == "Llegada tarde" else "No")
 t1["Ausencia"]          = t1["Validador Llegada"].apply(lambda x: "Sí" if x == "Ausente" else "No")
-t1["Tiempo de retardo"] = t1.apply(lambda r: seg_a_hhmmss(r["tard_s"]) if r["Retardo"] == "Sí" else "-", axis=1)
-t1["T. Programado"]     = t1["prog_s"].apply(seg_a_hhmmss)
-t1["Fuera de ADH"]      = (t1["prog_s"] - t1["adh_s"]).clip(lower=0).apply(seg_a_hhmmss)
-t1["ADH Aplicada"]      = t1["adh_s"].apply(seg_a_hhmmss)
+t1["Tiempo de retardo"] = seg_a_hhmmss_vec(t1["tard_s"]).where(t1["Retardo"] == "Sí", "-")
+t1["T. Programado"]     = seg_a_hhmmss_vec(t1["prog_s"])
+t1["Fuera de ADH"]      = seg_a_hhmmss_vec((t1["prog_s"] - t1["adh_s"]).clip(lower=0))
+t1["ADH Aplicada"]      = seg_a_hhmmss_vec(t1["adh_s"])
 t1["Adherencia %"]      = t1["ADH_pct"].fillna(0) * 100
 
 t1_show = (
@@ -1690,19 +1738,20 @@ with c_hist:
     hist_counts = pd.cut(exp_stats["ADH"], bins=_bins, labels=_labels).value_counts().reindex(_labels).fillna(0).astype(int)
     fig_hist = go.Figure(go.Bar(
         x=_labels, y=hist_counts.values,
-        marker=dict(color=_bucket_colors, line=dict(width=0)),
-        text=hist_counts.values, textposition="outside",
-        textfont=dict(size=11, color="#CBD3F2", family="Inter"),
+        marker=dict(color=_bucket_colors, opacity=0.92, line=dict(width=0), cornerradius=6),
+        width=0.55,
+        text=hist_counts.values, textposition="outside", cliponaxis=False,
+        textfont=dict(size=11, color="rgba(255,255,255,0.78)", family="Space Grotesk, sans-serif"),
         hovertemplate="<b>%{x}</b><br>%{y} expertos<extra></extra>"
     ))
     fig_hist.update_layout(
-        height=330, margin=dict(l=0, r=0, t=20, b=0),
+        height=330, margin=dict(l=0, r=0, t=26, b=0), bargap=0.42,
         paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-        xaxis=dict(gridcolor="rgba(0,0,0,0)", tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.62)")),
-        yaxis=dict(gridcolor="rgba(255,255,255,0.08)", tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.62)")),
+        xaxis=dict(gridcolor="rgba(0,0,0,0)", tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.55)"), fixedrange=True),
+        yaxis=dict(gridcolor="rgba(255,255,255,0.045)", tickfont=dict(size=9, family="Inter", color="rgba(255,255,255,0.32)"), fixedrange=True),
         showlegend=False, font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)")
     )
-    st.plotly_chart(fig_hist, use_container_width=True)
+    st.plotly_chart(fig_hist, use_container_width=True, config={"displayModeBar": False})
 
 with c_dia:
     st.markdown("""<div class='chart-hdr' style='--cc:#60A5FA'>
@@ -1716,19 +1765,23 @@ with c_dia:
     _dia_map = {"Monday": "Lunes", "Tuesday": "Martes", "Wednesday": "Miércoles",
                 "Thursday": "Jueves", "Friday": "Viernes", "Saturday": "Sábado", "Sunday": "Domingo"}
     _dia_order = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
-    dia_stats = (
+    _dia_sum = (
         dff_validos.assign(DiaEs=dff_validos["DiaSemana"].map(_dia_map))
-        .groupby("DiaEs")
-        .apply(lambda g: g["adh_s"].sum() / g["prog_s"].sum() if g["prog_s"].sum() > 0 else 0)
+        .groupby("DiaEs")[["adh_s","prog_s"]]
+        .sum()
+    )
+    dia_stats = (
+        (_dia_sum["adh_s"] / _dia_sum["prog_s"]).where(_dia_sum["prog_s"] > 0, 0)
         .reindex(_dia_order)
         .dropna()
     )
     dia_colors = [COLOR_SUCCESS if v >= 0.90 else (COLOR_WARNING if v >= 0.80 else COLOR_DANGER) for v in dia_stats.values]
     fig_dia = go.Figure(go.Bar(
         x=dia_stats.index, y=dia_stats.values,
-        marker=dict(color=dia_colors, line=dict(width=0)),
-        text=[f"{v:.1%}" for v in dia_stats.values], textposition="outside",
-        textfont=dict(size=11, color="#CBD3F2", family="Inter"),
+        marker=dict(color=dia_colors, opacity=0.92, line=dict(width=0), cornerradius=6),
+        width=0.55,
+        text=[f"{v:.1%}" for v in dia_stats.values], textposition="outside", cliponaxis=False,
+        textfont=dict(size=11, color="rgba(255,255,255,0.78)", family="Space Grotesk, sans-serif"),
         hovertemplate="<b>%{x}</b><br>Adherencia: %{y:.1%}<extra></extra>"
     ))
     fig_dia.add_hline(y=0.90, line_dash="dot", line_color="rgba(125,211,252,0.75)", line_width=1.5,
@@ -1736,14 +1789,14 @@ with c_dia:
                       annotation_font=dict(size=10, color="#7DD3FC"),
                       annotation_position="top left")
     fig_dia.update_layout(
-        height=330, margin=dict(l=0, r=0, t=20, b=0),
+        height=330, margin=dict(l=0, r=0, t=26, b=0), bargap=0.42,
         paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-        xaxis=dict(gridcolor="rgba(0,0,0,0)", tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.62)")),
-        yaxis=dict(tickformat=".0%", range=[0, 1.10], gridcolor="rgba(255,255,255,0.08)",
-                   tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.62)")),
+        xaxis=dict(gridcolor="rgba(0,0,0,0)", tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.55)"), fixedrange=True),
+        yaxis=dict(tickformat=".0%", range=[0, 1.10], gridcolor="rgba(255,255,255,0.045)",
+                   tickfont=dict(size=9, family="Inter", color="rgba(255,255,255,0.32)"), fixedrange=True),
         showlegend=False, font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)")
     )
-    st.plotly_chart(fig_dia, use_container_width=True)
+    st.plotly_chart(fig_dia, use_container_width=True, config={"displayModeBar": False})
 
 # ── Tabla 2: Planificación ────────────────────
 st.markdown(f"""<div class='tbl-hdr' style='background:linear-gradient(135deg,{COLOR_ACCENT} 0%,#0284C7 100%);margin-top:20px'>
@@ -1802,48 +1855,14 @@ with c_camp:
     </div>""", unsafe_allow_html=True)
     camp_stats = (
         dff_validos.groupby("Campana")
-        .apply(lambda g: pd.Series({
-            "ADH":     g["adh_s"].sum() / g["prog_s"].sum() if g["prog_s"].sum() > 0 else 0,
-            "Agentes": g["Nombre"].nunique()
-        }))
+        .agg(adh_s=("adh_s", "sum"), prog_s=("prog_s", "sum"), Agentes=("Nombre", "nunique"))
         .reset_index()
-        .sort_values("ADH", ascending=True)
     )
-    camp_stats["Color"] = camp_stats["ADH"].apply(
-        lambda x: COLOR_SUCCESS if x >= 0.90 else (COLOR_WARNING if x >= 0.80 else COLOR_DANGER)
-    )
-    n_camp = len(camp_stats)
-    fig_camp = go.Figure()
-    fig_camp.add_vrect(x0=0.90, x1=1.02, fillcolor="rgba(16,185,129,0.06)", layer="below", line_width=0)
-    fig_camp.add_trace(go.Bar(
-        x=[1.0] * n_camp, y=camp_stats["Campana"], orientation="h",
-        marker=dict(color="rgba(255,255,255,0.07)", line=dict(width=0)),
-        showlegend=False, hoverinfo="skip", width=0.55
-    ))
-    fig_camp.add_trace(go.Bar(
-        x=camp_stats["ADH"], y=camp_stats["Campana"], orientation="h",
-        marker=dict(color=camp_stats["Color"], line=dict(width=0)),
-        text=camp_stats["ADH"].apply(lambda x: f"{x:.1%}"),
-        textposition="outside", constraintext="none",
-        textfont=dict(size=11, color="#CBD3F2", family="Inter"),
-        customdata=camp_stats["Agentes"],
-        hovertemplate="<b>%{y}</b><br>Adherencia: %{x:.1%}<br>Agentes: %{customdata}<extra></extra>",
-        width=0.55
-    ))
-    fig_camp.add_vline(x=0.90, line_dash="dot", line_color="rgba(125,211,252,0.75)", line_width=1.5,
-                       annotation_text="Meta 90%",
-                       annotation_font=dict(size=10, color="#7DD3FC"),
-                       annotation_position="top left")
-    fig_camp.update_layout(
-        barmode="overlay", height=max(300, n_camp * 46 + 60),
-        margin=dict(l=0, r=55, t=20, b=0),
-        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-        xaxis=dict(tickformat=".0%", range=[0, 1.10], gridcolor="rgba(255,255,255,0.08)",
-                   tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.62)")),
-        yaxis=dict(gridcolor="rgba(0,0,0,0)", tickfont=dict(size=11, family="Inter", color="rgba(255,255,255,0.75)")),
-        showlegend=False, font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)")
-    )
-    st.plotly_chart(fig_camp, use_container_width=True)
+    camp_stats["ADH"] = (camp_stats["adh_s"] / camp_stats["prog_s"]).where(camp_stats["prog_s"] > 0, 0)
+    camp_stats = camp_stats.drop(columns=["adh_s", "prog_s"]).sort_values("ADH", ascending=True)
+    _camp_idx = camp_stats.set_index("Campana")
+    _ranking_bar(_camp_idx["ADH"], "Adherencia", lambda v: f"{v:.1%}", zonas=_ADH_ZONAS, color_fn=_adh_color,
+                 alto_fila=44, extra=_camp_idx["Agentes"], extra_label="Agentes")
 
 with c_exc:
     st.markdown("""<div class='chart-hdr' style='--cc:#FB7185'>
@@ -1860,27 +1879,8 @@ with c_exc:
     exc_tipo_disp = [c for c in exc_tipo_min if c in dff.columns]
     exc_totales   = dff[exc_tipo_disp].sum().sort_values(ascending=True)
     exc_labels    = [c.replace("_min", "").replace("Exceso ", "") for c in exc_totales.index]
-    exc_horas     = exc_totales.values / 60
-    exc_texto     = [seg_a_hhmmss(v * 60) for v in exc_totales.values]
-    fig_exc = go.Figure(go.Bar(
-        x=exc_horas, y=exc_labels, orientation="h",
-        marker=dict(color="#FB7185", line=dict(width=0)),
-        text=exc_texto, textposition="outside",
-        textfont=dict(size=10.5, color="#CBD3F2", family="Inter"),
-        hovertemplate="<b>%{y}</b><br>%{text}<extra></extra>",
-        width=0.55
-    ))
-    fig_exc.update_layout(
-        height=max(300, len(exc_labels) * 46 + 60),
-        margin=dict(l=0, r=55, t=20, b=0),
-        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-        xaxis=dict(title=dict(text="Horas", font=dict(size=10, color="rgba(255,255,255,0.5)")),
-                   gridcolor="rgba(255,255,255,0.08)",
-                   tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.62)")),
-        yaxis=dict(gridcolor="rgba(0,0,0,0)", tickfont=dict(size=11, family="Inter", color="rgba(255,255,255,0.75)")),
-        showlegend=False, font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)")
-    )
-    st.plotly_chart(fig_exc, use_container_width=True)
+    _serie_exc    = pd.Series((exc_totales.values / 60), index=exc_labels)
+    _ranking_bar(_serie_exc, "Horas", lambda v: seg_a_hhmmss(v * 3600), color_fija="#FB7185", alto_fila=44)
 
 # ── Tabla 3: Estados y Excesos ────────────────
 st.markdown(f"""<div class='tbl-hdr' style='background:linear-gradient(135deg,{COLOR_DANGER} 0%,#DC2626 100%);margin-top:20px'>
@@ -1916,18 +1916,6 @@ def _fmt_hora(v):
     except Exception:
         return "-"
 
-def _fmt_td(v):
-    try:
-        import pandas as _pd
-        if _pd.isna(v):
-            return "-"
-    except Exception:
-        pass
-    try:
-        return seg_a_hhmmss(int(v.total_seconds()))
-    except Exception:
-        return "-"
-
 t3 = dff.rename(columns={"Nombre": "Agente", "Campana": "Campaña"}).copy()
 t3["Fecha"] = t3["Fecha"].dt.strftime("%d/%m/%Y")
 
@@ -1940,18 +1928,18 @@ for col in ["Hora Login", "Hora Deslogueo"]:
 estado_disp = []
 for col in _estado_cols:
     if col in t3.columns:
-        t3[col] = t3[col].apply(_fmt_td)
+        t3[col] = fmt_td_vec(t3[col])
         estado_disp.append(col)
 
 exc_fmt_cols = []
 for orig, min_col in zip(exc_cols, exc_min_cols):
     if min_col in t3.columns:
-        t3[orig] = (t3[min_col] * 60).apply(seg_a_hhmmss)
+        t3[orig] = seg_a_hhmmss_vec(t3[min_col] * 60)
         exc_fmt_cols.append(orig)
 
 if exc_min_disp:
     total_s = t3[exc_min_disp].sum(axis=1) * 60
-    t3["Total excesos"] = total_s.apply(seg_a_hhmmss)
+    t3["Total excesos"] = seg_a_hhmmss_vec(total_s)
 
 cols_t3 = (
     ["Fecha", "Agente", "Supervisor", "Campaña"]
