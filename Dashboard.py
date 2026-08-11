@@ -7,7 +7,9 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ── Páginas (todas por ruta de archivo → navegación confiable) ──
+# ─────────────────────────────────────────────
+# NAVEGACIÓN (todas por ruta de archivo → navegación confiable)
+# ─────────────────────────────────────────────
 home_pg = st.Page("home.py",               title="Inicio",     icon="🏠", default=True)
 adh_pg  = st.Page("pages/1_Adherencia.py", title="Adherencia", icon="🎯")
 ocu_pg  = st.Page("pages/2_Ocupacion.py",  title="Ocupación",  icon="📊")
