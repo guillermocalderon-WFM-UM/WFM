@@ -673,7 +673,9 @@ st.markdown(f"""
         padding: 20px 22px 16px;
         border: 1px solid rgba(255,255,255,0.10);
         box-shadow: 0 16px 34px -16px rgba(0,0,0,0.6);
-        height: 100%;
+        height: 328px;
+        box-sizing: border-box;
+        overflow: hidden;
     }}
     .lb-head {{
         display:flex; align-items:center; gap:10px; margin-bottom:14px;
@@ -712,12 +714,15 @@ st.markdown(f"""
         padding: 20px 22px 18px;
         border: 1px solid rgba(255,255,255,0.10);
         box-shadow: 0 16px 34px -16px rgba(0,0,0,0.6);
-        height: 100%;
+        height: 328px;
+        box-sizing: border-box;
+        overflow: hidden;
     }}
     .st-key-donut_card div[data-testid="stPlotlyChart"] {{
         background: transparent !important; border: none !important;
         box-shadow: none !important; padding: 0 !important;
     }}
+    .st-key-donut_card [data-testid="stVerticalBlock"] {{ gap: 0.25rem !important; }}
 
     /* ── Plotly chart: tarjeta de vidrio oscuro ── */
     div[data-testid="stPlotlyChart"] {{
@@ -1322,7 +1327,8 @@ with c_bar:
     sup_short = sup_stats.copy()
     sup_short["Supervisor"] = sup_short["Supervisor"].apply(lambda n: " ".join(n.split()[:2]))
     _serie_sup = sup_short.set_index("Supervisor")["ADH"]
-    _ranking_bar(_serie_sup, "Adherencia", lambda v: f"{v:.1%}", zonas=_ADH_ZONAS, color_fn=_adh_color, alto_fila=40)
+    with st.container(height=420, border=False):
+        _ranking_bar(_serie_sup, "Adherencia", lambda v: f"{v:.1%}", zonas=_ADH_ZONAS, color_fn=_adh_color, alto_fila=40)
 
 with c_gauge:
     st.markdown("""<div class='tbl-hdr' style='background:linear-gradient(135deg,#28053F 0%,#0EA5E9 100%)'>
@@ -1659,6 +1665,7 @@ with col_donut:
         </div>""", unsafe_allow_html=True)
 
 # ── Tabla 1: Resumen General ──────────────────
+st.markdown("<div style='margin-top:24px'></div>", unsafe_allow_html=True)
 st.markdown(f"""<div class='tbl-hdr' style='background:linear-gradient(135deg,{COLOR_SUCCESS} 0%,#059669 100%)'>
     <span class='tbl-hdr-icon'>📋</span>
     <div class='tbl-hdr-body'>
