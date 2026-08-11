@@ -157,6 +157,10 @@ def _ranking_bar(valores, eje_titulo, value_fmt, zonas=None, color_fn=None, colo
             centro = (x0 + (x1 if x1 is not None else x_max)) / 2
             fig.add_annotation(x=centro, y=1.06, xref="x", yref="paper", showarrow=False,
                                 text=label.upper(), font=dict(size=8, color=zc, family="Inter, sans-serif"), opacity=0.55)
+        # línea exacta en el límite de la última zona (la meta), no solo el wash de fondo
+        _meta_x = zonas[-1][0]
+        if _meta_x > 0:
+            fig.add_vline(x=_meta_x, line_dash="dot", line_color="rgba(125,211,252,0.75)", line_width=1.5)
 
     fig_h = max(260, len(cats) * alto_fila + 70)
     fig.update_layout(
@@ -1328,7 +1332,7 @@ with c_bar:
     sup_short = sup_stats.copy()
     sup_short["Supervisor"] = sup_short["Supervisor"].apply(lambda n: " ".join(n.split()[:2]))
     _serie_sup = sup_short.set_index("Supervisor")["ADH"]
-    _h_sup = _ranking_bar(_serie_sup, "Adherencia", lambda v: f"{v:.1%}", zonas=_ADH_ZONAS, color_fn=_adh_color, alto_fila=15) or 400
+    _h_sup = _ranking_bar(_serie_sup, "Adherencia", lambda v: f"{v:.1%}", zonas=_ADH_ZONAS, color_fn=_adh_color, alto_fila=20) or 400
 
 with c_gauge:
     st.markdown("""<div class='tbl-hdr' style='background:linear-gradient(135deg,#28053F 0%,#0EA5E9 100%)'>
