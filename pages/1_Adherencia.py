@@ -173,6 +173,7 @@ def _ranking_bar(valores, eje_titulo, value_fmt, zonas=None, color_fn=None, colo
         yaxis=dict(showgrid=False, tickfont=dict(color="rgba(255,255,255,0.72)", size=10.5), fixedrange=True),
     )
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+    return fig_h
 
 _ADH_ZONAS = [(0, 0.80, COLOR_DANGER, "Bajo"), (0.80, 0.90, COLOR_WARNING, "Alerta"), (0.90, None, COLOR_SUCCESS, "Meta")]
 def _adh_color(v):
@@ -1327,8 +1328,7 @@ with c_bar:
     sup_short = sup_stats.copy()
     sup_short["Supervisor"] = sup_short["Supervisor"].apply(lambda n: " ".join(n.split()[:2]))
     _serie_sup = sup_short.set_index("Supervisor")["ADH"]
-    with st.container(height=420, border=False):
-        _ranking_bar(_serie_sup, "Adherencia", lambda v: f"{v:.1%}", zonas=_ADH_ZONAS, color_fn=_adh_color, alto_fila=40)
+    _h_sup = _ranking_bar(_serie_sup, "Adherencia", lambda v: f"{v:.1%}", zonas=_ADH_ZONAS, color_fn=_adh_color, alto_fila=30) or 400
 
 with c_gauge:
     st.markdown("""<div class='tbl-hdr' style='background:linear-gradient(135deg,#28053F 0%,#0EA5E9 100%)'>
@@ -1345,7 +1345,7 @@ with c_gauge:
     tabla_sup["ADH"] = tabla_sup["ADH"].apply(lambda x: f"{x:.1%}")
     tabla_sup["Supervisor"] = tabla_sup["Supervisor"].apply(lambda n: " ".join(n.split()[:2]))
     tabla_sup.columns = ["Supervisor","ADH%","Agentes","Ausentes","Tardes"]
-    st.dataframe(tabla_sup, use_container_width=True, hide_index=True, height=400)
+    st.dataframe(tabla_sup, use_container_width=True, hide_index=True, height=_h_sup)
 
 # ─────────────────────────────────────────────
 # COMPARATIVO POR EXPERTO
