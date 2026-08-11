@@ -1328,7 +1328,7 @@ with c_bar:
     sup_short = sup_stats.copy()
     sup_short["Supervisor"] = sup_short["Supervisor"].apply(lambda n: " ".join(n.split()[:2]))
     _serie_sup = sup_short.set_index("Supervisor")["ADH"]
-    _h_sup = _ranking_bar(_serie_sup, "Adherencia", lambda v: f"{v:.1%}", zonas=_ADH_ZONAS, color_fn=_adh_color, alto_fila=30) or 400
+    _h_sup = _ranking_bar(_serie_sup, "Adherencia", lambda v: f"{v:.1%}", zonas=_ADH_ZONAS, color_fn=_adh_color, alto_fila=15) or 400
 
 with c_gauge:
     st.markdown("""<div class='tbl-hdr' style='background:linear-gradient(135deg,#28053F 0%,#0EA5E9 100%)'>
