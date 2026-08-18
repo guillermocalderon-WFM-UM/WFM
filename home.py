@@ -58,9 +58,10 @@ def _datos_adherencia_dia():
     if dia.empty:
         return None
 
+    sup_sums = dia.groupby("Supervisor")[["adh_s", "prog_s"]].sum()
     top_sup = (
-        dia.groupby("Supervisor")
-        .apply(lambda g: g["adh_s"].sum() / g["prog_s"].sum() if g["prog_s"].sum() > 0 else 0)
+        (sup_sums["adh_s"] / sup_sums["prog_s"].where(sup_sums["prog_s"] > 0))
+        .fillna(0)
         .reset_index(name="ADH")
         .sort_values("ADH", ascending=False)
     )
@@ -68,9 +69,10 @@ def _datos_adherencia_dia():
         return None
 
     # Bottom 5 asesores con menor adherencia, excluyendo 0% (sin datos reales ese día, no bajo desempeño)
+    ases_sums = dia.groupby(["Nombre", "Supervisor"])[["adh_s", "prog_s"]].sum()
     bottom_ases = (
-        dia.groupby(["Nombre", "Supervisor"])
-        .apply(lambda g: g["adh_s"].sum() / g["prog_s"].sum() if g["prog_s"].sum() > 0 else 0)
+        (ases_sums["adh_s"] / ases_sums["prog_s"].where(ases_sums["prog_s"] > 0))
+        .fillna(0)
         .reset_index(name="ADH")
     )
     bottom_ases = bottom_ases[bottom_ases["ADH"] > 0].sort_values("ADH", ascending=True)
