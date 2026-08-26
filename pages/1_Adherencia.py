@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
@@ -20,18 +21,30 @@ def _excel_bytes(df):
     return buf.getvalue()
 
 def df_descarga(df, nombre_archivo, **kwargs):
+    """Muestra la tabla y deja el Excel listo bajo demanda: generarlo con openpyxl es
+    lento y antes se ejecutaba en cada cambio de filtro para las 3 tablas, aunque nadie
+    descargara nada. Ahora solo se calcula cuando el usuario hace clic en 'Preparar'."""
     st.dataframe(df, **kwargs)
-    b64 = base64.b64encode(_excel_bytes(df)).decode()
-    st.markdown(
-        f'<div style="text-align:right;margin-top:-6px;margin-bottom:8px">'
-        f'<a href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{b64}" '
-        f'download="{nombre_archivo}" '
-        f'style="font-size:0.72rem;color:rgba(255,255,255,0.35);text-decoration:none;letter-spacing:0.03em" '
-        f'onmouseover="this.style.color=\'rgba(255,255,255,0.75)\'" '
-        f'onmouseout="this.style.color=\'rgba(255,255,255,0.35)\'">'
-        f'↓ Exportar Excel</a></div>',
-        unsafe_allow_html=True,
-    )
+    _sig = (len(df), len(df.columns))
+    _bytes_key = f"_xlsx_bytes_{nombre_archivo}"
+    _sig_key = f"_xlsx_sig_{nombre_archivo}"
+    if st.session_state.get(_sig_key) != _sig:
+        st.session_state.pop(_bytes_key, None)
+
+    _, col_dl = st.columns([6, 1])
+    with col_dl:
+        if _bytes_key not in st.session_state:
+            if st.button("↓ Preparar Excel", key=f"prep_{nombre_archivo}", use_container_width=True):
+                st.session_state[_bytes_key] = _excel_bytes(df)
+                st.session_state[_sig_key] = _sig
+                st.rerun()
+        else:
+            st.download_button(
+                "⬇ Descargar Excel", data=st.session_state[_bytes_key],
+                file_name=nombre_archivo,
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                key=f"dl_{nombre_archivo}", use_container_width=True,
+            )
 
 # ─────────────────────────────────────────────
 # CARGA Y PREPARACIÓN DE DATOS
@@ -51,7 +64,8 @@ def cargar_datos(firma):
     # firma = (nombre, fecha_modificación) de cada archivo → el caché se invalida
     #         automáticamente cuando agregas/actualizas un Consolidado_*.xlsx.
     archivos = sorted(
-        [f for f in glob.glob("Consolidado_*.xlsx") if "_O_" not in os.path.basename(f)],
+        [f for f in glob.glob("Consolidado_*.xlsx")
+         if "_O_" not in os.path.basename(f) and "_T_" not in os.path.basename(f)],
         key=_mes_orden
     )
     if not archivos:
@@ -96,7 +110,8 @@ def cargar_datos(firma):
 _firma_archivos = tuple(
     (os.path.basename(a), os.path.getmtime(a))
     for a in sorted(
-        [f for f in glob.glob("Consolidado_*.xlsx") if "_O_" not in os.path.basename(f)],
+        [f for f in glob.glob("Consolidado_*.xlsx")
+         if "_O_" not in os.path.basename(f) and "_T_" not in os.path.basename(f)],
         key=_mes_orden
     )
 )
@@ -1111,6 +1126,7 @@ rango = f"{fecha_ini.strftime('%d/%m/%Y')} – {fecha_fin.strftime('%d/%m/%Y')}"
 filtro_txt = (f"{'Detalle por supervisor y experto.' if camp_sel == 'Todas' else camp_sel}")
 _home_pg = st.Page("home.py", title="Inicio", icon="🏠", default=True)
 _ocu_pg  = st.Page("pages/2_Ocupacion.py", title="Ocupación", icon="📊")
+_tip_pg  = st.Page("pages/4_Tipificacion.py", title="Tipificación", icon="🏷️")
 _nov_pg  = st.Page("pages/3_Novedades.py", title="Novedades", icon="📢")
 
 with st.container(key="hdrbanner"):
@@ -1123,7 +1139,7 @@ with st.container(key="hdrbanner"):
     </div>
     <div class='nav-lbl'>⚡ Navegación</div>
     """, unsafe_allow_html=True)
-    nb1, nb2, nb3, nb4, _nsp = st.columns([1.0, 1.35, 1.3, 1.35, 1.6], vertical_alignment="center")
+    nb1, nb2, nb3, nb4, nb5 = st.columns([1.0, 1.35, 1.3, 1.45, 1.35], vertical_alignment="center")
     with nb1:
         if st.button("🏠 Inicio", key="hdr_home", use_container_width=True):
             st.switch_page(_home_pg)
@@ -1133,6 +1149,9 @@ with st.container(key="hdrbanner"):
         if st.button("📊 Ocupación", key="hdr_ocu", use_container_width=True):
             st.switch_page(_ocu_pg)
     with nb4:
+        if st.button("🏷️ Tipificación", key="hdr_tip", use_container_width=True):
+            st.switch_page(_tip_pg)
+    with nb5:
         if st.button("📢 Novedades", key="hdr_nov", use_container_width=True):
             st.switch_page(_nov_pg)
 
@@ -1580,6 +1599,13 @@ def fmt_plan(v):
         return seg_a_hhmmss(v.total_seconds())
     return s
 
+def fmt_plan_vec(series):
+    """Vectoriza fmt_plan cuando la columna completa es timedelta (caso común de
+    Turno/Break/Lunch); si no, cae exactamente al mismo .apply(fmt_plan) de siempre."""
+    if pd.api.types.is_timedelta64_dtype(series):
+        return fmt_td_vec(series)
+    return series.apply(fmt_plan)
+
 # ── Resumen ejecutivo: Top/Bottom expertos + cumplimiento de meta ──
 st.markdown(f"""
 <div class='sec-header' style='--sc:#22D3EE'>
@@ -1681,8 +1707,8 @@ st.markdown(f"""<div class='tbl-hdr' style='background:linear-gradient(135deg,{C
 
 t1 = dff.copy()
 t1["Fecha"]             = t1["Fecha"].dt.strftime("%d/%m/%Y")
-t1["Retardo"]           = t1["Validador Llegada"].apply(lambda x: "Sí" if x == "Llegada tarde" else "No")
-t1["Ausencia"]          = t1["Validador Llegada"].apply(lambda x: "Sí" if x == "Ausente" else "No")
+t1["Retardo"]           = np.where(t1["Validador Llegada"] == "Llegada tarde", "Sí", "No")
+t1["Ausencia"]          = np.where(t1["Validador Llegada"] == "Ausente", "Sí", "No")
 t1["Tiempo de retardo"] = seg_a_hhmmss_vec(t1["tard_s"]).where(t1["Retardo"] == "Sí", "-")
 t1["T. Programado"]     = seg_a_hhmmss_vec(t1["prog_s"])
 t1["Fuera de ADH"]      = seg_a_hhmmss_vec((t1["prog_s"] - t1["adh_s"]).clip(lower=0))
@@ -1829,7 +1855,7 @@ t2 = dff.rename(columns={"Nombre": "Agente", "Campana": "Campaña"})[
 ].copy()
 t2["Fecha"] = t2["Fecha"].dt.strftime("%d/%m/%Y")
 for c in plan_disponibles:
-    t2[c] = t2[c].apply(fmt_plan)
+    t2[c] = fmt_plan_vec(t2[c])
 
 df_descarga(
     t2.sort_values(["Fecha", "Agente"]).reset_index(drop=True),

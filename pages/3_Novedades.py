@@ -1403,9 +1403,10 @@ st.markdown(f"""
 # ─────────────────────────────────────────────
 # ENCABEZADO
 # ─────────────────────────────────────────────
-_home_pg = st.Page("home.py",               title="Inicio",     icon="🏠", default=True)
-_adh_pg  = st.Page("pages/1_Adherencia.py", title="Adherencia", icon="🎯")
-_ocu_pg  = st.Page("pages/2_Ocupacion.py",  title="Ocupación",  icon="📊")
+_home_pg = st.Page("home.py",               title="Inicio",       icon="🏠", default=True)
+_adh_pg  = st.Page("pages/1_Adherencia.py", title="Adherencia",   icon="🎯")
+_ocu_pg  = st.Page("pages/2_Ocupacion.py",  title="Ocupación",    icon="📊")
+_tip_pg  = st.Page("pages/4_Tipificacion.py", title="Tipificación", icon="🏷️")
 
 with st.container(key="hdrbanner"):
     st.markdown("""
@@ -1416,7 +1417,7 @@ with st.container(key="hdrbanner"):
     </div>
     <div class='nav-lbl'>⚡ Navegación</div>
     """, unsafe_allow_html=True)
-    nb1, nb2, nb3, nb4, _nsp = st.columns([1.0, 1.35, 1.3, 1.35, 1.6], vertical_alignment="center")
+    nb1, nb2, nb3, nb4, nb5 = st.columns([1.0, 1.35, 1.3, 1.45, 1.35], vertical_alignment="center")
     with nb1:
         if st.button("🏠 Inicio",     key="hdr_home", use_container_width=True):
             st.switch_page(_home_pg)
@@ -1427,6 +1428,9 @@ with st.container(key="hdrbanner"):
         if st.button("📊 Ocupación",  key="hdr_ocu",  use_container_width=True):
             st.switch_page(_ocu_pg)
     with nb4:
+        if st.button("🏷️ Tipificación", key="hdr_tip", use_container_width=True):
+            st.switch_page(_tip_pg)
+    with nb5:
         st.button("📢 Novedades", key="hdr_nov", use_container_width=True, type="primary")
 
 # ─────────────────────────────────────────────

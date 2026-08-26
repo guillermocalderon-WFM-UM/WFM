@@ -8,9 +8,10 @@ COLOR_PRIMARY = "#28053F"
 COLOR_ACCENT  = "#0EA5E9"
 
 # objetos de página (mismos parámetros que en Dashboard.py → switch_page funciona)
-adh_pg = st.Page("pages/1_Adherencia.py", title="Adherencia", icon="🎯")
-ocu_pg = st.Page("pages/2_Ocupacion.py",  title="Ocupación",  icon="📊")
-nov_pg = st.Page("pages/3_Novedades.py",  title="Novedades",  icon="📢")
+adh_pg = st.Page("pages/1_Adherencia.py",   title="Adherencia",   icon="🎯")
+ocu_pg = st.Page("pages/2_Ocupacion.py",    title="Ocupación",    icon="📊")
+nov_pg = st.Page("pages/3_Novedades.py",    title="Novedades",    icon="📢")
+tip_pg = st.Page("pages/4_Tipificacion.py", title="Tipificación", icon="🏷️")
 
 _MESES_ABR = {1: "Ene", 2: "Feb", 3: "Mar", 4: "Abr", 5: "May", 6: "Jun",
               7: "Jul", 8: "Ago", 9: "Sep", 10: "Oct", 11: "Nov", 12: "Dic"}
@@ -25,7 +26,10 @@ def _datos_adherencia_dia():
     en lugar del rango completo, para reflejar el desempeño más actual. Los Excel son pesados, así
     que se leen una sola vez y de aquí se derivan tanto el top de supervisores como el de asesores.
     """
-    archivos = [f for f in glob.glob("Consolidado_*.xlsx") if "_O_" not in os.path.basename(f)]
+    archivos = [
+        f for f in glob.glob("Consolidado_*.xlsx")
+        if "_O_" not in os.path.basename(f) and "_T_" not in os.path.basename(f)
+    ]
     if not archivos:
         return None
 
@@ -80,11 +84,22 @@ def _datos_adherencia_dia():
     total_prog = dia["prog_s"].sum()
     promedio_general = (dia["adh_s"].sum() / total_prog) if total_prog > 0 else 0
 
+    # Serie diaria de ADH% para todo el rango cargado (no solo el último día):
+    # alimenta la mini-gráfica de tendencia de la tarjeta destacada en Inicio.
+    validos = df[df["prog_s"] > 0]
+    serie = (
+        validos.groupby(validos["Fecha"].dt.normalize())
+        .apply(lambda g: g["adh_s"].sum() / g["prog_s"].sum() if g["prog_s"].sum() > 0 else 0)
+        .sort_index()
+    )
+    serie_diaria = [{"fecha": f, "adh": v} for f, v in serie.items()]
+
     return {
         "fecha": ultimo_dia,
         "top3_supervisores": top_sup.head(3).to_dict("records"),
         "bottom5_asesores": bottom_ases.head(5).to_dict("records"),
         "promedio_general": promedio_general,
+        "serie_diaria": serie_diaria,
     }
 
 # ── Logo base64 ──────────────────────────
@@ -329,58 +344,60 @@ st.markdown(f"""
     .sec-lbl::after {{ content:'';flex:1;height:1px;
         background:linear-gradient(90deg,rgba(255,255,255,0.14),transparent); }}
 
-    /* ══ MODULE CARDS ══ */
-    .mod {{ position:relative;border-radius:24px;overflow:hidden;
-        padding:34px 30px 26px;display:flex;flex-direction:column;height:100%;
-        background:linear-gradient(160deg,rgba(255,255,255,0.075) 0%,rgba(255,255,255,0.02) 100%);
-        border:1px solid rgba(255,255,255,0.10);
-        box-shadow:0 20px 50px rgba(0,0,0,0.35),inset 0 1px 0 rgba(255,255,255,0.08);
-        backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-        transition:transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s ease,border-color .3s ease;
-        animation:fadeUp .8s ease both; }}
-    .mod:hover {{ transform:translateY(-8px);
-        border-color:var(--glow,rgba(255,255,255,0.25));
-        box-shadow:0 32px 70px rgba(0,0,0,0.5),0 0 0 1px var(--glow,transparent),
-                   0 0 50px -8px var(--glow,transparent); }}
-    .mod-glow {{ position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;
-        background:radial-gradient(circle,var(--accent),transparent 70%);opacity:.16;pointer-events:none; }}
-    .mod-head {{ display:flex;align-items:flex-start;justify-content:space-between;
-        position:relative;z-index:1;margin-bottom:18px; }}
-    .mod-ico {{ position:relative;width:64px;height:64px;border-radius:18px;
-        display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0;
-        background:var(--icobg);border:1px solid var(--glow,rgba(255,255,255,0.12));
-        animation:float 3.8s ease-in-out infinite;
-        box-shadow:0 10px 30px -6px var(--glow,transparent); }}
-    .mod-badge {{ display:inline-flex;align-items:center;gap:6px;
-        font-size:9.5px;font-weight:800;padding:5px 11px;border-radius:99px;
-        letter-spacing:0.08em;text-transform:uppercase; }}
-    .mod-badge-dot {{ width:6px;height:6px;border-radius:50%; }}
-    .mod-title {{ font-family:'Space Grotesk',sans-serif!important;
-        font-size:25px;font-weight:700;color:white;margin:0 0 9px;
-        letter-spacing:-0.5px;position:relative;z-index:1; }}
-    .mod-desc {{ font-size:13.5px;color:rgba(255,255,255,0.55);line-height:1.7;
-        margin:0 0 22px;position:relative;z-index:1; }}
-    .mod-feats {{ display:flex;flex-direction:column;gap:11px;margin-bottom:26px;
-        position:relative;z-index:1; }}
-    .mfeat {{ display:flex;align-items:center;gap:11px;font-size:12.5px;
-        color:rgba(255,255,255,0.72);font-weight:500; }}
-    .mfeat-ck {{ width:19px;height:19px;border-radius:6px;flex-shrink:0;
-        display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;
-        background:var(--icobg);color:var(--accent-solid);border:1px solid var(--glow,rgba(255,255,255,0.12)); }}
-    .mod-div {{ height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.12),transparent);
-        margin:0 0 16px;position:relative;z-index:1; }}
-    .mod-foot {{ display:flex;align-items:flex-end;justify-content:space-between;gap:14px;
-        margin-bottom:22px;position:relative;z-index:1; }}
-    .mod-chips {{ display:flex;flex-direction:column;gap:7px; }}
-    .mchip {{ display:inline-flex;align-items:center;gap:6px;align-self:flex-start;
-        font-size:10.5px;font-weight:700;padding:5px 10px;border-radius:8px;
-        background:var(--icobg);color:rgba(255,255,255,0.82);
-        border:1px solid var(--glow,rgba(255,255,255,0.12)); }}
-    .mchip b {{ color:var(--accent-solid);font-weight:800; }}
-    .mspark {{ display:flex;align-items:flex-end;gap:4px;height:46px;padding:0 2px; }}
-    .mspark span {{ width:7px;border-radius:4px;background:var(--accent);
-        opacity:.55;transform-origin:bottom;transition:transform .4s cubic-bezier(.2,.8,.2,1),opacity .3s ease; }}
-    .mod:hover .mspark span {{ opacity:.95;transform:scaleY(1.18); }}
+    /* ══ MINI MODULE CARDS (columna derecha) ══ */
+    .st-key-mini_stack [data-testid="stVerticalBlock"] {{ gap:0.5rem !important; }}
+    .bento-mini-v2 {{ position:relative;border-radius:18px 18px 6px 6px;padding:18px 18px 14px;overflow:hidden;
+        background:linear-gradient(160deg,rgba(255,255,255,0.06),rgba(255,255,255,0.015));
+        border:1px solid rgba(255,255,255,0.09);border-bottom:none;
+        transition:border-color .2s ease; }}
+    .bento-mini-v2::before {{ content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--mc); }}
+    .bento-mini-v2::after {{ content:'';position:absolute;top:-30px;right:-24px;width:90px;height:90px;border-radius:50%;
+        background:radial-gradient(circle,var(--mc),transparent 70%);opacity:.16;pointer-events:none; }}
+    .bento-mini-icon2 {{ width:36px;height:36px;border-radius:11px;background:var(--mbg);border:1px solid var(--mc);
+        display:flex;align-items:center;justify-content:center;margin-bottom:12px;position:relative;z-index:1; }}
+    .bento-mini-title2 {{ font-family:'Space Grotesk',sans-serif!important;font-size:14.5px;font-weight:700;color:white;
+        margin:0 0 4px;position:relative;z-index:1; }}
+    .bento-mini-desc2 {{ font-size:11px;color:rgba(255,255,255,0.45);line-height:1.5;margin:0;position:relative;z-index:1; }}
+
+    .st-key-mini_btn_ocu [data-testid="stButton"] > button,
+    .st-key-mini_btn_tip [data-testid="stButton"] > button,
+    .st-key-mini_btn_nov [data-testid="stButton"] > button {{
+        height:38px !important;border-radius:6px 6px 14px 14px !important;font-size:11.5px !important;
+        font-weight:700 !important;color:rgba(255,255,255,0.85) !important;border:1px solid transparent !important;
+        margin-top:-8px !important;position:relative;z-index:1; }}
+    .st-key-mini_btn_ocu [data-testid="stButton"] > button {{ background:rgba(139,92,246,0.16) !important;border-color:rgba(139,92,246,0.35) !important; }}
+    .st-key-mini_btn_tip [data-testid="stButton"] > button {{ background:rgba(236,72,153,0.16) !important;border-color:rgba(236,72,153,0.35) !important; }}
+    .st-key-mini_btn_nov [data-testid="stButton"] > button {{ background:rgba(52,211,153,0.16) !important;border-color:rgba(52,211,153,0.35) !important; }}
+    .st-key-mini_btn_ocu [data-testid="stButton"] > button:hover {{ background:rgba(139,92,246,0.28) !important; }}
+    .st-key-mini_btn_tip [data-testid="stButton"] > button:hover {{ background:rgba(236,72,153,0.28) !important; }}
+    .st-key-mini_btn_nov [data-testid="stButton"] > button:hover {{ background:rgba(52,211,153,0.28) !important; }}
+
+    .bento-hero {{ position:relative;border-radius:24px;padding:34px 34px 28px;overflow:hidden;
+        background:linear-gradient(155deg,var(--hc1),var(--hc2) 55%,rgba(255,255,255,0.02));
+        border:1px solid var(--hbd);animation:fadeUp .5s ease both; }}
+    .bento-hero::before {{ content:'';position:absolute;top:-90px;right:-70px;width:280px;height:280px;border-radius:50%;
+        background:radial-gradient(circle,var(--hglow),transparent 70%);pointer-events:none; }}
+    .bento-hero-top {{ display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:26px;position:relative;z-index:1; }}
+    .bento-hero-ico {{ width:52px;height:52px;border-radius:15px;display:flex;align-items:center;justify-content:center;
+        background:var(--hbg);border:1px solid var(--hbd);color:var(--htxt); }}
+    .bento-badge {{ display:inline-flex;align-items:center;gap:7px;font-size:10px;font-weight:800;letter-spacing:0.08em;
+        text-transform:uppercase;color:var(--htxt);background:var(--hbg);border:1px solid var(--hbd);
+        border-radius:99px;padding:6px 12px 6px 10px; }}
+    .bento-badge .live {{ width:6px;height:6px;border-radius:50%;background:var(--htxt);box-shadow:0 0 8px var(--htxt); }}
+    .bento-hero h3 {{ font-family:'Space Grotesk',sans-serif!important;font-size:26px;font-weight:700;color:white;
+        margin:0 0 8px;letter-spacing:-0.5px;position:relative;z-index:1; }}
+    .bento-hero p {{ font-size:13px;color:rgba(255,255,255,0.60);line-height:1.6;max-width:420px;margin:0 0 22px;position:relative;z-index:1; }}
+    .bento-stat-row {{ display:flex;align-items:flex-end;gap:28px;position:relative;z-index:1;margin-bottom:24px; }}
+    .bento-stat-val {{ font-family:'Space Grotesk',sans-serif!important;font-size:52px;font-weight:700;color:var(--htxt);
+        line-height:1;letter-spacing:-1.5px;font-variant-numeric:tabular-nums; }}
+    .bento-stat-lab {{ font-size:10.5px;color:rgba(255,255,255,0.38);text-transform:uppercase;letter-spacing:0.07em;margin-top:6px; }}
+    .bento-spark {{ flex:1;min-width:0; }}
+    .bento-feats {{ display:flex;flex-wrap:wrap;gap:10px 22px;position:relative;z-index:1;margin-bottom:22px; }}
+    .bento-feat {{ display:flex;align-items:center;gap:9px;font-size:12px;color:rgba(255,255,255,0.75);font-weight:500; }}
+    .bento-feat-ck {{ width:17px;height:17px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+        font-size:9px;font-weight:900;background:var(--hbg);color:var(--htxt);border:1px solid var(--hbd); }}
+    .bento-foot {{ display:flex;align-items:center;justify-content:space-between;margin-top:4px;padding-top:20px;
+        border-top:1px solid rgba(255,255,255,0.10);position:relative;z-index:1;flex-wrap:wrap;gap:8px; }}
 
     /* ══ BUTTONS ══ */
     div[data-testid="stButton"] > button {{
@@ -708,139 +725,136 @@ unsafe_allow_html=True)
 # ── MÓDULOS ──────────────────────────────
 st.markdown("<div class='sec-lbl'>Módulos disponibles</div>", unsafe_allow_html=True)
 
-col1, col2, col3 = st.columns(3, gap="large")
+st.markdown("""
+<svg width="0" height="0" style="position:absolute">
+<defs>
+  <linearGradient id="g-adh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0EA5E9"/><stop offset="1" stop-color="#6366F1"/></linearGradient>
+  <linearGradient id="g-spark" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F472B6" stop-opacity="0.45"/><stop offset="1" stop-color="#F472B6" stop-opacity="0"/></linearGradient>
+  <symbol id="ic-target" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6"/>
+    <circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="1.6"/>
+    <circle cx="12" cy="12" r="1.6" fill="currentColor"/>
+  </symbol>
+  <symbol id="ic-pulse" viewBox="0 0 24 24">
+    <path d="M2 13h4l2.2-6.5L12 19l2-9.5L15.6 13H22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="ic-tag" viewBox="0 0 24 24">
+    <path d="M11.3 3.3H5a1.7 1.7 0 0 0-1.7 1.7v6.3c0 .45.18.88.5 1.2l8.9 8.9c.66.66 1.74.66 2.4 0l6.3-6.3c.66-.66.66-1.74 0-2.4l-8.9-8.9c-.32-.32-.75-.5-1.2-.5Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+    <circle cx="8.2" cy="8.2" r="1.35" fill="currentColor"/>
+  </symbol>
+  <symbol id="ic-broadcast" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="2" fill="currentColor"/>
+    <path d="M7.5 7.5a6.5 6.5 0 0 0 0 9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    <path d="M16.5 7.5a6.5 6.5 0 0 1 0 9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    <path d="M4.3 4.3a11 11 0 0 0 0 15.4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" opacity="0.55"/>
+    <path d="M19.7 4.3a11 11 0 0 1 0 15.4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" opacity="0.55"/>
+  </symbol>
+</defs>
+</svg>
+""", unsafe_allow_html=True)
 
-with col1:
-    st.markdown("""
-    <div class='mod' style='
-        --accent:linear-gradient(90deg,#0EA5E9,#6366F1);
-        --accent-solid:#38BDF8;
-        --glow:rgba(56,189,248,0.55);
-        --icobg:linear-gradient(135deg,rgba(14,165,233,0.22),rgba(99,102,241,0.10));'>
-        <div class='mod-glow'></div>
-        <div class='mod-head'>
-            <div class='mod-ico'>🎯</div>
-            <span class='mod-badge' style='background:rgba(16,185,129,0.14);color:#34D399;border:1px solid rgba(16,185,129,0.30);'>
-                <span class='mod-badge-dot' style='background:#34D399'></span>Disponible
-            </span>
-        </div>
-        <div class='mod-title'>Adherencia</div>
-        <div class='mod-desc'>
-            Seguimiento de la adherencia de cada experto respecto a su tiempo programado.
-            Tendencias, distribución de llegadas y comparativos por supervisor.
-        </div>
-        <div class='mod-feats'>
-            <div class='mfeat'><span class='mfeat-ck'>✓</span>Tendencia diaria, semanal y mensual</div>
-            <div class='mfeat'><span class='mfeat-ck'>✓</span>Distribución de tipos de llegada</div>
-            <div class='mfeat'><span class='mfeat-ck'>✓</span>Ranking y comparativo por supervisor</div>
-            <div class='mfeat'><span class='mfeat-ck'>✓</span>Tablas de planificación y excesos</div>
-        </div>
-        <div class='mod-div'></div>
-        <div class='mod-foot'>
-            <div class='mod-chips'>
-                <span class='mchip'>🎯 Meta&nbsp;<b>90%</b></span>
-                <span class='mchip'>📊 <b>4</b>&nbsp;vistas</span>
-            </div>
-            <div class='mspark'>
-                <span style='height:38%'></span><span style='height:62%'></span>
-                <span style='height:48%'></span><span style='height:78%'></span>
-                <span style='height:58%'></span><span style='height:90%'></span>
-                <span style='height:70%'></span><span style='height:100%'></span>
-            </div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+# ── Sparkline real de adherencia (últimos días con datos) ──
+_spark_points = ""
+_spark_area = ""
+if _datos_dia and _datos_dia.get("serie_diaria"):
+    _serie_pts = _datos_dia["serie_diaria"][-14:]
+    _vals = [max(0.0, min(1.0, p["adh"])) for p in _serie_pts]
+    if len(_vals) >= 2:
+        _vmin, _vmax = min(_vals), max(_vals)
+        _rango = (_vmax - _vmin) or 1.0
+        _w, _h, _pad = 260, 64, 6
+        _step = _w / (len(_vals) - 1)
+        _xy = [
+            (i * _step, _pad + (1 - (v - _vmin) / _rango) * (_h - 2 * _pad))
+            for i, v in enumerate(_vals)
+        ]
+        _spark_points = " ".join(f"{x:.1f},{y:.1f}" for x, y in _xy)
+        _spark_area = _spark_points + f" {_w:.1f},{_h} 0,{_h}"
+
+_adh_hero_pct = f"{_datos_dia['promedio_general'] * 100:.1f}" if _datos_dia else "—"
+if _datos_dia and _datos_dia.get("top3_supervisores"):
+    _adh_hero_ctx = (
+        f"{len(_datos_dia['serie_diaria'])} días evaluados este mes · "
+        f"lidera {_datos_dia['top3_supervisores'][0]['Supervisor'].split()[0]} "
+        f"{_datos_dia['top3_supervisores'][0]['Supervisor'].split()[1] if len(_datos_dia['top3_supervisores'][0]['Supervisor'].split()) > 1 else ''}"
+    )
+else:
+    _adh_hero_ctx = "Aún no hay suficientes datos este mes"
+
+_feats_adh = ["Tendencia diaria, semanal y mensual", "Distribución de tipos de llegada", "Ranking por supervisor"]
+_feats_html = "".join(f"<div class='bento-feat'><span class='bento-feat-ck'>✓</span>{f}</div>" for f in _feats_adh)
+
+_stat_html = (
+    "<div class='bento-stat-row'>"
+    "<div>"
+    f"<div class='bento-stat-val'>{_adh_hero_pct}<span style='font-size:26px'>%</span></div>"
+    f"<div class='bento-stat-lab'>Adherencia · {_adh_hero_ctx}</div>"
+    "</div>"
+    "<div class='bento-spark'>"
+    "<svg viewBox='0 0 260 64' width='100%' height='64' preserveAspectRatio='none'>"
+    "<polyline points='" + _spark_points + "' fill='none' stroke='#7DD3FC' stroke-width='2.2' "
+    "stroke-linecap='round' stroke-linejoin='round'/>"
+    "<polygon points='" + _spark_area + "' fill='url(#g-spark)' opacity='0.5'/>"
+    "</svg>"
+    "</div>"
+    "</div>"
+)
+
+_hero_html = (
+    "<div class='bento-hero' style=\"--hc1:rgba(14,165,233,0.16);--hc2:rgba(99,102,241,0.06);"
+    "--hbd:rgba(14,165,233,0.30);--hglow:rgba(14,165,233,0.28);--hbg:rgba(14,165,233,0.16);--htxt:#7DD3FC\">"
+    "<div class='bento-hero-top'>"
+    "<div class='bento-hero-ico'><svg width=\"26\" height=\"26\"><use href=\"#ic-target\"/></svg></div>"
+    "<span class='bento-badge'><span class='live'></span>Indicador principal</span>"
+    "</div>"
+    "<h3>Adherencia</h3>"
+    "<p>Seguimiento de la adherencia de cada experto respecto a su tiempo programado, con comparativos por supervisor.</p>"
+    f"{_stat_html}"
+    f"<div class='bento-feats'>{_feats_html}</div>"
+    "</div>"
+)
+
+MINIS = {
+    "ocu": {
+        "titulo": "Ocupación", "emoji": "📊", "icono": "ic-pulse", "pagina": ocu_pg,
+        "desc": "Ocupación y contacto por período, con detalle de llamadas atendidas.",
+        "mc": "#8B5CF6", "mbg": "rgba(139,92,246,0.14)", "mtxt": "#C4B5FD",
+    },
+    "tip": {
+        "titulo": "Tipificación", "emoji": "🏷️", "icono": "ic-tag", "pagina": tip_pg,
+        "desc": "Calidad del dato en el cierre de llamadas y sus categorías.",
+        "mc": "#EC4899", "mbg": "rgba(236,72,153,0.14)", "mtxt": "#F9A8D4",
+    },
+    "nov": {
+        "titulo": "Novedades", "emoji": "📢", "icono": "ic-broadcast", "pagina": nov_pg,
+        "desc": "Registro de novedades con flujo de aprobación.",
+        "mc": "#34D399", "mbg": "rgba(52,211,153,0.14)", "mtxt": "#6EE7B7",
+    },
+}
+
+col_hero, col_stack = st.columns([1.55, 1], gap="large")
+
+with col_hero:
+    st.markdown(_hero_html, unsafe_allow_html=True)
     if st.button("🎯  Abrir módulo de Adherencia →", key="btn_adh",
                  use_container_width=True, type="primary"):
         st.switch_page(adh_pg)
 
-with col2:
-    st.markdown("""
-    <div class='mod' style='
-        --accent:linear-gradient(90deg,#8B5CF6,#EC4899);
-        --accent-solid:#A78BFA;
-        --glow:rgba(139,92,246,0.55);
-        --icobg:linear-gradient(135deg,rgba(139,92,246,0.22),rgba(236,72,153,0.10));'>
-        <div class='mod-glow'></div>
-        <div class='mod-head'>
-            <div class='mod-ico'>📊</div>
-            <span class='mod-badge' style='background:rgba(16,185,129,0.14);color:#34D399;border:1px solid rgba(16,185,129,0.30);'>
-                <span class='mod-badge-dot' style='background:#34D399'></span>Disponible
-            </span>
-        </div>
-        <div class='mod-title'>Ocupación</div>
-        <div class='mod-desc'>
-            Seguimiento de ocupación y contacto por experto. Tendencias por supervisor,
-            detalle de llamadas y resumen de distribución por equipo.
-        </div>
-        <div class='mod-feats'>
-            <div class='mfeat'><span class='mfeat-ck'>✓</span>Ocupación y contacto por período</div>
-            <div class='mfeat'><span class='mfeat-ck'>✓</span>Tendencia por supervisor y experto</div>
-            <div class='mfeat'><span class='mfeat-ck'>✓</span>Detalle de llamadas atendidas</div>
-            <div class='mfeat'><span class='mfeat-ck'>✓</span>Resumen y distribución por supervisor</div>
-        </div>
-        <div class='mod-div'></div>
-        <div class='mod-foot'>
-            <div class='mod-chips'>
-                <span class='mchip'>📈 Meta&nbsp;<b>90%</b></span>
-                <span class='mchip'>📊 <b>3</b>&nbsp;vistas</span>
-            </div>
-            <div class='mspark'>
-                <span style='height:55%'></span><span style='height:35%'></span>
-                <span style='height:72%'></span><span style='height:50%'></span>
-                <span style='height:85%'></span><span style='height:62%'></span>
-                <span style='height:95%'></span><span style='height:74%'></span>
-            </div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-    if st.button("📊  Abrir módulo de Ocupación →", key="btn_ocu",
-                 use_container_width=True, type="primary"):
-        st.switch_page(ocu_pg)
-
-with col3:
-    st.markdown("""
-    <div class='mod' style='
-        --accent:linear-gradient(90deg,#34D399,#059669);
-        --accent-solid:#34D399;
-        --glow:rgba(52,211,153,0.55);
-        --icobg:linear-gradient(135deg,rgba(52,211,153,0.22),rgba(5,150,105,0.10));'>
-        <div class='mod-glow'></div>
-        <div class='mod-head'>
-            <div class='mod-ico'>📢</div>
-            <span class='mod-badge' style='background:rgba(52,211,153,0.14);color:#34D399;border:1px solid rgba(52,211,153,0.30);'>
-                <span class='mod-badge-dot' style='background:#34D399'></span>Disponible
-            </span>
-        </div>
-        <div class='mod-title'>Novedades</div>
-        <div class='mod-desc'>
-            Registra y gestiona las novedades operativas del equipo. Cada novedad sigue un flujo
-            de aprobación: experto → supervisor → WFM.
-        </div>
-        <div class='mod-feats'>
-            <div class='mfeat'><span class='mfeat-ck'>✓</span>Registro de novedades en tiempo real</div>
-            <div class='mfeat'><span class='mfeat-ck'>✓</span>Vista por estado: pendientes, aprobadas e históricas</div>
-            <div class='mfeat'><span class='mfeat-ck'>✓</span>Filtros por supervisor, experto y período</div>
-            <div class='mfeat'><span class='mfeat-ck'>✓</span>Descarga en Excel y sincronización con Google Sheets</div>
-        </div>
-        <div class='mod-div'></div>
-        <div class='mod-foot'>
-            <div class='mod-chips'>
-                <span class='mchip'>🟢 <b>Live</b></span>
-                <span class='mchip'>📊 <b>3</b>&nbsp;vistas</span>
-            </div>
-            <div class='mspark'>
-                <span style='height:45%'></span><span style='height:70%'></span>
-                <span style='height:55%'></span><span style='height:82%'></span>
-                <span style='height:64%'></span><span style='height:92%'></span>
-                <span style='height:76%'></span><span style='height:100%'></span>
-            </div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-    if st.button("📢  Abrir módulo de Novedades →", key="btn_nov",
-                 use_container_width=True, type="primary"):
-        st.switch_page(nov_pg)
+with col_stack:
+    with st.container(key="mini_stack"):
+        for _mid, _m in MINIS.items():
+            _mini_html = (
+                f"<div class='bento-mini-v2' style=\"--mc:{_m['mc']};--mbg:{_m['mbg']}\">"
+                f"<div class='bento-mini-icon2' style=\"color:{_m['mtxt']}\">"
+                f"<svg width=\"18\" height=\"18\"><use href=\"#{_m['icono']}\"/></svg></div>"
+                f"<div class='bento-mini-title2'>{_m['titulo']}</div>"
+                f"<div class='bento-mini-desc2'>{_m['desc']}</div>"
+                "</div>"
+            )
+            st.markdown(_mini_html, unsafe_allow_html=True)
+            with st.container(key=f"mini_btn_{_mid}"):
+                if st.button(f"{_m['emoji']}  Abrir →", key=f"btn_{_mid}", use_container_width=True):
+                    st.switch_page(_m["pagina"])
 
 # ── STATS ─────────────────────────────────
 st.markdown("""
@@ -857,7 +871,7 @@ st.markdown("""
     </div>
     <div class='stat' style='--sc:#A78BFA'>
         <div class='stat-ico'>🧩</div>
-        <div class='stat-val'>3</div>
+        <div class='stat-val'>4</div>
         <div class='stat-lbl'>Módulos</div>
     </div>
     <div class='stat' style='--sc:#FBBF24'>

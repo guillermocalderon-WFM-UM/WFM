@@ -11,6 +11,7 @@ import io
 # CONFIGURACIÓN
 # ─────────────────────────────────────────────
 SUPERVISOR_COLORS = px.colors.qualitative.Bold
+NIVEL1_COLORS     = px.colors.qualitative.Set2
 
 @st.cache_data(show_spinner=False)
 def _excel_bytes(df):
@@ -38,6 +39,7 @@ COLOR_ACCENT  = "#0EA5E9"
 COLOR_SUCCESS = "#10B981"
 COLOR_WARNING = "#F59E0B"
 COLOR_DANGER  = "#EF4444"
+COLOR_TIPI    = "#EC4899"   # rosa/magenta — color distintivo del módulo de Tipificación
 
 def _mes_orden(path):
     nombre = os.path.basename(path).upper()
@@ -62,9 +64,9 @@ def seg_a_hhmmss(seg):
 # ─────────────────────────────────────────────
 @st.cache_data
 def cargar_datos(firma):
-    archivos = sorted(glob.glob("Consolidado_O_*.xlsx"), key=_mes_orden)
+    archivos = sorted(glob.glob("Consolidado_T_*.xlsx"), key=_mes_orden)
     if not archivos:
-        st.error("No se encontraron archivos Consolidado_O_*.xlsx en la carpeta.")
+        st.error("No se encontraron archivos Consolidado_T_*.xlsx en la carpeta.")
         st.stop()
 
     partes = []
@@ -76,24 +78,26 @@ def cargar_datos(firma):
     df = pd.concat(partes, ignore_index=True)
     df["Fecha"] = pd.to_datetime(df["Fecha"], dayfirst=True, errors="coerce")
 
-    for col in ["Total Turno", "Tiempo Efectivo", "Ajuste", "Tiempo Dur. Llamadas", "Disponible"]:
+    # Tiempo Conc. / Tiempo Dur. son SUMAS por fila (cada fila agrupa todas las
+    # llamadas de un agente en un día con el mismo resultado — ver "Llamadas").
+    for col in ["Tiempo Conc.", "Tiempo Dur."]:
         if col in df.columns:
             df[col + "_s"] = pd.to_timedelta(df[col], errors="coerce").dt.total_seconds()
 
-    # Calcular métricas desde columnas de tiempo (más confiable que el Excel precalculado)
-    if "Ajuste_s" in df.columns and "Tiempo Efectivo_s" in df.columns:
-        df["Ocupación"] = (
-            df["Ajuste_s"] / df["Tiempo Efectivo_s"].replace(0, float("nan"))
-        ).clip(upper=1.0)
+    if "Llamadas" not in df.columns:
+        df["Llamadas"] = 1  # compatibilidad con un consolidado viejo sin agregar
 
-    if "Ajuste_s" in df.columns and "Disponible_s" in df.columns:
-        df["% Contacto"] = (
-            df["Ajuste_s"] / df["Disponible_s"].replace(0, float("nan"))
-        ).clip(upper=1.0)
+    # Solo las llamadas atendidas (Aten.="Si") pueden llegar a tener tipificación;
+    # el resto (Aten.="No", incluye Abandonadas y Canceladas) nunca la tiene.
+    df["Medible"]    = df["Aten."] == "Si"
+    df["Tipificada"] = df["Disp."].notna() & (df["Disp."].astype(str).str.strip() != "")
 
     if "Semana" in df.columns:
         df["_semana_num"] = df["Semana"]
-    df["Semana"]   = df["Fecha"].dt.to_period("W").apply(lambda p: f"Sem {p.start_time.strftime('%d/%m')}")
+    # Lunes de la semana de cada fecha, vectorizado (nada de .apply fila por
+    # fila): con ~600.000 registros de llamadas, un lambda por fila se nota.
+    _lunes = df["Fecha"] - pd.to_timedelta(df["Fecha"].dt.dayofweek, unit="D")
+    df["Semana"]   = "Sem " + _lunes.dt.strftime("%d/%m")
     df["Mes"]      = df["Fecha"].dt.to_period("M").astype(str)
     df["FechaStr"] = df["Fecha"].dt.strftime("%d/%m")
 
@@ -101,7 +105,7 @@ def cargar_datos(firma):
 
 _firma_archivos = tuple(
     (os.path.basename(a), os.path.getmtime(a))
-    for a in sorted(glob.glob("Consolidado_O_*.xlsx"), key=_mes_orden)
+    for a in sorted(glob.glob("Consolidado_T_*.xlsx"), key=_mes_orden)
 )
 df, archivos_cargados = cargar_datos(_firma_archivos)
 
@@ -119,9 +123,6 @@ def _cargar_logo():
         return ""
 
 _logo_src = _cargar_logo()
-
-# Detectar columna Campaña (con o sin tilde)
-_camp_col = "Campaña" if "Campaña" in df.columns else ("Campana" if "Campana" in df.columns else None)
 
 # ─────────────────────────────────────────────
 # SIDEBAR – FILTROS
@@ -159,7 +160,7 @@ with st.sidebar:
     tipo_periodo = st.selectbox("Agrupar por", ["Día","Semana","Mes"], index=0)
 
     meses_disp = ["Todos"] + [
-        os.path.basename(a).replace("Consolidado_O_", "").replace(".xlsx", "").capitalize()
+        os.path.basename(a).replace("Consolidado_T_", "").replace(".xlsx", "").capitalize()
         for a in archivos_cargados
     ]
     mes_sel = st.selectbox("Mes", meses_disp)
@@ -208,11 +209,14 @@ with st.sidebar:
     expertos = ["Todos"] + sorted(df["Nombre"].dropna().unique().tolist())
     exp_sel = st.selectbox("Experto", expertos)
 
-    if _camp_col:
-        campanas = ["Todas"] + sorted(df[_camp_col].dropna().unique().tolist())
-        camp_sel = st.selectbox("Campaña", campanas)
+    campanas = ["Todas"] + sorted(df["Campaña"].dropna().unique().tolist())
+    camp_sel = st.selectbox("Campaña", campanas)
+
+    if "Nivel 1" in df.columns:
+        niveles1_disp = ["Todos"] + sorted(df["Nivel 1"].dropna().unique().tolist())
+        nivel1_sel = st.selectbox("Categoría (Nivel 1)", niveles1_disp)
     else:
-        camp_sel = "Todas"
+        nivel1_sel = "Todos"
 
     st.markdown("""
     <div class='sbf'>
@@ -449,16 +453,16 @@ st.markdown(f"""
         transform:translateY(0) !important;box-shadow:inset 0 2px 5px rgba(0,0,0,0.48) !important; }}
     .st-key-hdrbanner [data-testid="stButton"] > button[kind="primary"] {{
         color:#F4F9FF !important;padding-left:20px !important;
-        border:1px solid rgba(56,189,248,0.55) !important;border-top-color:rgba(186,225,255,0.62) !important;
-        background:linear-gradient(180deg,rgba(56,189,248,0.30),rgba(59,130,246,0.16)) !important;
-        box-shadow:inset 0 1px 0 rgba(255,255,255,0.22),inset 0 -8px 14px -12px rgba(8,3,24,0.42),0 8px 22px -10px rgba(56,189,248,0.50) !important; }}
+        border:1px solid rgba(236,72,153,0.55) !important;border-top-color:rgba(249,168,212,0.62) !important;
+        background:linear-gradient(180deg,rgba(236,72,153,0.30),rgba(219,39,119,0.16)) !important;
+        box-shadow:inset 0 1px 0 rgba(255,255,255,0.22),inset 0 -8px 14px -12px rgba(8,3,24,0.42),0 8px 22px -10px rgba(236,72,153,0.50) !important; }}
     .st-key-hdrbanner [data-testid="stButton"] > button[kind="primary"]::before {{
         content:"";position:absolute;left:8px;top:50%;transform:translateY(-50%);
-        width:5px;height:5px;border-radius:50%;background:#7DD3FC;box-shadow:0 0 8px rgba(125,211,252,0.9); }}
+        width:5px;height:5px;border-radius:50%;background:#F9A8D4;box-shadow:0 0 8px rgba(249,168,212,0.9); }}
     .st-key-hdrbanner [data-testid="stButton"] > button[kind="primary"]:hover {{
         transform:translateY(-1px) !important;
-        background:linear-gradient(180deg,rgba(56,189,248,0.36),rgba(59,130,246,0.20)) !important;
-        box-shadow:inset 0 1px 0 rgba(255,255,255,0.24),0 10px 26px -10px rgba(56,189,248,0.58) !important; }}
+        background:linear-gradient(180deg,rgba(236,72,153,0.36),rgba(219,39,119,0.20)) !important;
+        box-shadow:inset 0 1px 0 rgba(255,255,255,0.24),0 10px 26px -10px rgba(236,72,153,0.58) !important; }}
 
     /* ══ KPI CARDS ══ */
     .kpi-card {{
@@ -561,7 +565,7 @@ st.markdown(f"""
     div[data-testid="stDataFrame"] {{ border-radius:16px!important;overflow:hidden!important;
         box-shadow:0 16px 38px -16px rgba(0,0,0,0.65)!important;border:1px solid rgba(255,255,255,0.10)!important; }}
     div[data-testid="stDataFrame"] div[role="columnheader"] {{
-        background:linear-gradient(135deg,#1b1240 0%,#0EA5E9 100%)!important;
+        background:linear-gradient(135deg,#1b1240 0%,#EC4899 100%)!important;
         color:white!important;font-weight:700!important; }}
     div[data-testid="stDataFrame"] div[role="columnheader"] span {{ color:white!important; }}
     div[data-testid="stDataFrame"] .ag-root-wrapper {{ background:rgba(16,13,36,0.90)!important;border:none!important; }}
@@ -570,12 +574,12 @@ st.markdown(f"""
     div[data-testid="stDataFrame"] .ag-row {{ background:rgba(16,13,36,0.85)!important;border-color:rgba(255,255,255,0.045)!important; }}
     div[data-testid="stDataFrame"] .ag-row-odd {{ background:rgba(22,18,48,0.80)!important; }}
     div[data-testid="stDataFrame"] .ag-row:hover,
-    div[data-testid="stDataFrame"] .ag-row-hover {{ background:rgba(14,165,233,0.10)!important; }}
+    div[data-testid="stDataFrame"] .ag-row-hover {{ background:rgba(236,72,153,0.10)!important; }}
     div[data-testid="stDataFrame"] .ag-cell {{ color:rgba(225,232,250,0.90)!important;border-color:rgba(255,255,255,0.04)!important; }}
     div[data-testid="stDataFrame"] .ag-header {{ background:transparent!important;border-bottom:1px solid rgba(255,255,255,0.10)!important; }}
     div[data-testid="stDataFrame"] ::-webkit-scrollbar {{ width:6px;height:6px; }}
     div[data-testid="stDataFrame"] ::-webkit-scrollbar-track {{ background:rgba(255,255,255,0.04); }}
-    div[data-testid="stDataFrame"] ::-webkit-scrollbar-thumb {{ background:rgba(56,189,248,0.35);border-radius:99px; }}
+    div[data-testid="stDataFrame"] ::-webkit-scrollbar-thumb {{ background:rgba(236,72,153,0.35);border-radius:99px; }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -587,7 +591,7 @@ mask = (
     (df["Fecha"].dt.date <= fecha_fin)
 )
 if mes_sel != "Todos":
-    archivo_mes = f"Consolidado_O_{mes_sel.upper()}.xlsx"
+    archivo_mes = f"Consolidado_T_{mes_sel.upper()}.xlsx"
     mask &= df["_archivo"] == archivo_mes
 if sem_sel != "Todas":
     if "_semana_num" in df.columns:
@@ -604,8 +608,10 @@ if coord_sel != "Todos" and "Coordinador" in df.columns:
     mask &= df["Coordinador"] == coord_sel
 if exp_sel != "Todos":
     mask &= df["Nombre"] == exp_sel
-if camp_sel != "Todas" and _camp_col:
-    mask &= df[_camp_col] == camp_sel
+if camp_sel != "Todas":
+    mask &= df["Campaña"] == camp_sel
+if nivel1_sel != "Todos" and "Nivel 1" in df.columns:
+    mask &= df["Nivel 1"] == nivel1_sel
 
 dff = df[mask].copy()
 
@@ -624,22 +630,22 @@ _periodo_rank = {p: i for i, p in enumerate(_periodo_sorted)}
 _n_per        = len(_periodo_sorted)
 _ini_per      = max(-0.5, _n_per - 15 - 0.5)
 
-n_agentes     = dff["Nombre"].nunique()
+n_agentes      = dff["Nombre"].nunique()
 n_supervisores = dff["Supervisor"].nunique()
 
 # ─────────────────────────────────────────────
 # ENCABEZADO
 # ─────────────────────────────────────────────
 rango    = f"{fecha_ini.strftime('%d/%m/%Y')} – {fecha_fin.strftime('%d/%m/%Y')}"
-_home_pg = st.Page("home.py",               title="Inicio",       icon="🏠", default=True)
-_adh_pg  = st.Page("pages/1_Adherencia.py", title="Adherencia",   icon="🎯")
-_tip_pg  = st.Page("pages/4_Tipificacion.py", title="Tipificación", icon="🏷️")
-_nov_pg  = st.Page("pages/3_Novedades.py",  title="Novedades",    icon="📢")
+_home_pg = st.Page("home.py",               title="Inicio",      icon="🏠", default=True)
+_adh_pg  = st.Page("pages/1_Adherencia.py", title="Adherencia",  icon="🎯")
+_ocu_pg  = st.Page("pages/2_Ocupacion.py",  title="Ocupación",   icon="📊")
+_nov_pg  = st.Page("pages/3_Novedades.py",  title="Novedades",   icon="📢")
 
 with st.container(key="hdrbanner"):
     st.markdown(f"""
     <div class='hb-eyebrow'><span class='hb-dot'></span>Centro de Control · Uniminuto 2026</div>
-    <div class='hb-title'>Módulo de Ocupación</div>
+    <div class='hb-title'>Módulo de Tipificación</div>
     <div class='hb-meta'>
         <span class='hb-chip'>📅 <b>{rango}</b></span>
         <span class='hb-chip'>👥 <b>{n_agentes}</b> expertos</span>
@@ -648,32 +654,47 @@ with st.container(key="hdrbanner"):
     """, unsafe_allow_html=True)
     nb1, nb2, nb3, nb4, nb5 = st.columns([1.0, 1.35, 1.3, 1.45, 1.35], vertical_alignment="center")
     with nb1:
-        if st.button("🏠 Inicio",     key="hdr_home", use_container_width=True):
+        if st.button("🏠 Inicio",       key="hdr_home", use_container_width=True):
             st.switch_page(_home_pg)
     with nb2:
-        if st.button("🎯 Adherencia", key="hdr_adh",  use_container_width=True):
+        if st.button("🎯 Adherencia",   key="hdr_adh",  use_container_width=True):
             st.switch_page(_adh_pg)
     with nb3:
-        st.button("📊 Ocupación", key="hdr_ocu", use_container_width=True, type="primary")
+        if st.button("📊 Ocupación",    key="hdr_ocu",  use_container_width=True):
+            st.switch_page(_ocu_pg)
     with nb4:
-        if st.button("🏷️ Tipificación", key="hdr_tip", use_container_width=True):
-            st.switch_page(_tip_pg)
+        st.button("🏷️ Tipificación", key="hdr_tip", use_container_width=True, type="primary")
     with nb5:
-        if st.button("📢 Novedades",  key="hdr_nov",  use_container_width=True):
+        if st.button("📢 Novedades",    key="hdr_nov",  use_container_width=True):
             st.switch_page(_nov_pg)
 
 # ─────────────────────────────────────────────
 # MÉTRICAS GLOBALES
 # ─────────────────────────────────────────────
-ocu_avg      = dff["Ocupación"].mean() if "Ocupación" in dff.columns else 0.0
-cont_avg     = dff["% Contacto"].mean()       if "% Contacto"       in dff.columns else 0.0
-tot_llamadas = int(dff["Llamadas"].sum())     if "Llamadas"         in dff.columns else 0
-tot_abandon  = int(dff["Abandonadas"].sum())  if "Abandonadas"      in dff.columns else 0
-pct_abandon  = tot_abandon / tot_llamadas     if tot_llamadas > 0 else 0.0
+# Cada fila representa varias llamadas iguales (mismo agente/día/resultado)
+# agrupadas — "Llamadas" trae cuántas. Por eso todo se pondera por Llamadas
+# en vez de contar filas o promediar filas directamente.
+medibles      = dff[dff["Medible"]]
+n_medibles    = int(medibles["Llamadas"].sum())
+n_tipificadas = int(medibles.loc[medibles["Tipificada"], "Llamadas"].sum()) if n_medibles > 0 else 0
+pct_tipif     = (n_tipificadas / n_medibles) if n_medibles > 0 else 0.0
 
-ocu_color   = COLOR_SUCCESS if ocu_avg  >= 0.90 else (COLOR_WARNING if ocu_avg  >= 0.80 else COLOR_DANGER)
-cont_color  = COLOR_SUCCESS if cont_avg >= 0.95 else (COLOR_WARNING if cont_avg >= 0.85 else COLOR_DANGER)
-aband_color = COLOR_DANGER  if pct_abandon >= 0.08 else (COLOR_WARNING if pct_abandon >= 0.05 else COLOR_SUCCESS)
+tiempo_conc_prom = (
+    medibles["Tiempo Conc._s"].sum() / n_medibles
+    if "Tiempo Conc._s" in medibles.columns and n_medibles > 0 else 0.0
+)
+
+if n_tipificadas > 0:
+    _top_motivo_row = (
+        medibles.loc[medibles["Tipificada"]].groupby("Disp.")["Llamadas"].sum()
+        .sort_values(ascending=False)
+    )
+    _top_motivo      = _top_motivo_row.index[0]
+    _top_motivo_pct  = _top_motivo_row.iloc[0] / n_tipificadas
+else:
+    _top_motivo, _top_motivo_pct = "—", 0.0
+
+tipif_color = COLOR_SUCCESS if pct_tipif >= 0.90 else (COLOR_WARNING if pct_tipif >= 0.75 else COLOR_DANGER)
 
 def kpi_bar(pct, color, max_val=100):
     fill = min(pct / max_val * 100, 100) if max_val > 0 else 0
@@ -681,107 +702,107 @@ def kpi_bar(pct, color, max_val=100):
 
 k1, k2, k3, k4 = st.columns(4)
 with k1:
-    st.markdown(f"""<div class='kpi-card' style='--kc:{ocu_color}'>
-        <div class='kpi-bg-icon'>⏱️</div>
+    st.markdown(f"""<div class='kpi-card' style='--kc:{tipif_color}'>
+        <div class='kpi-bg-icon'>🏷️</div>
         <div>
-            <div class='kpi-label'>Ocupación</div>
-            <div class='kpi-value' style='color:{ocu_color}'>{ocu_avg:.1%}</div>
-            <div class='kpi-sub'>Meta: 90%</div>
+            <div class='kpi-label'>% Tipificación</div>
+            <div class='kpi-value' style='color:{tipif_color}'>{pct_tipif:.1%}</div>
+            <div class='kpi-sub'>{n_medibles:,} llamadas medibles (Aten.=Sí)</div>
         </div>
-        {kpi_bar(ocu_avg * 100, ocu_color)}
+        {kpi_bar(pct_tipif * 100, tipif_color)}
     </div>""", unsafe_allow_html=True)
 with k2:
-    st.markdown(f"""<div class='kpi-card' style='--kc:{cont_color}'>
+    st.markdown(f"""<div class='kpi-card' style='--kc:{COLOR_ACCENT}'>
         <div class='kpi-bg-icon'>📞</div>
         <div>
-            <div class='kpi-label'>% Contacto</div>
-            <div class='kpi-value' style='color:{cont_color}'>{cont_avg:.1%}</div>
-            <div class='kpi-sub'>Meta: 95%</div>
-        </div>
-        {kpi_bar(cont_avg * 100, cont_color)}
-    </div>""", unsafe_allow_html=True)
-with k3:
-    st.markdown(f"""<div class='kpi-card' style='--kc:{COLOR_ACCENT}'>
-        <div class='kpi-bg-icon'>📲</div>
-        <div>
-            <div class='kpi-label'>Total Llamadas</div>
-            <div class='kpi-value' style='color:#7DD3FC'>{tot_llamadas:,}</div>
-            <div class='kpi-sub'>Llamadas ingresadas al sistema</div>
+            <div class='kpi-label'>Llamadas Atendidas</div>
+            <div class='kpi-value' style='color:#7DD3FC'>{n_medibles:,}</div>
+            <div class='kpi-sub'>Únicas que pueden tipificarse</div>
         </div>
         {kpi_bar(100, COLOR_ACCENT)}
     </div>""", unsafe_allow_html=True)
-with k4:
-    st.markdown(f"""<div class='kpi-card' style='--kc:{aband_color}'>
-        <div class='kpi-bg-icon'>🚫</div>
+with k3:
+    st.markdown(f"""<div class='kpi-card' style='--kc:{COLOR_TIPI}'>
+        <div class='kpi-bg-icon'>⏱️</div>
         <div>
-            <div class='kpi-label'>% Abandono</div>
-            <div class='kpi-value' style='color:{aband_color}'>{pct_abandon:.1%}</div>
-            <div class='kpi-sub'>{tot_abandon:,} llamadas abandonadas</div>
+            <div class='kpi-label'>Tiempo Promedio</div>
+            <div class='kpi-value' style='color:{COLOR_TIPI}'>{seg_a_hhmmss(tiempo_conc_prom)}</div>
+            <div class='kpi-sub'>Por llamada medible</div>
         </div>
-        {kpi_bar(pct_abandon * 100, aband_color, 15)}
+        {kpi_bar(100, COLOR_TIPI)}
+    </div>""", unsafe_allow_html=True)
+with k4:
+    st.markdown(f"""<div class='kpi-card' style='--kc:#8B5CF6'>
+        <div class='kpi-bg-icon'>🏆</div>
+        <div>
+            <div class='kpi-label'>Motivo Más Frecuente</div>
+            <div class='kpi-value' style='color:#C4B5FD;font-size:20px'>{_top_motivo}</div>
+            <div class='kpi-sub'>{_top_motivo_pct:.1%} de las tipificadas</div>
+        </div>
+        {kpi_bar(100, "#8B5CF6")}
     </div>""", unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────
-# SECCIÓN 1 · OCUPACIÓN
+# SECCIÓN 1 · % TIPIFICACIÓN EN EL TIEMPO
 # ─────────────────────────────────────────────
 st.markdown(f"""
-<div class='sec-header' style='--sc:#0EA5E9'>
+<div class='sec-header' style='--sc:{COLOR_TIPI}'>
     <div class='sec-wash'></div>
-    <div class='sec-icon'>⏱️</div>
+    <div class='sec-icon'>🏷️</div>
     <div class='sec-text'>
-        <div class='sec-title'>Ocupación</div>
-        <div class='sec-desc'>Evolución del indicador de Ocupación por período, desglosado por supervisor y experto.</div>
+        <div class='sec-title'>Tipificación</div>
+        <div class='sec-desc'>Evolución del % de tipificación por período, desglosado por supervisor.</div>
     </div>
     <div class='sec-meta'>
-        <div class='sec-meta-val' style='color:#0EA5E9'>{ocu_avg:.1%}</div>
+        <div class='sec-meta-val' style='color:{COLOR_TIPI}'>{pct_tipif:.1%}</div>
         <div class='sec-meta-lab'>Promedio</div>
     </div>
-    <span class='sec-tag' style='background:#0EA5E9'>Eficiencia</span>
+    <span class='sec-tag' style='background:{COLOR_TIPI}'>Calidad de dato</span>
 </div>
 """, unsafe_allow_html=True)
 
-# Preparar datos de tendencia por supervisor
-tend_ocu = (
-    dff.groupby(["_periodo", "Supervisor"])["Ocupación"]
-    .mean().reset_index(name="OcuAjuste")
+_tend_base = medibles.groupby(["_periodo", "Supervisor"])["Llamadas"].sum()
+_tend_tip  = (
+    medibles[medibles["Tipificada"]].groupby(["_periodo", "Supervisor"])["Llamadas"].sum()
 )
-tend_ocu["_ord"] = tend_ocu["_periodo"].map(_periodo_rank)
-tend_ocu = tend_ocu.sort_values(["Supervisor","_ord"]).drop(columns="_ord")
+tend_tipif = (
+    (_tend_tip.reindex(_tend_base.index, fill_value=0) / _tend_base)
+    .reset_index(name="PctTipif")
+)
+tend_tipif["_ord"] = tend_tipif["_periodo"].map(_periodo_rank)
+tend_tipif = tend_tipif.sort_values(["Supervisor","_ord"]).drop(columns="_ord")
 
-sup_lista  = sorted(tend_ocu["Supervisor"].unique())
+sup_lista   = sorted(tend_tipif["Supervisor"].unique())
 colores_sup = {s: SUPERVISOR_COLORS[i % len(SUPERVISOR_COLORS)] for i, s in enumerate(sup_lista)}
 
-st.markdown("""<div class='chart-hdr' style='--cc:#0EA5E9'>
-    <span class='ch-icon'>⏱️</span>
+st.markdown("""<div class='chart-hdr' style='--cc:#EC4899'>
+    <span class='ch-icon'>🏷️</span>
     <div class='ch-texts'>
-        <div class='ch-title'>Ocupación por Supervisor en el Tiempo</div>
+        <div class='ch-title'>% Tipificación por Supervisor en el Tiempo</div>
         <div class='ch-sub'>Promedio por período · cada línea = un supervisor</div>
     </div>
-    <span class='ch-tag' style='color:#0EA5E9'>Multi-línea</span>
+    <span class='ch-tag' style='color:#EC4899'>Multi-línea</span>
 </div>""", unsafe_allow_html=True)
 
-fig_ocu = go.Figure()
-fig_ocu.add_hrect(y0=0.50, y1=0.80, fillcolor="rgba(239,68,68,0.03)",   layer="below", line_width=0)
-fig_ocu.add_hrect(y0=0.80, y1=0.90, fillcolor="rgba(245,158,11,0.04)",  layer="below", line_width=0)
-fig_ocu.add_hrect(y0=0.90, y1=1.00, fillcolor="rgba(16,185,129,0.04)",  layer="below", line_width=0)
+fig_tip = go.Figure()
+fig_tip.add_hrect(y0=0.00, y1=0.75, fillcolor="rgba(239,68,68,0.03)",  layer="below", line_width=0)
+fig_tip.add_hrect(y0=0.75, y1=0.90, fillcolor="rgba(245,158,11,0.04)", layer="below", line_width=0)
+fig_tip.add_hrect(y0=0.90, y1=1.00, fillcolor="rgba(16,185,129,0.04)", layer="below", line_width=0)
 
 for sup in sup_lista:
-    sub = tend_ocu[tend_ocu["Supervisor"] == sup]
+    sub = tend_tipif[tend_tipif["Supervisor"] == sup]
     nc  = " ".join(sup.split()[:2])
-    fig_ocu.add_trace(go.Scatter(
-        x=sub["_periodo"], y=sub["OcuAjuste"], name=nc,
+    fig_tip.add_trace(go.Scatter(
+        x=sub["_periodo"], y=sub["PctTipif"], name=nc,
         mode="lines+markers",
         line=dict(color=colores_sup[sup], width=2, shape="spline"),
         marker=dict(size=6, color="white", line=dict(color=colores_sup[sup], width=2)),
         hovertemplate=f"<b>{nc}</b><br>%{{x}}: %{{y:.1%}}<extra></extra>"
     ))
-fig_ocu.add_hline(y=0.90, line_dash="dot", line_color="rgba(100,116,139,0.6)", line_width=1.5,
-                  annotation_text="Meta 90%", annotation_position="top right",
-                  annotation_font=dict(color="rgba(255,255,255,0.6)", size=10, family="Inter"))
-fig_ocu.update_layout(
+fig_tip.update_layout(
     height=390, margin=dict(l=0, r=0, t=10, b=40),
     paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-    yaxis=dict(tickformat=".0%", gridcolor="rgba(255,255,255,0.08)", range=[0.50, 1.00], dtick=0.04,
+    yaxis=dict(tickformat=".0%", gridcolor="rgba(255,255,255,0.08)", range=[0.0, 1.00], dtick=0.1,
                tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.62)"), zeroline=False),
     xaxis=dict(gridcolor="rgba(0,0,0,0)", tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.62)"),
                range=[_ini_per, _n_per - 0.5],
@@ -791,298 +812,40 @@ fig_ocu.update_layout(
                 font=dict(size=10, family="Inter"), itemsizing="constant", bgcolor="rgba(0,0,0,0)"),
     font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)")
 )
-st.plotly_chart(fig_ocu, use_container_width=True)
+st.plotly_chart(fig_tip, use_container_width=True)
 
-# ─────────────────────────────────────────────
-# COMPARATIVO POR SUPERVISOR
-# ─────────────────────────────────────────────
-st.markdown(f"""
-<div class='sec-header' style='--sc:{COLOR_PRIMARY}; background:radial-gradient(ellipse 95% 60% at 6% 0%, rgba(14,165,233,0.30) 0%, transparent 55%), radial-gradient(ellipse 90% 70% at 100% 120%, rgba(129,140,248,0.32) 0%, transparent 55%), radial-gradient(ellipse 80% 70% at 55% 130%, rgba(52,211,153,0.14) 0%, transparent 55%), linear-gradient(150deg, #0B0518 0%, #1a0b34 50%, #0A0414 100%)'>
-    <div class='sec-wash'></div>
-    <div class='sec-icon' style='background:linear-gradient(135deg,rgba(40,5,63,0.20),rgba(40,5,63,0.06))'>👥</div>
-    <div class='sec-text'>
-        <div class='sec-title'>Comparativo por Supervisor</div>
-        <div class='sec-desc'>Ocupación consolidada por equipo: verde ≥ 90%, amarillo ≥ 80%, rojo &lt; 80%.</div>
-    </div>
-    <div class='sec-meta'>
-        <div class='sec-meta-val' style='color:#0EA5E9'>{n_supervisores}</div>
-        <div class='sec-meta-lab'>Supervisores</div>
-    </div>
-    <span class='sec-tag'>Equipos</span>
-</div>
-""", unsafe_allow_html=True)
-
-sup_ocu = (
-    dff.groupby("Supervisor")
-    .apply(lambda g: pd.Series({
-        "OcuAjuste": g["Ocupación"].mean() if "Ocupación" in g.columns else 0.0,
-        "Agentes":   g["Nombre"].nunique(),
-        "Llamadas":  int(g["Llamadas"].sum()) if "Llamadas" in g.columns else 0,
-        "Ajuste_s":  g["Ajuste_s"].sum() if "Ajuste_s" in g.columns else 0,
-    }))
-    .reset_index()
-    .sort_values("OcuAjuste", ascending=True)
-)
-sup_ocu["Color"] = sup_ocu["OcuAjuste"].apply(
-    lambda x: COLOR_SUCCESS if x >= 0.90 else (COLOR_WARNING if x >= 0.80 else COLOR_DANGER)
-)
-
-c_bar_ocu, c_rank_ocu = st.columns([3, 2])
-
-with c_bar_ocu:
-    st.markdown(f"""<div class='chart-hdr' style='--cc:#0EA5E9'>
-        <span class='ch-icon'>📊</span>
-        <div class='ch-texts'>
-            <div class='ch-title'>Ocupación por Supervisor</div>
-            <div class='ch-sub'>Menor a mayor · Zona verde = meta cumplida</div>
-        </div>
-        <span class='ch-tag' style='color:#0EA5E9'>Barras</span>
-    </div>""", unsafe_allow_html=True)
-
-    sup_ocu_short = sup_ocu.copy()
-    sup_ocu_short["Supervisor"] = sup_ocu_short["Supervisor"].apply(lambda n: " ".join(n.split()[:2]))
-    n_sup_ocu = len(sup_ocu)
-
-    fig_bar_ocu = go.Figure()
-    fig_bar_ocu.add_vrect(x0=0.90, x1=1.02, fillcolor="rgba(16,185,129,0.06)", layer="below", line_width=0)
-    fig_bar_ocu.add_trace(go.Bar(
-        x=[1.0] * n_sup_ocu, y=sup_ocu_short["Supervisor"], orientation="h",
-        marker=dict(color="rgba(255,255,255,0.07)", line=dict(width=0)),
-        showlegend=False, hoverinfo="skip", width=0.55
-    ))
-    fig_bar_ocu.add_trace(go.Bar(
-        x=sup_ocu["OcuAjuste"], y=sup_ocu_short["Supervisor"], orientation="h",
-        marker=dict(color=sup_ocu["Color"], line=dict(width=0)),
-        text=sup_ocu["OcuAjuste"].apply(lambda x: f"{x:.1%}"),
-        textposition="outside",
-        constraintext="none",
-        textfont=dict(size=11, color="#CBD3F2", family="Inter"),
-        hovertemplate="<b>%{y}</b><br>Ocupación: %{x:.1%}<extra></extra>",
-        width=0.55
-    ))
-    fig_bar_ocu.add_vline(x=0.90, line_dash="dot", line_color="rgba(125,211,252,0.75)", line_width=1.5,
-                          annotation_text="Meta 90%",
-                          annotation_font=dict(size=10, color="#7DD3FC"),
-                          annotation_position="top left")
-    fig_bar_ocu.update_layout(
-        barmode="overlay", height=400,
-        margin=dict(l=0, r=55, t=20, b=0),
-        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-        xaxis=dict(tickformat=".0%", range=[0, 1.10], gridcolor="rgba(255,255,255,0.08)",
-                   showgrid=True, tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.62)")),
-        yaxis=dict(gridcolor="rgba(0,0,0,0)", tickfont=dict(size=11, family="Inter", color="rgba(255,255,255,0.75)")),
-        showlegend=False, font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)")
-    )
-    st.plotly_chart(fig_bar_ocu, use_container_width=True)
-
-with c_rank_ocu:
-    st.markdown("""<div class='tbl-hdr' style='background:linear-gradient(135deg,#28053F 0%,#0EA5E9 100%)'>
-        <span class='tbl-hdr-icon'>🏆</span>
-        <div class='tbl-hdr-body'>
-            <div class='tbl-hdr-title'>Ranking Supervisores</div>
-            <div class='tbl-hdr-desc'>Ocupación, agentes y tiempo en llamadas</div>
-        </div>
-        <span class='tbl-hdr-badge'>Resumen</span>
-    </div>""", unsafe_allow_html=True)
-    tbl_sup_ocu = sup_ocu.sort_values("OcuAjuste", ascending=False)[
-        ["Supervisor", "OcuAjuste", "Agentes", "Llamadas", "Ajuste_s"]
-    ].copy()
-    tbl_sup_ocu["Supervisor"] = tbl_sup_ocu["Supervisor"].apply(lambda n: " ".join(n.split()[:2]))
-    tbl_sup_ocu["OcuAjuste"]  = tbl_sup_ocu["OcuAjuste"].apply(lambda x: f"{x:.1%}")
-    tbl_sup_ocu["Ajuste_s"]   = tbl_sup_ocu["Ajuste_s"].apply(seg_a_hhmmss)
-    tbl_sup_ocu.columns = ["Supervisor", "Ocupación%", "Agentes", "Llamadas", "T. en Llamadas"]
-    st.dataframe(tbl_sup_ocu, use_container_width=True, hide_index=True, height=400)
-
-# Tabla detalle por agente
-n_ocu = dff["Nombre"].nunique()
-st.markdown(f"""
-<div class='tbl-hdr' style='background:linear-gradient(120deg,#0EA5E9,#3B82F6)'>
-    <div class='tbl-hdr-icon'>📋</div>
-    <div class='tbl-hdr-body'>
-        <div class='tbl-hdr-title'>Detalle por Experto · Ocupación</div>
-        <div class='tbl-hdr-desc'>Ocupación promedio, Tiempo Programado, Tiempo Programado Efectivo y Tiempo en Llamadas</div>
-    </div>
-    <div class='tbl-hdr-badge'>{n_ocu} expertos</div>
-</div>
-""", unsafe_allow_html=True)
-
-_agg_ocu = {"OcuAjuste": ("Ocupación", "mean")}
-if "Total Turno_s"    in dff.columns: _agg_ocu["TotalTurno_s"]    = ("Total Turno_s", "sum")
-if "Tiempo Efectivo_s" in dff.columns: _agg_ocu["TiempoEfectivo_s"] = ("Tiempo Efectivo_s", "sum")
-if "Ajuste_s"          in dff.columns: _agg_ocu["Ajuste_s"]          = ("Ajuste_s", "sum")
-
-tbl_ocu = (
-    dff.groupby(["Fecha","Nombre","Supervisor"])
-    .agg(**_agg_ocu)
-    .reset_index()
-    .sort_values(["Fecha","Nombre"])
-)
-tbl_ocu_disp = {
-    "Fecha":      tbl_ocu["Fecha"].dt.strftime("%d/%m/%Y"),
-    "Experto":    tbl_ocu["Nombre"],
-    "Supervisor": tbl_ocu["Supervisor"],
-    "Ocupación":  tbl_ocu["OcuAjuste"].map(lambda x: f"{x:.1%}"),
-}
-if "TotalTurno_s"    in tbl_ocu.columns: tbl_ocu_disp["Tiempo Programado"]          = tbl_ocu["TotalTurno_s"].map(seg_a_hhmmss)
-if "TiempoEfectivo_s" in tbl_ocu.columns: tbl_ocu_disp["Tiempo Programado Efectivo"] = tbl_ocu["TiempoEfectivo_s"].map(seg_a_hhmmss)
-if "Ajuste_s"          in tbl_ocu.columns: tbl_ocu_disp["Tiempo en Llamadas"]         = tbl_ocu["Ajuste_s"].map(seg_a_hhmmss)
-df_descarga(pd.DataFrame(tbl_ocu_disp), "ocupacion_detalle.xlsx", use_container_width=True, hide_index=True)
-
-# ─────────────────────────────────────────────
-# SECCIÓN 2 · CONTACTO
-# ─────────────────────────────────────────────
-st.markdown(f"""
-<div class='sec-header' style='--sc:#10B981'>
-    <div class='sec-wash'></div>
-    <div class='sec-icon'>📞</div>
-    <div class='sec-text'>
-        <div class='sec-title'>Contacto</div>
-        <div class='sec-desc'>Porcentaje de contacto efectivo por período. Incluye tiempo disponible y duración de llamadas por experto.</div>
-    </div>
-    <div class='sec-meta'>
-        <div class='sec-meta-val' style='color:#10B981'>{cont_avg:.1%}</div>
-        <div class='sec-meta-lab'>Promedio</div>
-    </div>
-    <span class='sec-tag' style='background:#10B981'>Contacto</span>
-</div>
-""", unsafe_allow_html=True)
-
-tend_cont = (
-    dff.groupby(["_periodo","Supervisor"])["% Contacto"]
-    .mean().reset_index(name="PctContacto")
-)
-tend_cont["_ord"] = tend_cont["_periodo"].map(_periodo_rank)
-tend_cont = tend_cont.sort_values(["Supervisor","_ord"]).drop(columns="_ord")
-
-st.markdown("""<div class='chart-hdr' style='--cc:#10B981'>
-    <span class='ch-icon'>📞</span>
+# ── Volumen: medibles vs tipificadas por período ──────────────────────────
+st.markdown("""<div class='chart-hdr' style='--cc:#EC4899;margin-top:18px'>
+    <span class='ch-icon'>📊</span>
     <div class='ch-texts'>
-        <div class='ch-title'>% Contacto por Supervisor en el Tiempo</div>
-        <div class='ch-sub'>Proporción de contacto efectivo · por equipo y período</div>
+        <div class='ch-title'>Volumen: Medibles vs Tipificadas</div>
+        <div class='ch-sub'>Cantidad de llamadas por período · la brecha entre barras es lo que falta por tipificar</div>
     </div>
-    <span class='ch-tag' style='color:#10B981'>Tendencia</span>
+    <span class='ch-tag' style='color:#EC4899'>Barras agrupadas</span>
 </div>""", unsafe_allow_html=True)
 
-fig_cont = go.Figure()
-fig_cont.add_hrect(y0=0.50, y1=0.85, fillcolor="rgba(239,68,68,0.03)",  layer="below", line_width=0)
-fig_cont.add_hrect(y0=0.85, y1=0.95, fillcolor="rgba(245,158,11,0.04)", layer="below", line_width=0)
-fig_cont.add_hrect(y0=0.95, y1=1.00, fillcolor="rgba(16,185,129,0.04)", layer="below", line_width=0)
-for sup in sup_lista:
-    sub = tend_cont[tend_cont["Supervisor"] == sup]
-    if sub.empty:
-        continue
-    nc = " ".join(sup.split()[:2])
-    fig_cont.add_trace(go.Scatter(
-        x=sub["_periodo"], y=sub["PctContacto"], name=nc,
-        mode="lines+markers",
-        line=dict(color=colores_sup.get(sup, "#34D399"), width=2, shape="spline"),
-        marker=dict(size=6, color="white", line=dict(color=colores_sup.get(sup, "#34D399"), width=2)),
-        hovertemplate=f"<b>{nc}</b><br>%{{x}}: %{{y:.1%}}<extra></extra>"
-    ))
-fig_cont.add_hline(y=0.95, line_dash="dot", line_color="rgba(100,116,139,0.6)", line_width=1.5,
-                   annotation_text="Meta 95%", annotation_position="top right",
-                   annotation_font=dict(color="rgba(255,255,255,0.6)", size=10, family="Inter"))
-fig_cont.update_layout(
-    height=390, margin=dict(l=0, r=0, t=10, b=40),
-    paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-    yaxis=dict(tickformat=".0%", gridcolor="rgba(255,255,255,0.08)", range=[0.50, 1.00], dtick=0.04,
-               tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.62)"), zeroline=False),
-    xaxis=dict(gridcolor="rgba(0,0,0,0)", tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.62)"),
-               range=[_ini_per, _n_per - 0.5],
-               rangeslider=dict(visible=True, thickness=0.08, bgcolor="rgba(255,255,255,0.05)"),
-               tickangle=-30, showgrid=False),
-    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0,
-                font=dict(size=10, family="Inter"), itemsizing="constant", bgcolor="rgba(0,0,0,0)"),
-    font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)")
-)
-st.plotly_chart(fig_cont, use_container_width=True)
+_vol_medibles = medibles.groupby("_periodo")["Llamadas"].sum()
+_vol_tipif    = medibles[medibles["Tipificada"]].groupby("_periodo")["Llamadas"].sum()
+vol_per = pd.DataFrame({
+    "Medibles":    _vol_medibles,
+    "Tipificadas": _vol_tipif.reindex(_vol_medibles.index, fill_value=0),
+}).reset_index()
+vol_per["_ord"] = vol_per["_periodo"].map(_periodo_rank)
+vol_per = vol_per.sort_values("_ord").drop(columns="_ord")
 
-n_cont = dff["Nombre"].nunique()
-st.markdown(f"""
-<div class='tbl-hdr' style='background:linear-gradient(120deg,#10B981,#059669)'>
-    <div class='tbl-hdr-icon'>📋</div>
-    <div class='tbl-hdr-body'>
-        <div class='tbl-hdr-title'>Detalle por Experto · Contacto</div>
-        <div class='tbl-hdr-desc'>% Contacto promedio, Tiempo Ejecutado en Disponible y Tiempo en Llamadas</div>
-    </div>
-    <div class='tbl-hdr-badge'>{n_cont} expertos</div>
-</div>
-""", unsafe_allow_html=True)
-
-_agg_cont = {"PctContacto": ("% Contacto", "mean")}
-if "Disponible_s" in dff.columns: _agg_cont["Disponible_s"] = ("Disponible_s", "sum")
-if "Ajuste_s"     in dff.columns: _agg_cont["Ajuste_s"]     = ("Ajuste_s", "sum")
-
-tbl_cont = (
-    dff.groupby(["Fecha","Nombre","Supervisor"])
-    .agg(**_agg_cont)
-    .reset_index()
-    .sort_values(["Fecha","Nombre"])
-)
-tbl_cont_disp = {
-    "Fecha":      tbl_cont["Fecha"].dt.strftime("%d/%m/%Y"),
-    "Experto":    tbl_cont["Nombre"],
-    "Supervisor": tbl_cont["Supervisor"],
-    "% Contacto": tbl_cont["PctContacto"].map(lambda x: f"{x:.1%}"),
-}
-if "Disponible_s" in tbl_cont.columns: tbl_cont_disp["T. Ejecutado en Disponible"] = tbl_cont["Disponible_s"].map(seg_a_hhmmss)
-if "Ajuste_s"     in tbl_cont.columns: tbl_cont_disp["Tiempo en Llamadas"]         = tbl_cont["Ajuste_s"].map(seg_a_hhmmss)
-df_descarga(pd.DataFrame(tbl_cont_disp), "contacto_detalle.xlsx", use_container_width=True, hide_index=True)
-
-# ─────────────────────────────────────────────
-# SECCIÓN 3 · LLAMADAS
-# ─────────────────────────────────────────────
-tot_atend  = int(dff["Atendidas"].sum())  if "Atendidas"  in dff.columns else 0
-tot_cancel = int(dff["Canceladas"].sum()) if "Canceladas" in dff.columns else 0
-
-st.markdown(f"""
-<div class='sec-header' style='--sc:#8B5CF6'>
-    <div class='sec-wash'></div>
-    <div class='sec-icon'>📲</div>
-    <div class='sec-text'>
-        <div class='sec-title'>Llamadas</div>
-        <div class='sec-desc'>Volumen de llamadas ingresadas, atendidas, abandonadas y canceladas por período.</div>
-    </div>
-    <div class='sec-meta'>
-        <div class='sec-meta-val' style='color:#8B5CF6'>{tot_llamadas:,}</div>
-        <div class='sec-meta-lab'>Ingresadas</div>
-    </div>
-    <span class='sec-tag' style='background:#8B5CF6'>Volumen</span>
-</div>
-""", unsafe_allow_html=True)
-
-call_cols = [c for c in ["Llamadas","Atendidas","Abandonadas","Canceladas"] if c in dff.columns]
-call_per  = (
-    dff.groupby("_periodo")[call_cols].sum().reset_index()
-)
-call_per["_ord"] = call_per["_periodo"].map(_periodo_rank)
-call_per = call_per.sort_values("_ord").drop(columns="_ord")
-
-st.markdown("""<div class='chart-hdr' style='--cc:#8B5CF6'>
-    <span class='ch-icon'>📲</span>
-    <div class='ch-texts'>
-        <div class='ch-title'>Volumen de Llamadas por Período</div>
-        <div class='ch-sub'>Ingresadas · Atendidas · Abandonadas · Canceladas</div>
-    </div>
-    <span class='ch-tag' style='color:#8B5CF6'>Barras agrupadas</span>
-</div>""", unsafe_allow_html=True)
-
-_CALL_CFG = [
-    ("Llamadas",    "#60A5FA", "Ingresadas"),
-    ("Atendidas",   "#34D399", "Atendidas"),
-    ("Abandonadas", "#F87171", "Abandonadas"),
-    ("Canceladas",  "#FBBF24", "Canceladas"),
-]
-fig_call = go.Figure()
-for col, color, label in _CALL_CFG:
-    if col in call_per.columns:
-        fig_call.add_trace(go.Bar(
-            name=label, x=call_per["_periodo"], y=call_per[col],
-            marker_color=color, opacity=0.88,
-            hovertemplate=f"<b>{label}</b><br>%{{x}}: %{{y:,}}<extra></extra>"
-        ))
-fig_call.update_layout(
-    barmode="group", height=390, margin=dict(l=0, r=0, t=10, b=40),
+fig_vol = go.Figure()
+fig_vol.add_trace(go.Bar(
+    name="Medibles", x=vol_per["_periodo"], y=vol_per["Medibles"],
+    marker_color="rgba(56,189,248,0.55)", opacity=0.9,
+    hovertemplate="<b>Medibles</b><br>%{x}: %{y:,}<extra></extra>"
+))
+fig_vol.add_trace(go.Bar(
+    name="Tipificadas", x=vol_per["_periodo"], y=vol_per["Tipificadas"],
+    marker_color=COLOR_TIPI, opacity=0.95,
+    hovertemplate="<b>Tipificadas</b><br>%{x}: %{y:,}<extra></extra>"
+))
+fig_vol.update_layout(
+    barmode="group", height=340, margin=dict(l=0, r=0, t=10, b=40),
     paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
     yaxis=dict(gridcolor="rgba(255,255,255,0.08)",
                tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.62)"), zeroline=False),
@@ -1094,118 +857,304 @@ fig_call.update_layout(
     font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)"),
     bargap=0.20, bargroupgap=0.08
 )
-st.plotly_chart(fig_call, use_container_width=True)
+st.plotly_chart(fig_vol, use_container_width=True)
 
-n_call = dff["Nombre"].nunique()
+# ─────────────────────────────────────────────
+# SECCIÓN 2 · DISTRIBUCIÓN Y JERARQUÍA
+# ─────────────────────────────────────────────
+tipificadas_df = medibles[medibles["Tipificada"]]
+
 st.markdown(f"""
-<div class='tbl-hdr' style='background:linear-gradient(120deg,#8B5CF6,#6D28D9)'>
-    <div class='tbl-hdr-icon'>📋</div>
-    <div class='tbl-hdr-body'>
-        <div class='tbl-hdr-title'>Detalle por Experto · Llamadas</div>
-        <div class='tbl-hdr-desc'>Ingresadas, Atendidas, Abandonadas, Canceladas y % Abandono por agente</div>
+<div class='sec-header' style='--sc:{COLOR_PRIMARY}; background:radial-gradient(ellipse 95% 60% at 6% 0%, rgba(236,72,153,0.28) 0%, transparent 55%), radial-gradient(ellipse 90% 70% at 100% 120%, rgba(129,140,248,0.30) 0%, transparent 55%), radial-gradient(ellipse 80% 70% at 55% 130%, rgba(52,211,153,0.14) 0%, transparent 55%), linear-gradient(150deg, #0B0518 0%, #1a0b34 50%, #0A0414 100%)'>
+    <div class='sec-wash'></div>
+    <div class='sec-icon' style='background:linear-gradient(135deg,rgba(40,5,63,0.20),rgba(40,5,63,0.06))'>🌳</div>
+    <div class='sec-text'>
+        <div class='sec-title'>Distribución y Jerarquía</div>
+        <div class='sec-desc'>Composición de las llamadas tipificadas por categoría (Nivel 1) y su desglose jerárquico completo.</div>
     </div>
-    <div class='tbl-hdr-badge'>{n_call} expertos</div>
+    <div class='sec-meta'>
+        <div class='sec-meta-val' style='color:{COLOR_TIPI}'>{n_tipificadas:,}</div>
+        <div class='sec-meta-lab'>Tipificadas</div>
+    </div>
+    <span class='sec-tag' style='background:{COLOR_TIPI}'>Categorías</span>
 </div>
 """, unsafe_allow_html=True)
 
-_agg_call = {}
-for col in ["Llamadas","Atendidas","Abandonadas","Canceladas"]:
-    if col in dff.columns:
-        _agg_call[col] = (col, "sum")
+c_pie, c_tree = st.columns([1, 2])
 
-tbl_call = (
-    dff.groupby(["Fecha","Nombre","Supervisor"])
-    .agg(**_agg_call)
-    .reset_index()
-    .sort_values(["Fecha","Nombre"])
-)
-tbl_call_disp = {
-    "Fecha":      tbl_call["Fecha"].dt.strftime("%d/%m/%Y"),
-    "Experto":    tbl_call["Nombre"],
-    "Supervisor": tbl_call["Supervisor"],
-}
-for col in ["Llamadas","Atendidas","Abandonadas","Canceladas"]:
-    if col in tbl_call.columns:
-        tbl_call_disp[col] = tbl_call[col].astype(int)
-if "Abandonadas" in tbl_call.columns and "Llamadas" in tbl_call.columns:
-    tbl_call_disp["% Abandono"] = (
-        tbl_call["Abandonadas"] / tbl_call["Llamadas"].replace(0, float("nan"))
-    ).map(lambda x: f"{x:.1%}" if pd.notna(x) else "—")
+with c_pie:
+    st.markdown("""<div class='chart-hdr' style='--cc:#EC4899'>
+        <span class='ch-icon'>🥧</span>
+        <div class='ch-texts'>
+            <div class='ch-title'>Nivel 1</div>
+            <div class='ch-sub'>Categoría raíz de la tipificación</div>
+        </div>
+        <span class='ch-tag' style='color:#EC4899'>Dona</span>
+    </div>""", unsafe_allow_html=True)
 
-df_descarga(pd.DataFrame(tbl_call_disp), "llamadas_detalle.xlsx", use_container_width=True, hide_index=True)
-
-# ─────────────────────────────────────────────
-# RESUMEN POR SUPERVISOR
-# ─────────────────────────────────────────────
-st.markdown("""
-<div class='chart-hdr' style='--cc:#8B5CF6;margin-top:28px'>
-    <span class='ch-icon'>👥</span>
-    <div class='ch-texts'>
-        <div class='ch-title'>Resumen por Supervisor</div>
-        <div class='ch-sub'>Llamadas totales, atendidas, abandonadas y distribución por equipo</div>
-    </div>
-    <span class='ch-tag' style='color:#8B5CF6'>Por equipo</span>
-</div>""", unsafe_allow_html=True)
-
-_agg_sup = {}
-for col in ["Llamadas","Atendidas","Abandonadas"]:
-    if col in dff.columns:
-        _agg_sup[col] = (col, "sum")
-
-tbl_sup = (
-    dff.groupby("Supervisor")
-    .agg(**_agg_sup)
-    .reset_index()
-    .sort_values("Llamadas", ascending=False)
-)
-if "Abandonadas" in tbl_sup.columns:
-    _total_abandon_sup = tbl_sup["Abandonadas"].sum()
-    tbl_sup["PctAbandono"] = tbl_sup["Abandonadas"] / (_total_abandon_sup if _total_abandon_sup > 0 else float("nan"))
-
-col_tbl, col_pie = st.columns([1, 1])
-
-_sup_h = 380
-
-with col_tbl:
-    tbl_sup_disp = {"Supervisor": tbl_sup["Supervisor"]}
-    for col in ["Llamadas","Atendidas","Abandonadas"]:
-        if col in tbl_sup.columns:
-            tbl_sup_disp[col] = tbl_sup[col].astype(int)
-    if "PctAbandono" in tbl_sup.columns:
-        tbl_sup_disp["% Abandono"] = tbl_sup["PctAbandono"].map(
-            lambda x: f"{x:.1%}" if pd.notna(x) else "—"
-        )
-    st.dataframe(pd.DataFrame(tbl_sup_disp), use_container_width=True, hide_index=True, height=_sup_h)
-
-with col_pie:
-    if "Abandonadas" in tbl_sup.columns and tbl_sup["Abandonadas"].sum() > 0:
-        _pie_h = _sup_h
-        _labels = tbl_sup["Supervisor"].apply(lambda n: " ".join(n.split()[:2]))
-        _values = tbl_sup["Abandonadas"]
-        _pcts   = tbl_sup["PctAbandono"].fillna(0)
-        _text   = _pcts.map(lambda x: f"{x:.1%}")
-        fig_pie = go.Figure(go.Pie(
-            labels=_labels,
-            values=_values,
-            hole=0.52,
-            marker=dict(
-                colors=[SUPERVISOR_COLORS[i % len(SUPERVISOR_COLORS)] for i in range(len(tbl_sup))],
-                line=dict(color="rgba(0,0,0,0.35)", width=2)
-            ),
-            text=_text,
-            textinfo="text",
-            textfont=dict(size=11, family="Inter", color="white"),
-            hovertemplate="<b>%{label}</b><br>Abandonadas: %{value:,}<br>% del total: %{text}<extra></extra>",
+    if "Nivel 1" in tipificadas_df.columns and len(tipificadas_df) > 0:
+        n1_counts = tipificadas_df.groupby("Nivel 1")["Llamadas"].sum().sort_values(ascending=False)
+        fig_n1 = go.Figure(go.Pie(
+            labels=n1_counts.index, values=n1_counts.values, hole=0.55,
+            marker=dict(colors=NIVEL1_COLORS, line=dict(color="rgba(0,0,0,0.35)", width=2)),
+            textinfo="percent", textfont=dict(size=11, family="Inter", color="white"),
+            hovertemplate="<b>%{label}</b><br>%{value:,} llamadas<br>%{percent}<extra></extra>",
         ))
-        fig_pie.update_layout(
-            height=_pie_h, margin=dict(l=0, r=0, t=30, b=10),
-            title=dict(text="Distribución % Abandono", font=dict(size=13, color="rgba(255,255,255,0.7)", family="Inter"), x=0.5),
+        fig_n1.update_layout(
+            height=360, margin=dict(l=0, r=0, t=10, b=10),
             paper_bgcolor="rgba(0,0,0,0)",
-            legend=dict(
-                orientation="v", x=1.02, y=0.5,
-                font=dict(size=10, family="Inter", color="rgba(255,255,255,0.75)"),
-                bgcolor="rgba(0,0,0,0)"
-            ),
+            legend=dict(orientation="h", yanchor="top", y=-0.05, font=dict(size=10, family="Inter", color="rgba(255,255,255,0.75)"), bgcolor="rgba(0,0,0,0)"),
             font=dict(family="Inter", color="rgba(255,255,255,0.72)")
         )
-        st.plotly_chart(fig_pie, use_container_width=True)
+        st.plotly_chart(fig_n1, use_container_width=True)
+    else:
+        st.info("Sin datos de Nivel 1 para el filtro actual.")
+
+with c_tree:
+    st.markdown("""<div class='chart-hdr' style='--cc:#EC4899'>
+        <span class='ch-icon'>🌳</span>
+        <div class='ch-texts'>
+            <div class='ch-title'>Jerarquía Completa (Nivel 1 → 2 → 3)</div>
+            <div class='ch-sub'>Tamaño del bloque = cantidad de llamadas · click para explorar</div>
+        </div>
+        <span class='ch-tag' style='color:#EC4899'>Treemap</span>
+    </div>""", unsafe_allow_html=True)
+
+    _cols_tree = [c for c in ["Nivel 1", "Nivel 2", "Nivel 3"] if c in tipificadas_df.columns]
+    if _cols_tree and len(tipificadas_df) > 0:
+        # Agregar por combinación de niveles ANTES de pasarlo a px.treemap: con
+        # cientos de miles de llamadas individuales, construir el árbol fila por
+        # fila (en vez de a partir de las pocas combinaciones únicas ya contadas)
+        # es el cuello de botella — tanto para Plotly como para el navegador.
+        tree_df = (
+            tipificadas_df[_cols_tree + ["Llamadas"]].fillna({c: "(Sin detalle)" for c in _cols_tree})
+            .groupby(_cols_tree)["Llamadas"].sum().reset_index(name="_conteo")
+        )
+        fig_tree = px.treemap(
+            tree_df, path=_cols_tree, values="_conteo",
+            color_discrete_sequence=NIVEL1_COLORS,
+        )
+        fig_tree.update_traces(
+            textfont=dict(family="Inter", size=12, color="white"),
+            hovertemplate="<b>%{label}</b><br>%{value:,} llamadas<extra></extra>",
+            marker=dict(line=dict(color="rgba(10,8,19,0.85)", width=2)),
+        )
+        fig_tree.update_layout(
+            height=360, margin=dict(l=0, r=0, t=10, b=10),
+            paper_bgcolor="rgba(0,0,0,0)",
+            font=dict(family="Inter", color="rgba(255,255,255,0.85)")
+        )
+        st.plotly_chart(fig_tree, use_container_width=True)
+    else:
+        st.info("Sin datos jerárquicos para el filtro actual.")
+
+# ─────────────────────────────────────────────
+# COMPARATIVO POR SUPERVISOR
+# ─────────────────────────────────────────────
+st.markdown(f"""
+<div class='sec-header' style='--sc:{COLOR_PRIMARY}; background:radial-gradient(ellipse 95% 60% at 6% 0%, rgba(236,72,153,0.28) 0%, transparent 55%), radial-gradient(ellipse 90% 70% at 100% 120%, rgba(129,140,248,0.30) 0%, transparent 55%), radial-gradient(ellipse 80% 70% at 55% 130%, rgba(52,211,153,0.14) 0%, transparent 55%), linear-gradient(150deg, #0B0518 0%, #1a0b34 50%, #0A0414 100%)'>
+    <div class='sec-wash'></div>
+    <div class='sec-icon' style='background:linear-gradient(135deg,rgba(40,5,63,0.20),rgba(40,5,63,0.06))'>👥</div>
+    <div class='sec-text'>
+        <div class='sec-title'>Comparativo por Supervisor</div>
+        <div class='sec-desc'>% de tipificación consolidado por equipo: verde ≥ 90%, amarillo ≥ 75%, rojo &lt; 75%.</div>
+    </div>
+    <div class='sec-meta'>
+        <div class='sec-meta-val' style='color:{COLOR_TIPI}'>{n_supervisores}</div>
+        <div class='sec-meta-lab'>Supervisores</div>
+    </div>
+    <span class='sec-tag'>Equipos</span>
+</div>
+""", unsafe_allow_html=True)
+
+sup_tip = (
+    medibles.groupby("Supervisor")
+    .apply(lambda g: pd.Series({
+        "Agentes":      g["Nombre"].nunique(),
+        "Medibles":     int(g["Llamadas"].sum()),
+        "Tipificadas":  int(g.loc[g["Tipificada"], "Llamadas"].sum()),
+        "PctTipif":     g.loc[g["Tipificada"], "Llamadas"].sum() / g["Llamadas"].sum() if g["Llamadas"].sum() > 0 else 0.0,
+        "TConc_s":      g["Tiempo Conc._s"].sum() / g["Llamadas"].sum() if g["Llamadas"].sum() > 0 else 0.0,
+    }))
+    .reset_index()
+    .sort_values("PctTipif", ascending=True)
+)
+sup_tip["Color"] = sup_tip["PctTipif"].apply(
+    lambda x: COLOR_SUCCESS if x >= 0.90 else (COLOR_WARNING if x >= 0.75 else COLOR_DANGER)
+)
+
+c_bar_tip, c_rank_tip = st.columns([3, 2])
+
+with c_bar_tip:
+    st.markdown(f"""<div class='chart-hdr' style='--cc:{COLOR_TIPI}'>
+        <span class='ch-icon'>📊</span>
+        <div class='ch-texts'>
+            <div class='ch-title'>% Tipificación por Supervisor</div>
+            <div class='ch-sub'>Menor a mayor · Zona verde = ≥ 90%</div>
+        </div>
+        <span class='ch-tag' style='color:{COLOR_TIPI}'>Barras</span>
+    </div>""", unsafe_allow_html=True)
+
+    sup_tip_short = sup_tip.copy()
+    sup_tip_short["Supervisor"] = sup_tip_short["Supervisor"].apply(lambda n: " ".join(n.split()[:2]))
+    n_sup_tip = len(sup_tip)
+
+    fig_bar_tip = go.Figure()
+    fig_bar_tip.add_vrect(x0=0.90, x1=1.02, fillcolor="rgba(16,185,129,0.06)", layer="below", line_width=0)
+    fig_bar_tip.add_trace(go.Bar(
+        x=[1.0] * n_sup_tip, y=sup_tip_short["Supervisor"], orientation="h",
+        marker=dict(color="rgba(255,255,255,0.07)", line=dict(width=0)),
+        showlegend=False, hoverinfo="skip", width=0.55
+    ))
+    fig_bar_tip.add_trace(go.Bar(
+        x=sup_tip["PctTipif"], y=sup_tip_short["Supervisor"], orientation="h",
+        marker=dict(color=sup_tip["Color"], line=dict(width=0)),
+        text=sup_tip["PctTipif"].apply(lambda x: f"{x:.1%}"),
+        textposition="outside",
+        constraintext="none",
+        textfont=dict(size=11, color="#CBD3F2", family="Inter"),
+        hovertemplate="<b>%{y}</b><br>Tipificación: %{x:.1%}<extra></extra>",
+        width=0.55
+    ))
+    fig_bar_tip.update_layout(
+        barmode="overlay", height=400,
+        margin=dict(l=0, r=55, t=20, b=0),
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+        xaxis=dict(tickformat=".0%", range=[0, 1.10], gridcolor="rgba(255,255,255,0.08)",
+                   showgrid=True, tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.62)")),
+        yaxis=dict(gridcolor="rgba(0,0,0,0)", tickfont=dict(size=11, family="Inter", color="rgba(255,255,255,0.75)")),
+        showlegend=False, font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)")
+    )
+    st.plotly_chart(fig_bar_tip, use_container_width=True)
+
+with c_rank_tip:
+    st.markdown("""<div class='tbl-hdr' style='background:linear-gradient(135deg,#28053F 0%,#EC4899 100%)'>
+        <span class='tbl-hdr-icon'>🏆</span>
+        <div class='tbl-hdr-body'>
+            <div class='tbl-hdr-title'>Ranking Supervisores</div>
+            <div class='tbl-hdr-desc'>% Tipificación, agentes y tiempo promedio</div>
+        </div>
+        <span class='tbl-hdr-badge'>Resumen</span>
+    </div>""", unsafe_allow_html=True)
+    tbl_sup_tip = sup_tip.sort_values("PctTipif", ascending=False)[
+        ["Supervisor", "PctTipif", "Agentes", "Medibles", "Tipificadas", "TConc_s"]
+    ].copy()
+    tbl_sup_tip["Supervisor"] = tbl_sup_tip["Supervisor"].apply(lambda n: " ".join(n.split()[:2]))
+    tbl_sup_tip["PctTipif"]   = tbl_sup_tip["PctTipif"].apply(lambda x: f"{x:.1%}")
+    tbl_sup_tip["TConc_s"]    = tbl_sup_tip["TConc_s"].apply(seg_a_hhmmss)
+    tbl_sup_tip.columns = ["Supervisor", "% Tipif.", "Agentes", "Medibles", "Tipificadas", "T. Promedio"]
+    st.dataframe(tbl_sup_tip, use_container_width=True, hide_index=True, height=400)
+
+# ── Tiempo promedio por supervisor ──────────────────────────────────────
+# Complementa el % de tipificación con la otra cara del dato: un equipo
+# puede tipificar casi todo pero tardarse demasiado (o muy poco, señal de
+# que están tipificando sin cuidado) en cada llamada.
+st.markdown(f"""<div class='chart-hdr' style='--cc:{COLOR_TIPI};margin-top:18px'>
+    <span class='ch-icon'>⏱️</span>
+    <div class='ch-texts'>
+        <div class='ch-title'>Tiempo Promedio por Supervisor</div>
+        <div class='ch-sub'>Segundos que tarda en promedio cada llamada medible en tipificarse</div>
+    </div>
+    <span class='ch-tag' style='color:{COLOR_TIPI}'>Barras</span>
+</div>""", unsafe_allow_html=True)
+
+sup_tconc = sup_tip.sort_values("TConc_s", ascending=True).copy()
+sup_tconc["SupCorta"] = sup_tconc["Supervisor"].apply(lambda n: " ".join(n.split()[:2]))
+fig_tconc = go.Figure(go.Bar(
+    x=sup_tconc["TConc_s"], y=sup_tconc["SupCorta"], orientation="h",
+    marker=dict(color=sup_tconc["TConc_s"], colorscale="Magenta", line=dict(width=0)),
+    text=sup_tconc["TConc_s"].apply(seg_a_hhmmss), textposition="outside",
+    hovertemplate="<b>%{y}</b><br>%{text} promedio<extra></extra>",
+))
+fig_tconc.update_layout(
+    height=max(260, 28 * len(sup_tconc)), margin=dict(l=0, r=50, t=10, b=20),
+    paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+    xaxis=dict(gridcolor="rgba(255,255,255,0.08)", tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.62)")),
+    yaxis=dict(gridcolor="rgba(0,0,0,0)", tickfont=dict(size=11, family="Inter", color="rgba(255,255,255,0.75)")),
+    showlegend=False, font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)")
+)
+st.plotly_chart(fig_tconc, use_container_width=True)
+
+# Tabla detalle por agente
+n_det = dff["Nombre"].nunique()
+st.markdown(f"""
+<div class='tbl-hdr' style='background:linear-gradient(120deg,#EC4899,#BE185D)'>
+    <div class='tbl-hdr-icon'>📋</div>
+    <div class='tbl-hdr-body'>
+        <div class='tbl-hdr-title'>Detalle por Experto · Tipificación</div>
+        <div class='tbl-hdr-desc'>Llamadas medibles, tipificadas, % de tipificación y tiempo promedio</div>
+    </div>
+    <div class='tbl-hdr-badge'>{n_det} expertos</div>
+</div>
+""", unsafe_allow_html=True)
+
+tbl_det = (
+    medibles.groupby(["Nombre", "Supervisor"])
+    .apply(lambda g: pd.Series({
+        "Medibles":    int(g["Llamadas"].sum()),
+        "Tipificadas": int(g.loc[g["Tipificada"], "Llamadas"].sum()),
+        "PctTipif":    g.loc[g["Tipificada"], "Llamadas"].sum() / g["Llamadas"].sum() if g["Llamadas"].sum() > 0 else 0.0,
+        "TConc_s":     g["Tiempo Conc._s"].sum() / g["Llamadas"].sum() if g["Llamadas"].sum() > 0 else 0.0,
+    }))
+    .reset_index()
+    .sort_values("PctTipif", ascending=False)
+)
+tbl_det_disp = pd.DataFrame({
+    "Experto":        tbl_det["Nombre"],
+    "Supervisor":     tbl_det["Supervisor"],
+    "Medibles":       tbl_det["Medibles"].astype(int),
+    "Tipificadas":    tbl_det["Tipificadas"].astype(int),
+    "% Tipificación": tbl_det["PctTipif"].map(lambda x: f"{x:.1%}"),
+    "T. Promedio": tbl_det["TConc_s"].map(seg_a_hhmmss),
+})
+df_descarga(tbl_det_disp, "tipificacion_detalle.xlsx", use_container_width=True, hide_index=True)
+
+# ─────────────────────────────────────────────
+# TOP MOTIVOS DE TIPIFICACIÓN
+# ─────────────────────────────────────────────
+st.markdown(f"""
+<div class='sec-header' style='--sc:#8B5CF6'>
+    <div class='sec-wash'></div>
+    <div class='sec-icon'>🔖</div>
+    <div class='sec-text'>
+        <div class='sec-title'>Top Motivos</div>
+        <div class='sec-desc'>Los 12 motivos de tipificación (Disp.) más frecuentes en el rango seleccionado.</div>
+    </div>
+    <div class='sec-meta'>
+        <div class='sec-meta-val' style='color:#8B5CF6'>{tipificadas_df["Disp."].nunique() if len(tipificadas_df) else 0}</div>
+        <div class='sec-meta-lab'>Motivos distintos</div>
+    </div>
+    <span class='sec-tag' style='background:#8B5CF6'>Ranking</span>
+</div>
+""", unsafe_allow_html=True)
+
+st.markdown("""<div class='chart-hdr' style='--cc:#8B5CF6'>
+    <span class='ch-icon'>🔖</span>
+    <div class='ch-texts'>
+        <div class='ch-title'>Motivos Más Frecuentes</div>
+        <div class='ch-sub'>Cantidad de llamadas por tipificación (Disp.)</div>
+    </div>
+    <span class='ch-tag' style='color:#8B5CF6'>Top 12</span>
+</div>""", unsafe_allow_html=True)
+
+if len(tipificadas_df) > 0:
+    top_motivos = (
+        tipificadas_df.groupby("Disp.")["Llamadas"].sum()
+        .sort_values(ascending=False).head(12).sort_values(ascending=True)
+    )
+    fig_motivos = go.Figure(go.Bar(
+        x=top_motivos.values, y=top_motivos.index, orientation="h",
+        marker=dict(color=px.colors.sample_colorscale("Magenta", [i/max(len(top_motivos)-1,1) for i in range(len(top_motivos))])),
+        text=top_motivos.values, textposition="outside",
+        hovertemplate="<b>%{y}</b><br>%{x:,} llamadas<extra></extra>",
+    ))
+    fig_motivos.update_layout(
+        height=420, margin=dict(l=0, r=40, t=10, b=20),
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+        xaxis=dict(gridcolor="rgba(255,255,255,0.08)", tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.62)")),
+        yaxis=dict(gridcolor="rgba(0,0,0,0)", tickfont=dict(size=11, family="Inter", color="rgba(255,255,255,0.75)")),
+        font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)")
+    )
+    st.plotly_chart(fig_motivos, use_container_width=True)
+else:
+    st.info("Sin llamadas tipificadas para el filtro actual.")
