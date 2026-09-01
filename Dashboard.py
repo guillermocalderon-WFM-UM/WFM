@@ -22,8 +22,9 @@ _SESION_MAX_SEG = 60 * 60  # 1 hora
 #                               (o pertenecer a un dominio permitido).
 # ─────────────────────────────────────────────
 _APP_NOMBRE = "WFM Dashboard"
-# Acento de la pantalla de acceso: MISMO en las dos apps para que los login se vean idénticos.
+# Pantalla de acceso: cada app usa su propio fondo/acento (igual que su dashboard).
 _ACCENT = "#38BDF8"
+_LOGIN_BG = "linear-gradient(160deg,#0a0813 0%,#13123d 50%,#0a0a1c 100%)"  # azul-índigo (WFM)
 _LOGIN_EYEBROW = "Scala Learning · Workforce Management · 2026"
 
 _G_SVG = (
@@ -47,8 +48,7 @@ def _portada_acceso(cuerpo_html: str) -> None:
       @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&display=swap');
       [data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stDecoration"],
       [data-testid="stSidebar"], [data-testid="stSidebarCollapsedControl"], #MainMenu {{ display:none !important; }}
-      [data-testid="stAppViewContainer"], .stApp {{
-        background:linear-gradient(165deg,#061109 0%,#0a1f17 68%,#071712 100%) !important; }}
+      [data-testid="stAppViewContainer"], .stApp {{ background:{_LOGIN_BG} !important; }}
       [data-testid="stAppViewContainer"]::before {{
         content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
         background:radial-gradient(360px 360px at 82% 14%, {_ACCENT}30, transparent 70%); }}
