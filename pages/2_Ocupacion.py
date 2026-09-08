@@ -1179,8 +1179,6 @@ def _nombre_corto_sup(n):
         return f"{p[0]} {p[1]}"
     return n
 
-_sup_h = 380
-
 if "Abandonadas" in dff.columns:
     tbl_sup = (
         dff.groupby("Supervisor", as_index=False)["Abandonadas"].sum()
@@ -1199,70 +1197,157 @@ else:
     tbl_sup = pd.DataFrame(columns=["Supervisores", "Abandonadas", "PctAbandono"])
     _total_ab = 0
 
-col_tbl, col_pie = st.columns([1, 1])
+# ── TABLA (ancho completo, sin scroll) ───────────────────────────────────
+st.markdown("""
+<style>
+    .abd-wrap {
+        border-radius:18px; overflow:hidden; margin:4px 0 10px;
+        border:1px solid rgba(255,255,255,0.10);
+        box-shadow:0 18px 42px -18px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.06);
+        background:linear-gradient(160deg,rgba(255,255,255,0.045),rgba(255,255,255,0.012));
+        backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+    }
+    .abd-tbl { width:100%; border-collapse:collapse; font-family:'Inter',sans-serif; }
+    .abd-tbl thead th {
+        background:linear-gradient(135deg,#2a0b1b 0%,#8f2f43 52%,#F87171 100%);
+        color:#fff; font-weight:800; font-size:10.5px; letter-spacing:0.12em;
+        text-transform:uppercase; text-align:left; padding:14px 20px;
+        border-bottom:1px solid rgba(255,255,255,0.12);
+    }
+    .abd-tbl thead th:nth-child(2), .abd-tbl thead th:nth-child(3) { text-align:center; }
+    .abd-tbl tbody td {
+        padding:12px 20px; font-size:13px; color:rgba(228,234,252,0.90);
+        border-top:1px solid rgba(255,255,255,0.05);
+    }
+    .abd-row:nth-child(odd)  td { background:rgba(22,18,48,0.55); }
+    .abd-row:nth-child(even) td { background:rgba(14,11,32,0.42); }
+    .abd-row:hover td { background:rgba(248,113,113,0.10); }
+    .abd-zero td { color:rgba(228,234,252,0.40); }
+    .abd-hit  td { color:#fff; font-weight:600; }
+    .abd-hit  td.abd-name { box-shadow:inset 3px 0 0 #F87171; }
+    .abd-name-in { display:flex; align-items:center; gap:11px; }
+    .abd-rk {
+        display:inline-flex; align-items:center; justify-content:center;
+        width:21px; height:21px; border-radius:7px; flex-shrink:0;
+        font-size:10px; font-weight:900;
+        background:rgba(248,113,113,0.18); color:#FCA5A5;
+        border:1px solid rgba(248,113,113,0.38);
+    }
+    .abd-rk-off { background:transparent; border:none; color:rgba(255,255,255,0.16); font-weight:700; }
+    .abd-num {
+        text-align:center; font-variant-numeric:tabular-nums;
+        font-weight:800; font-size:15px; font-family:'Space Grotesk',sans-serif;
+    }
+    .abd-pct { text-align:center; position:relative; font-variant-numeric:tabular-nums; overflow:hidden; }
+    .abd-bar {
+        position:absolute; left:14px; top:50%; transform:translateY(-50%);
+        height:24px; border-radius:6px; z-index:0;
+        background:linear-gradient(90deg,rgba(248,113,113,0.38),rgba(248,113,113,0.08));
+    }
+    .abd-pv { position:relative; z-index:1; }
+    .abd-total td {
+        padding:14px 20px; font-weight:900; font-size:13.5px; color:#fff;
+        background:linear-gradient(90deg,rgba(248,113,113,0.24),rgba(248,113,113,0.09));
+        border-top:2px solid rgba(248,113,113,0.6);
+    }
+    .abd-total td:nth-child(2), .abd-total td:nth-child(3) { text-align:center; }
+    .abd-total .abd-num { font-size:16px; }
+</style>
+""", unsafe_allow_html=True)
 
-with col_tbl:
-    tbl_disp = pd.DataFrame({
-        "Supervisores": tbl_sup["Supervisores"],
-        "Abandonadas": tbl_sup["Abandonadas"].astype(int),
-        "% de abandonadas": tbl_sup["PctAbandono"].map(
-            lambda x: f"{x:.2%}" if pd.notna(x) else "0.00%"
-        ),
-    })
-    tbl_disp.loc[len(tbl_disp)] = [
-        "Total general", _total_ab, "100%" if _total_ab > 0 else "0.00%"
-    ]
-
-    _sty = (
-        tbl_disp.style
-        .set_properties(subset=["Abandonadas", "% de abandonadas"], **{"text-align": "center"})
-        .apply(
-            lambda r: ["font-weight:700;background-color:rgba(248,113,113,0.16)"] * len(r)
-            if r["Supervisores"] == "Total general" else [""] * len(r),
-            axis=1,
-        )
-    )
-    st.dataframe(_sty, use_container_width=True, hide_index=True, height=_sup_h)
-
-    b64 = base64.b64encode(_excel_bytes(tbl_disp)).decode()
-    st.markdown(
-        f'<div style="text-align:right;margin-top:-6px;margin-bottom:8px">'
-        f'<a href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{b64}" '
-        f'download="cierre_abandonos_supervisor.xlsx" '
-        f'style="font-size:0.72rem;color:rgba(255,255,255,0.35);text-decoration:none;letter-spacing:0.03em">'
-        f'↓ Exportar Excel</a></div>',
-        unsafe_allow_html=True,
-    )
-
-with col_pie:
-    _pie_src = tbl_sup[tbl_sup["Abandonadas"] > 0].sort_values("Abandonadas", ascending=False)
-    if len(_pie_src):
-        fig_pie = go.Figure(go.Pie(
-            labels=_pie_src["Supervisores"],
-            values=_pie_src["Abandonadas"],
-            hole=0.5,
-            sort=False,
-            direction="clockwise",
-            marker=dict(
-                colors=[SUPERVISOR_COLORS[i % len(SUPERVISOR_COLORS)] for i in range(len(_pie_src))],
-                line=dict(color="#0A0813", width=2),
-            ),
-            texttemplate="%{label}<br><b>%{value:,}</b> · %{percent}",
-            textposition="outside",
-            textfont=dict(size=12, family="Inter", color="rgba(255,255,255,0.88)"),
-            pull=[0.05] + [0] * (len(_pie_src) - 1),
-            hovertemplate="<b>%{label}</b><br>Abandonadas: %{value:,}<br>% del total: %{percent}<extra></extra>",
-        ))
-        fig_pie.update_layout(
-            height=_sup_h, margin=dict(l=30, r=30, t=48, b=30),
-            title=dict(
-                text="Participación en el total de abandonos",
-                font=dict(size=13, color="rgba(255,255,255,0.7)", family="Inter"), x=0.5,
-            ),
-            paper_bgcolor="rgba(0,0,0,0)",
-            showlegend=False,
-            font=dict(family="Inter", color="rgba(255,255,255,0.72)"),
-        )
-        st.plotly_chart(fig_pie, use_container_width=True)
+_maxpct = tbl_sup["PctAbandono"].max() if (len(tbl_sup) and tbl_sup["PctAbandono"].notna().any()) else 1.0
+_rank = 0
+_rows_html = ""
+for _, r in tbl_sup.iterrows():
+    _ab   = int(r["Abandonadas"])
+    _pct  = r["PctAbandono"]
+    _ptxt = f"{_pct:.2%}" if pd.notna(_pct) else "0.00%"
+    _hit  = _ab > 0
+    if _hit:
+        _rank += 1
+        _badge = f"<span class='abd-rk'>{_rank}</span>"
+        _cls   = "abd-row abd-hit"
     else:
-        st.info("Sin llamadas abandonadas en el período seleccionado.")
+        _badge = "<span class='abd-rk abd-rk-off'>·</span>"
+        _cls   = "abd-row abd-zero"
+    _bw = (_pct / _maxpct * 100) if (pd.notna(_pct) and _maxpct) else 0
+    _bar = f"<span class='abd-bar' style='width:{_bw:.0f}%'></span>" if _bw > 0 else ""
+    _rows_html += (
+        f"<tr class='{_cls}'>"
+        f"<td class='abd-name'><span class='abd-name-in'>{_badge}<span>{r['Supervisores']}</span></span></td>"
+        f"<td class='abd-num'>{_ab}</td>"
+        f"<td class='abd-pct'>{_bar}<span class='abd-pv'>{_ptxt}</span></td>"
+        f"</tr>"
+    )
+
+_total_ptxt = "100%" if _total_ab > 0 else "0.00%"
+st.markdown(
+    f"""<div class='abd-wrap'><table class='abd-tbl'>
+        <thead><tr><th>Supervisores</th><th>Abandonadas</th><th>% de abandonadas</th></tr></thead>
+        <tbody>{_rows_html}
+        <tr class='abd-total'><td>Total general</td>
+            <td class='abd-num'>{_total_ab}</td>
+            <td class='abd-pct'><span class='abd-pv'>{_total_ptxt}</span></td></tr>
+        </tbody>
+    </table></div>""",
+    unsafe_allow_html=True,
+)
+
+tbl_disp = pd.DataFrame({
+    "Supervisores": tbl_sup["Supervisores"],
+    "Abandonadas": tbl_sup["Abandonadas"].astype(int),
+    "% de abandonadas": tbl_sup["PctAbandono"].map(lambda x: f"{x:.2%}" if pd.notna(x) else "0.00%"),
+})
+tbl_disp.loc[len(tbl_disp)] = ["Total general", _total_ab, _total_ptxt]
+b64 = base64.b64encode(_excel_bytes(tbl_disp)).decode()
+st.markdown(
+    f'<div style="text-align:right;margin-top:-2px;margin-bottom:18px">'
+    f'<a href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{b64}" '
+    f'download="cierre_abandonos_supervisor.xlsx" '
+    f'style="font-size:0.72rem;color:rgba(255,255,255,0.35);text-decoration:none;letter-spacing:0.03em">'
+    f'↓ Exportar Excel</a></div>',
+    unsafe_allow_html=True,
+)
+
+# ── GRÁFICA (ancho completo, debajo de la tabla) ─────────────────────────
+_pie_src = tbl_sup[tbl_sup["Abandonadas"] > 0].sort_values("Abandonadas", ascending=False)
+if len(_pie_src):
+    st.markdown("""<div class='chart-hdr' style='--cc:#F87171'>
+        <span class='ch-icon'>🍩</span>
+        <div class='ch-texts'>
+            <div class='ch-title'>Participación en el total de abandonos</div>
+            <div class='ch-sub'>Solo supervisores con llamadas abandonadas en el período</div>
+        </div>
+        <span class='ch-tag' style='color:#F87171'>Distribución</span>
+    </div>""", unsafe_allow_html=True)
+
+    fig_pie = go.Figure(go.Pie(
+        labels=_pie_src["Supervisores"],
+        values=_pie_src["Abandonadas"],
+        hole=0.55,
+        sort=False,
+        direction="clockwise",
+        marker=dict(
+            colors=[SUPERVISOR_COLORS[i % len(SUPERVISOR_COLORS)] for i in range(len(_pie_src))],
+            line=dict(color="#0A0813", width=2),
+        ),
+        texttemplate="%{label}<br><b>%{value:,}</b> · %{percent}",
+        textposition="outside",
+        textfont=dict(size=12, family="Inter", color="rgba(255,255,255,0.88)"),
+        pull=[0.05] + [0] * (len(_pie_src) - 1),
+        hovertemplate="<b>%{label}</b><br>Abandonadas: %{value:,}<br>% del total: %{percent}<extra></extra>",
+    ))
+    fig_pie.update_layout(
+        height=460, margin=dict(l=80, r=80, t=30, b=40),
+        paper_bgcolor="rgba(0,0,0,0)",
+        showlegend=False,
+        font=dict(family="Inter", color="rgba(255,255,255,0.72)"),
+        annotations=[dict(
+            text=f"{_total_ab}<br><span style='font-size:11px;color:rgba(255,255,255,0.45)'>abandonos</span>",
+            x=0.5, y=0.5, showarrow=False,
+            font=dict(size=30, family="Space Grotesk", color="rgba(255,255,255,0.92)"),
+        )],
+    )
+    st.plotly_chart(fig_pie, use_container_width=True)
+else:
+    st.info("Sin llamadas abandonadas en el período seleccionado.")
