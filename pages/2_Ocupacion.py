@@ -1135,77 +1135,134 @@ if "Abandonadas" in tbl_call.columns and "Llamadas" in tbl_call.columns:
 df_descarga(pd.DataFrame(tbl_call_disp), "llamadas_detalle.xlsx", use_container_width=True, hide_index=True)
 
 # ─────────────────────────────────────────────
-# RESUMEN POR SUPERVISOR
+# CIERRE DE ABANDONOS POR SUPERVISOR
+# (formato idéntico al correo diario de cierre de Abandonos)
 # ─────────────────────────────────────────────
 st.markdown("""
-<div class='chart-hdr' style='--cc:#8B5CF6;margin-top:28px'>
-    <span class='ch-icon'>👥</span>
+<div class='chart-hdr' style='--cc:#F87171;margin-top:28px'>
+    <span class='ch-icon'>🚫</span>
     <div class='ch-texts'>
-        <div class='ch-title'>Resumen por Supervisor</div>
-        <div class='ch-sub'>Llamadas totales, atendidas, abandonadas y distribución por equipo</div>
+        <div class='ch-title'>Cierre de Abandonos por Supervisor</div>
+        <div class='ch-sub'>Llamadas abandonadas y participación de cada equipo sobre el total</div>
     </div>
-    <span class='ch-tag' style='color:#8B5CF6'>Por equipo</span>
+    <span class='ch-tag' style='color:#F87171'>Reporte diario</span>
 </div>""", unsafe_allow_html=True)
 
-_agg_sup = {}
-for col in ["Llamadas","Atendidas","Abandonadas"]:
-    if col in dff.columns:
-        _agg_sup[col] = (col, "sum")
+# Nombre corto (Nombre + primer apellido), como se usa en el correo.
+# Diccionario explícito para los casos que la heurística no resuelve bien.
+_NOMBRE_CORTO_SUP = {
+    "Karen Julieth Garcia Mateus":      "Karen Garcia",
+    "Lina Estefania Forero Quemba":     "Lina Forero",
+    "Oscar Leonardo Ladino Algutria":   "Oscar Ladino",
+    "Zully Paola Vargas Vargas":        "Zully Vargas",
+    "Paula Andrea Avila Ñustes":        "Paula Avila",
+    "Ana Milena Carvajal Patiño":       "Ana Carvajal",
+    "Anyi Paola Castaño":               "Anyi Castaño",
+    "Juan Camilo Delgado Osorio":       "Juan Delgado",
+    "Claudia Daniela Arevalo Martinez": "Claudia Arevalo",
+    "Carlos Duvan Gonzalez Macias":     "Carlos Gonzalez",
+    "Camila Maldonado Tribilcock":      "Camila Maldonado",
+    "Leidy Milena Camacho Díaz":        "Leidy Camacho",
+    "Julieth Natalia Barreto Forero":   "Julieth Barreto",
+    "Angie Paola Salamanca Riaño":      "Angie Salamanca",
+    "Edwin Alexander Bajonero Prieto":  "Edwin Bajonero",
+}
 
-tbl_sup = (
-    dff.groupby("Supervisor")
-    .agg(**_agg_sup)
-    .reset_index()
-    .sort_values("Llamadas", ascending=False)
-)
-if "Abandonadas" in tbl_sup.columns:
-    _total_abandon_sup = tbl_sup["Abandonadas"].sum()
-    tbl_sup["PctAbandono"] = tbl_sup["Abandonadas"] / (_total_abandon_sup if _total_abandon_sup > 0 else float("nan"))
-
-col_tbl, col_pie = st.columns([1, 1])
+def _nombre_corto_sup(n):
+    n = str(n).strip()
+    if n in _NOMBRE_CORTO_SUP:
+        return _NOMBRE_CORTO_SUP[n]
+    p = n.split()
+    if len(p) >= 4:      # Nombre1 Nombre2 Apellido1 Apellido2
+        return f"{p[0]} {p[2]}"
+    if len(p) == 3:      # Nombre1 Apellido1 Apellido2
+        return f"{p[0]} {p[1]}"
+    return n
 
 _sup_h = 380
 
+if "Abandonadas" in dff.columns:
+    tbl_sup = (
+        dff.groupby("Supervisor", as_index=False)["Abandonadas"].sum()
+    )
+    tbl_sup["Supervisores"] = tbl_sup["Supervisor"].map(_nombre_corto_sup)
+    tbl_sup = (
+        tbl_sup.groupby("Supervisores", as_index=False)["Abandonadas"].sum()
+    )
+    tbl_sup["Abandonadas"] = tbl_sup["Abandonadas"].astype(int)
+    _total_ab = int(tbl_sup["Abandonadas"].sum())
+    tbl_sup["PctAbandono"] = tbl_sup["Abandonadas"] / (_total_ab if _total_ab > 0 else float("nan"))
+    tbl_sup = tbl_sup.sort_values(
+        ["Abandonadas", "Supervisores"], ascending=[False, True]
+    ).reset_index(drop=True)
+else:
+    tbl_sup = pd.DataFrame(columns=["Supervisores", "Abandonadas", "PctAbandono"])
+    _total_ab = 0
+
+col_tbl, col_pie = st.columns([1, 1])
+
 with col_tbl:
-    tbl_sup_disp = {"Supervisor": tbl_sup["Supervisor"]}
-    for col in ["Llamadas","Atendidas","Abandonadas"]:
-        if col in tbl_sup.columns:
-            tbl_sup_disp[col] = tbl_sup[col].astype(int)
-    if "PctAbandono" in tbl_sup.columns:
-        tbl_sup_disp["% Abandono"] = tbl_sup["PctAbandono"].map(
-            lambda x: f"{x:.1%}" if pd.notna(x) else "—"
+    tbl_disp = pd.DataFrame({
+        "Supervisores": tbl_sup["Supervisores"],
+        "Abandonadas": tbl_sup["Abandonadas"].astype(int),
+        "% de abandonadas": tbl_sup["PctAbandono"].map(
+            lambda x: f"{x:.2%}" if pd.notna(x) else "0.00%"
+        ),
+    })
+    tbl_disp.loc[len(tbl_disp)] = [
+        "Total general", _total_ab, "100%" if _total_ab > 0 else "0.00%"
+    ]
+
+    _sty = (
+        tbl_disp.style
+        .set_properties(subset=["Abandonadas", "% de abandonadas"], **{"text-align": "center"})
+        .apply(
+            lambda r: ["font-weight:700;background-color:rgba(248,113,113,0.16)"] * len(r)
+            if r["Supervisores"] == "Total general" else [""] * len(r),
+            axis=1,
         )
-    st.dataframe(pd.DataFrame(tbl_sup_disp), use_container_width=True, hide_index=True, height=_sup_h)
+    )
+    st.dataframe(_sty, use_container_width=True, hide_index=True, height=_sup_h)
+
+    b64 = base64.b64encode(_excel_bytes(tbl_disp)).decode()
+    st.markdown(
+        f'<div style="text-align:right;margin-top:-6px;margin-bottom:8px">'
+        f'<a href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{b64}" '
+        f'download="cierre_abandonos_supervisor.xlsx" '
+        f'style="font-size:0.72rem;color:rgba(255,255,255,0.35);text-decoration:none;letter-spacing:0.03em">'
+        f'↓ Exportar Excel</a></div>',
+        unsafe_allow_html=True,
+    )
 
 with col_pie:
-    if "Abandonadas" in tbl_sup.columns and tbl_sup["Abandonadas"].sum() > 0:
-        _pie_h = _sup_h
-        _labels = tbl_sup["Supervisor"].apply(lambda n: " ".join(n.split()[:2]))
-        _values = tbl_sup["Abandonadas"]
-        _pcts   = tbl_sup["PctAbandono"].fillna(0)
-        _text   = _pcts.map(lambda x: f"{x:.1%}")
+    _pie_src = tbl_sup[tbl_sup["Abandonadas"] > 0].sort_values("Abandonadas", ascending=False)
+    if len(_pie_src):
         fig_pie = go.Figure(go.Pie(
-            labels=_labels,
-            values=_values,
-            hole=0.52,
+            labels=_pie_src["Supervisores"],
+            values=_pie_src["Abandonadas"],
+            hole=0.5,
+            sort=False,
+            direction="clockwise",
             marker=dict(
-                colors=[SUPERVISOR_COLORS[i % len(SUPERVISOR_COLORS)] for i in range(len(tbl_sup))],
-                line=dict(color="rgba(0,0,0,0.35)", width=2)
+                colors=[SUPERVISOR_COLORS[i % len(SUPERVISOR_COLORS)] for i in range(len(_pie_src))],
+                line=dict(color="#0A0813", width=2),
             ),
-            text=_text,
-            textinfo="text",
-            textfont=dict(size=11, family="Inter", color="white"),
-            hovertemplate="<b>%{label}</b><br>Abandonadas: %{value:,}<br>% del total: %{text}<extra></extra>",
+            texttemplate="%{label}<br><b>%{value:,}</b> · %{percent}",
+            textposition="outside",
+            textfont=dict(size=12, family="Inter", color="rgba(255,255,255,0.88)"),
+            pull=[0.05] + [0] * (len(_pie_src) - 1),
+            hovertemplate="<b>%{label}</b><br>Abandonadas: %{value:,}<br>% del total: %{percent}<extra></extra>",
         ))
         fig_pie.update_layout(
-            height=_pie_h, margin=dict(l=0, r=0, t=30, b=10),
-            title=dict(text="Distribución % Abandono", font=dict(size=13, color="rgba(255,255,255,0.7)", family="Inter"), x=0.5),
-            paper_bgcolor="rgba(0,0,0,0)",
-            legend=dict(
-                orientation="v", x=1.02, y=0.5,
-                font=dict(size=10, family="Inter", color="rgba(255,255,255,0.75)"),
-                bgcolor="rgba(0,0,0,0)"
+            height=_sup_h, margin=dict(l=30, r=30, t=48, b=30),
+            title=dict(
+                text="Participación en el total de abandonos",
+                font=dict(size=13, color="rgba(255,255,255,0.7)", family="Inter"), x=0.5,
             ),
-            font=dict(family="Inter", color="rgba(255,255,255,0.72)")
+            paper_bgcolor="rgba(0,0,0,0)",
+            showlegend=False,
+            font=dict(family="Inter", color="rgba(255,255,255,0.72)"),
         )
         st.plotly_chart(fig_pie, use_container_width=True)
+    else:
+        st.info("Sin llamadas abandonadas en el período seleccionado.")
