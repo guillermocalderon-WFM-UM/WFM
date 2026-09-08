@@ -1136,17 +1136,8 @@ df_descarga(pd.DataFrame(tbl_call_disp), "llamadas_detalle.xlsx", use_container_
 
 # ─────────────────────────────────────────────
 # CIERRE DE ABANDONOS POR SUPERVISOR
-# (formato idéntico al correo diario de cierre de Abandonos)
+# Diseño "Boletín de cierre" · rampa cálida rojo → ámbar
 # ─────────────────────────────────────────────
-st.markdown("""
-<div class='chart-hdr' style='--cc:#F87171;margin-top:28px'>
-    <span class='ch-icon'>🚫</span>
-    <div class='ch-texts'>
-        <div class='ch-title'>Cierre de Abandonos por Supervisor</div>
-        <div class='ch-sub'>Llamadas abandonadas y participación de cada equipo sobre el total</div>
-    </div>
-    <span class='ch-tag' style='color:#F87171'>Reporte diario</span>
-</div>""", unsafe_allow_html=True)
 
 # Nombre corto (Nombre + primer apellido), como se usa en el correo.
 # Diccionario explícito para los casos que la heurística no resuelve bien.
@@ -1197,101 +1188,160 @@ else:
     tbl_sup = pd.DataFrame(columns=["Supervisores", "Abandonadas", "PctAbandono"])
     _total_ab = 0
 
-# ── TABLA (ancho completo, sin scroll) ───────────────────────────────────
+# ── BOLETÍN DE CIERRE (ancho completo, sin scroll) ──────────────────────
+_WARM = ["#F87171", "#FB923C", "#FBBF24", "#EF4444", "#FDBA74", "#F97316"]
+
 st.markdown("""
 <style>
-    .abd-wrap {
-        border-radius:18px; overflow:hidden; margin:4px 0 10px;
-        border:1px solid rgba(255,255,255,0.10);
-        box-shadow:0 18px 42px -18px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.06);
-        background:linear-gradient(160deg,rgba(255,255,255,0.045),rgba(255,255,255,0.012));
-        backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+    .bol{position:relative;border:1px solid rgba(255,255,255,0.10);border-radius:16px;
+        padding:24px 28px 22px;overflow:hidden;background:rgba(11,8,22,0.55);margin:28px 0 8px;
+        box-shadow:0 18px 44px -20px rgba(0,0,0,0.7),inset 0 1px 0 rgba(255,255,255,0.05);}
+    .bol-rule{position:absolute;top:0;left:0;right:0;height:3px;
+        background:linear-gradient(90deg,#F87171,#FB923C,#FBBF24);
+        box-shadow:0 0 16px -2px rgba(251,146,60,0.6);}
+    .bol-top{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;
+        padding-bottom:15px;border-bottom:2px solid rgba(251,146,60,0.35);}
+    .bol-mast .k{font-size:9.5px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#FB923C;}
+    .bol-mast .h{font-family:'Space Grotesk',sans-serif!important;font-size:22px;font-weight:700;
+        letter-spacing:-0.4px;margin-top:5px;color:#fff;}
+    .bol-date{text-align:right;flex-shrink:0;border-radius:10px;padding:7px 13px;
+        background:linear-gradient(135deg,#F87171,#FB923C);}
+    .bol-date .d{font-family:'Space Grotesk',sans-serif!important;font-size:14px;font-weight:700;
+        letter-spacing:0.14em;color:#fff;}
+    .bol-date .l{font-size:8px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;
+        margin-top:2px;color:rgba(255,255,255,0.85);}
+    .bol-hero{position:relative;display:flex;align-items:flex-end;gap:22px;padding:18px 0;
+        border-bottom:1px solid rgba(255,255,255,0.07);}
+    .bol-hero .glow{position:absolute;left:-20px;top:-6px;width:130px;height:130px;border-radius:50%;
+        pointer-events:none;filter:blur(20px);opacity:0.5;
+        background:radial-gradient(circle,rgba(248,113,113,0.55),transparent 70%);}
+    .bol-hero .big{position:relative;font-family:'Space Grotesk',sans-serif!important;font-size:64px;
+        font-weight:700;line-height:0.8;letter-spacing:-2.5px;
+        background-image:linear-gradient(135deg,#FCA5A5,#FB923C 60%,#FBBF24);
+        -webkit-background-clip:text;background-clip:text;color:transparent;}
+    .bol-hero .cap{position:relative;font-size:12px;color:rgba(232,236,252,0.6);padding-bottom:8px;}
+    .bol-hero .cap b{font-weight:700;color:#FCA5A5;}
+    .bol-hero .sep{width:1px;align-self:stretch;background:rgba(255,255,255,0.07);margin:6px 0;}
+    .bol-hero .side{position:relative;padding-bottom:8px;}
+    .bol-hero .side .n{font-family:'Space Grotesk',sans-serif!important;font-size:20px;font-weight:700;color:#FBBF24;}
+    .bol-hero .side .t{font-size:9px;color:rgba(232,236,252,0.34);text-transform:uppercase;
+        letter-spacing:0.1em;line-height:1.4;}
+    .bol-split{display:flex;gap:3px;margin:15px 0 5px;height:28px;border-radius:8px;overflow:hidden;}
+    .bol-split div{display:flex;align-items:center;padding:0 11px;font-size:10px;font-weight:700;color:#fff;
+        white-space:nowrap;font-family:'Space Grotesk',sans-serif!important;letter-spacing:0.02em;overflow:hidden;}
+    .bol-splitcap{font-size:9px;color:rgba(232,236,252,0.34);text-transform:uppercase;
+        letter-spacing:0.1em;margin-bottom:12px;}
+    .bol-ledger{display:grid;grid-template-columns:1fr 1fr;column-gap:32px;padding-top:6px;}
+    .bol-lh{display:grid;grid-template-columns:1fr auto 56px;gap:12px;font-size:8.5px;font-weight:800;
+        letter-spacing:0.12em;text-transform:uppercase;padding:5px 8px;border-radius:6px;margin-bottom:3px;
+        background:rgba(248,113,113,0.10);color:#FCA5A5;}
+    .bol-lh span:not(:first-child){text-align:right;}
+    .bol-line{display:grid;grid-template-columns:1fr auto 56px;gap:12px;align-items:baseline;
+        padding:5.5px 0;font-size:12px;border-bottom:1px dotted rgba(255,255,255,0.07);}
+    .bol-line .nm{display:flex;align-items:baseline;gap:8px;color:rgba(232,236,252,0.34);overflow:hidden;}
+    .bol-line .nm::after{content:"";flex:1;border-bottom:1px dotted rgba(255,255,255,0.13);transform:translateY(-3px);}
+    .bol-line .ct{font-family:'Space Grotesk',sans-serif!important;font-weight:600;font-variant-numeric:tabular-nums;
+        text-align:right;color:rgba(232,236,252,0.34);}
+    .bol-line .pc{font-family:'Space Grotesk',sans-serif!important;font-size:10.5px;font-variant-numeric:tabular-nums;
+        text-align:right;color:rgba(232,236,252,0.34);}
+    .bol-line .rk{font-family:'Space Grotesk',sans-serif!important;font-size:8.5px;font-weight:800;
+        flex-shrink:0;color:#FB923C;}
+    .bol-line.hit{margin-left:-16px;padding-left:13px;border-left:3px solid #FB923C;border-radius:2px;
+        background:linear-gradient(90deg,rgba(251,146,60,0.12),transparent);}
+    .bol-line.hit .nm{color:#fff;font-weight:600;}
+    .bol-line.hit .ct{font-weight:800;font-size:13.5px;color:#FBBF24;}
+    .bol-line.hit .pc{color:#FCA5A5;}
+    .bol-foot{display:flex;justify-content:space-between;align-items:center;margin-top:16px;
+        padding:10px 15px;border-radius:10px;
+        background:linear-gradient(90deg,rgba(248,113,113,0.22),rgba(251,146,60,0.08));
+        border:1px solid rgba(251,146,60,0.3);}
+    .bol-foot .sig{font-size:9.5px;letter-spacing:0.05em;color:rgba(255,255,255,0.55);}
+    .bol-foot .tot{font-family:'Space Grotesk',sans-serif!important;font-weight:700;color:#fff;
+        letter-spacing:0.05em;font-size:11px;}
+    .bol-foot .tot b{font-size:14px;color:#FBBF24;}
+    @media(max-width:900px){
+        .bol-ledger{grid-template-columns:1fr;}
+        .bol-hero{flex-wrap:wrap;gap:14px;}
+        .bol-hero .sep{display:none;}
     }
-    .abd-tbl { width:100%; border-collapse:collapse; font-family:'Inter',sans-serif; }
-    .abd-tbl thead th {
-        background:linear-gradient(135deg,#2a0b1b 0%,#8f2f43 52%,#F87171 100%);
-        color:#fff; font-weight:800; font-size:10.5px; letter-spacing:0.12em;
-        text-transform:uppercase; text-align:left; padding:14px 20px;
-        border-bottom:1px solid rgba(255,255,255,0.12);
-    }
-    .abd-tbl thead th:nth-child(2), .abd-tbl thead th:nth-child(3) { text-align:center; }
-    .abd-tbl tbody td {
-        padding:12px 20px; font-size:13px; color:rgba(228,234,252,0.90);
-        border-top:1px solid rgba(255,255,255,0.05);
-    }
-    .abd-row:nth-child(odd)  td { background:rgba(22,18,48,0.55); }
-    .abd-row:nth-child(even) td { background:rgba(14,11,32,0.42); }
-    .abd-row:hover td { background:rgba(248,113,113,0.10); }
-    .abd-zero td { color:rgba(228,234,252,0.40); }
-    .abd-hit  td { color:#fff; font-weight:600; }
-    .abd-hit  td.abd-name { box-shadow:inset 3px 0 0 #F87171; }
-    .abd-name-in { display:flex; align-items:center; gap:11px; }
-    .abd-rk {
-        display:inline-flex; align-items:center; justify-content:center;
-        width:21px; height:21px; border-radius:7px; flex-shrink:0;
-        font-size:10px; font-weight:900;
-        background:rgba(248,113,113,0.18); color:#FCA5A5;
-        border:1px solid rgba(248,113,113,0.38);
-    }
-    .abd-rk-off { background:transparent; border:none; color:rgba(255,255,255,0.16); font-weight:700; }
-    .abd-num {
-        text-align:center; font-variant-numeric:tabular-nums;
-        font-weight:800; font-size:15px; font-family:'Space Grotesk',sans-serif;
-    }
-    .abd-pct { text-align:center; position:relative; font-variant-numeric:tabular-nums; overflow:hidden; }
-    .abd-bar {
-        position:absolute; left:14px; top:50%; transform:translateY(-50%);
-        height:24px; border-radius:6px; z-index:0;
-        background:linear-gradient(90deg,rgba(248,113,113,0.38),rgba(248,113,113,0.08));
-    }
-    .abd-pv { position:relative; z-index:1; }
-    .abd-total td {
-        padding:14px 20px; font-weight:900; font-size:13.5px; color:#fff;
-        background:linear-gradient(90deg,rgba(248,113,113,0.24),rgba(248,113,113,0.09));
-        border-top:2px solid rgba(248,113,113,0.6);
-    }
-    .abd-total td:nth-child(2), .abd-total td:nth-child(3) { text-align:center; }
-    .abd-total .abd-num { font-size:16px; }
 </style>
 """, unsafe_allow_html=True)
 
-_maxpct = tbl_sup["PctAbandono"].max() if (len(tbl_sup) and tbl_sup["PctAbandono"].notna().any()) else 1.0
+_total_ptxt = "100%" if _total_ab > 0 else "0.00%"
+_es_dia    = fecha_ini == fecha_fin
+_fecha_d   = fecha_fin.strftime("%d·%m·%y")
+_fecha_l   = "Corte del día" if _es_dia else f"Corte · {fecha_ini.strftime('%d/%m')}–{fecha_fin.strftime('%d/%m')}"
+_n_sup     = len(tbl_sup)
+_n_hit     = int((tbl_sup["Abandonadas"] > 0).sum()) if _n_sup else 0
+
+# Barra de participación (solo equipos con abandono)
+_hits = tbl_sup[tbl_sup["Abandonadas"] > 0].reset_index(drop=True)
+_split_html = ""
+for _i, _r in _hits.iterrows():
+    _c    = _WARM[_i % len(_WARM)]
+    _pv   = float(_r["PctAbandono"] * 100) if pd.notna(_r["PctAbandono"]) else 0.0
+    _last = _i == len(_hits) - 1
+    _flex = "1 1 0" if _last else f"0 0 {_pv:.4f}%"
+    if _pv >= 22:
+        _lbl = f"{_r['Supervisores']} · {int(_r['Abandonadas'])} · {_r['PctAbandono']:.2%}"
+    elif _pv >= 8:
+        _lbl = str(int(_r["Abandonadas"]))
+    else:
+        _lbl = ""
+    _split_html += f"<div style='flex:{_flex};background:linear-gradient(150deg,{_c},{_c}cc)'>{_lbl}</div>"
+_split_block = (
+    f"<div class='bol-split'>{_split_html}</div>"
+    f"<div class='bol-splitcap'>Participación en el total de abandonos</div>"
+) if _split_html else ""
+
+# Libro contable a dos columnas
 _rank = 0
-_rows_html = ""
+_lines = []
 for _, r in tbl_sup.iterrows():
     _ab   = int(r["Abandonadas"])
     _pct  = r["PctAbandono"]
     _ptxt = f"{_pct:.2%}" if pd.notna(_pct) else "0.00%"
-    _hit  = _ab > 0
-    if _hit:
+    if _ab > 0:
         _rank += 1
-        _badge = f"<span class='abd-rk'>{_rank}</span>"
-        _cls   = "abd-row abd-hit"
+        _lines.append(
+            f"<div class='bol-line hit'><span class='nm'><span class='rk'>{_rank:02d}</span>"
+            f"{r['Supervisores']}</span><span class='ct'>{_ab}</span><span class='pc'>{_ptxt}</span></div>"
+        )
     else:
-        _badge = "<span class='abd-rk abd-rk-off'>·</span>"
-        _cls   = "abd-row abd-zero"
-    _bw = (_pct / _maxpct * 100) if (pd.notna(_pct) and _maxpct) else 0
-    _bar = f"<span class='abd-bar' style='width:{_bw:.0f}%'></span>" if _bw > 0 else ""
-    _rows_html += (
-        f"<tr class='{_cls}'>"
-        f"<td class='abd-name'><span class='abd-name-in'>{_badge}<span>{r['Supervisores']}</span></span></td>"
-        f"<td class='abd-num'>{_ab}</td>"
-        f"<td class='abd-pct'>{_bar}<span class='abd-pv'>{_ptxt}</span></td>"
-        f"</tr>"
-    )
+        _lines.append(
+            f"<div class='bol-line'><span class='nm'>{r['Supervisores']}</span>"
+            f"<span class='ct'>{_ab}</span><span class='pc'>{_ptxt}</span></div>"
+        )
+_half = (len(_lines) + 1) // 2
+_lh   = "<div class='bol-lh'><span>Supervisor</span><span>Ab.</span><span>% ab.</span></div>"
+_col_l = _lh + "".join(_lines[:_half])
+_col_r = _lh + "".join(_lines[_half:])
 
-_total_ptxt = "100%" if _total_ab > 0 else "0.00%"
-st.markdown(
-    f"""<div class='abd-wrap'><table class='abd-tbl'>
-        <thead><tr><th>Supervisores</th><th>Abandonadas</th><th>% de abandonadas</th></tr></thead>
-        <tbody>{_rows_html}
-        <tr class='abd-total'><td>Total general</td>
-            <td class='abd-num'>{_total_ab}</td>
-            <td class='abd-pct'><span class='abd-pv'>{_total_ptxt}</span></td></tr>
-        </tbody>
-    </table></div>""",
-    unsafe_allow_html=True,
-)
+st.markdown(f"""
+<div class='bol'>
+    <div class='bol-rule'></div>
+    <div class='bol-top'>
+        <div class='bol-mast'>
+            <div class='k'>Workforce Management · Uniminuto</div>
+            <div class='h'>Cierre de Abandonos</div>
+        </div>
+        <div class='bol-date'><div class='d'>{_fecha_d}</div><div class='l'>{_fecha_l}</div></div>
+    </div>
+    <div class='bol-hero'>
+        <div class='glow'></div>
+        <div class='big'>{_total_ab}</div>
+        <div class='cap'>llamadas abandonadas<br>en el corte &mdash; <b>{_n_hit} de {_n_sup} equipos</b></div>
+        <div class='sep'></div>
+        <div class='side'><div class='n'>{_total_ptxt}</div><div class='t'>Repartido<br>entre equipos</div></div>
+    </div>
+    {_split_block}
+    <div class='bol-ledger'><div>{_col_l}</div><div>{_col_r}</div></div>
+    <div class='bol-foot'>
+        <span class='sig'>Generado por Workforce Management</span>
+        <span class='tot'>TOTAL GENERAL&nbsp;&nbsp;<b>{_total_ab}</b>&nbsp;&nbsp;·&nbsp;&nbsp;{_total_ptxt}</span>
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
 tbl_disp = pd.DataFrame({
     "Supervisores": tbl_sup["Supervisores"],
@@ -1309,7 +1359,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# ── GRÁFICA (ancho completo, debajo de la tabla) ─────────────────────────
+# ── GRÁFICA (ancho completo, debajo del boletín) ────────────────────────
 _pie_src = tbl_sup[tbl_sup["Abandonadas"] > 0].sort_values("Abandonadas", ascending=False)
 if len(_pie_src):
     st.markdown("""<div class='chart-hdr' style='--cc:#F87171'>
@@ -1328,7 +1378,7 @@ if len(_pie_src):
         sort=False,
         direction="clockwise",
         marker=dict(
-            colors=[SUPERVISOR_COLORS[i % len(SUPERVISOR_COLORS)] for i in range(len(_pie_src))],
+            colors=[_WARM[i % len(_WARM)] for i in range(len(_pie_src))],
             line=dict(color="#0A0813", width=2),
         ),
         texttemplate="%{label}<br><b>%{value:,}</b> · %{percent}",
