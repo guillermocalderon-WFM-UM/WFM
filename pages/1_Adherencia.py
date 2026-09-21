@@ -1105,6 +1105,18 @@ _periodo_sorted = (
 )
 _periodo_rank = {p: i for i, p in enumerate(_periodo_sorted)}
 
+# Columna de período por granularidad, para que cada gráfica pueda ofrecer su
+# propio selector "Granularidad" (filtro interno) sin depender solo del filtro
+# global "Agrupar por" de la barra lateral.
+_PERIODO_COLS = {"Día": "FechaStr", "Semana": "Semana", "Mes": "Mes"}
+_GRANULARIDADES = list(_PERIODO_COLS)
+
+def _periodo_rank_de(col: str):
+    orden = dff.groupby(col)["Fecha"].min().sort_values().index.tolist()
+    return orden, {p: i for i, p in enumerate(orden)}
+
+_VENTANAS = {"Todo el período": None, "Últimos 15": 15, "Últimos 30": 30, "Últimos 60": 60}
+
 # ─────────────────────────────────────────────
 # MÉTRICAS GLOBALES
 # ─────────────────────────────────────────────
@@ -1164,23 +1176,32 @@ _ui.overview_kpis([
 # ─────────────────────────────────────────────
 _ui.section("A", "MONITOREO")
 
-tend_sup = (
-    dff_validos
-    .groupby(["_periodo","Supervisor"])[["adh_s","prog_s"]]
-    .sum()
-    .reset_index()
-)
-tend_sup["ADH"] = (tend_sup["adh_s"] / tend_sup["prog_s"]).where(tend_sup["prog_s"] > 0, 0)
-tend_sup = tend_sup.drop(columns=["adh_s","prog_s"])
-tend_sup["_ord"] = tend_sup["_periodo"].map(_periodo_rank)
-tend_sup = tend_sup.sort_values(["Supervisor","_ord"]).drop(columns="_ord")
-
-sup_lista = sorted(tend_sup["Supervisor"].unique())
+sup_lista = sorted(dff_validos["Supervisor"].dropna().unique())
 colores_sup = {s: SUPERVISOR_COLORS[i % len(SUPERVISOR_COLORS)] for i, s in enumerate(sup_lista)}
 
 _ui.panel_title("📉", "Tendencia por Supervisor", "Comparación de la evolución de adherencia de cada supervisor a lo largo del período.", "EVOLUCIÓN")
-_sup_filtro = _ui.multiselect_all("Supervisor", sup_lista, "wfm_v1_tend_sup")
+_c_tsup1, _c_tsup2, _c_tsup3 = st.columns([2.2, .9, .9])
+with _c_tsup1:
+    _sup_filtro = _ui.multiselect_all("Supervisor", sup_lista, "wfm_v1_tend_sup")
+with _c_tsup2:
+    _gran_tsup = st.selectbox("Granularidad", _GRANULARIDADES, index=_GRANULARIDADES.index(tipo_periodo), key="wfm_v1_tend_sup_gran")
+with _c_tsup3:
+    _ventana_tsup = st.selectbox("Mostrar", list(_VENTANAS), key="wfm_v1_tend_sup_ventana")
 _ui.selected_chips(_sup_filtro)
+
+_col_tsup = _PERIODO_COLS[_gran_tsup]
+_orden_tsup, _rank_tsup = _periodo_rank_de(_col_tsup)
+tend_sup = (
+    dff_validos
+    .groupby([_col_tsup, "Supervisor"])[["adh_s","prog_s"]]
+    .sum()
+    .reset_index()
+    .rename(columns={_col_tsup: "_periodo"})
+)
+tend_sup["ADH"] = (tend_sup["adh_s"] / tend_sup["prog_s"]).where(tend_sup["prog_s"] > 0, 0)
+tend_sup = tend_sup.drop(columns=["adh_s","prog_s"])
+tend_sup["_ord"] = tend_sup["_periodo"].map(_rank_tsup)
+tend_sup = tend_sup.sort_values(["Supervisor","_ord"]).drop(columns="_ord")
 
 fig_sup = go.Figure()
 fig_sup.add_hrect(y0=0.60, y1=0.80, fillcolor="rgba(239,68,68,0.03)",  layer="below", line_width=0)
@@ -1202,9 +1223,10 @@ fig_sup.add_hline(y=0.90, line_dash="dot", line_color="rgba(100,116,139,0.6)", l
                   annotation_text="Meta 90%", annotation_position="top right",
                   annotation_font=dict(color="rgba(255,255,255,0.6)", size=10, family="Inter"))
 
-_periodos_sup = _periodo_sorted
-_n_sup_per    = len(_periodos_sup)
-_ini_sup      = max(-0.5, _n_sup_per - 15 - 0.5)
+_periodos_sup   = _orden_tsup
+_n_sup_per      = len(_periodos_sup)
+_ventana_n_sup  = _VENTANAS[_ventana_tsup]
+_ini_sup        = max(-0.5, _n_sup_per - _ventana_n_sup - 0.5) if _ventana_n_sup else -0.5
 fig_sup.update_layout(
     height=390, margin=dict(l=0, r=0, t=10, b=40),
     paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
@@ -1272,8 +1294,14 @@ n_exp = len(exp_stats)
 _exp_tag = sup_sel if sup_sel != "Todos" else "Todos los equipos"
 
 _ui.panel_title("🧑‍💻", "Comparativo por Experto", f"Adherencia individual de cada experto: verde ≥ 90%, amarillo ≥ 80%, rojo < 80% · {n_exp} expertos · {_exp_tag}", "BARRAS")
+_c_exp1, _c_exp2 = st.columns([2.4, 1])
+with _c_exp1:
+    _sup_filtro_exp = _ui.multiselect_all("Supervisor", sorted(exp_stats["Supervisor"].unique()), "wfm_v1_exp_sup")
+with _c_exp2:
+    _orden_exp = st.selectbox("Ordenar", ["Mejores arriba", "En riesgo arriba"], key="wfm_v1_exp_orden")
 
 _exp_idx = exp_stats.set_index("Nombre")
+_exp_idx = _exp_idx[_exp_idx["Supervisor"].isin(_sup_filtro_exp)].sort_values("ADH", ascending=(_orden_exp == "Mejores arriba"))
 with st.container(height=520, border=False):
     _ranking_bar(_exp_idx["ADH"], "Adherencia", lambda v: f"{v:.1%}", zonas=_ADH_ZONAS, color_fn=_adh_color,
                  alto_fila=38, extra=_exp_idx["Supervisor"], extra_label="Supervisor")
@@ -1283,16 +1311,24 @@ with st.container(height=520, border=False):
 # ─────────────────────────────────────────────
 _ui.section("C", "ANÁLISIS")
 _ui.panel_title("📈", "Tendencia de Adherencia", "Evolución de la adherencia del equipo y distribución de tipos de llegada en el período.", f"{adh_global:.1%} global")
+_c_tend1, _c_tend2 = st.columns([1, 1])
+with _c_tend1:
+    _gran_tend = st.selectbox("Granularidad", _GRANULARIDADES, index=_GRANULARIDADES.index(tipo_periodo), key="wfm_v1_tend_gran")
+with _c_tend2:
+    _ventana_tend = st.selectbox("Mostrar", list(_VENTANAS), key="wfm_v1_tend_ventana")
 
+_col_tend = _PERIODO_COLS[_gran_tend]
+_orden_tend, _rank_tend = _periodo_rank_de(_col_tend)
 tend = (
     dff_validos
-    .groupby("_periodo")[["adh_s","prog_s"]]
+    .groupby(_col_tend)[["adh_s","prog_s"]]
     .sum()
     .reset_index()
+    .rename(columns={_col_tend: "_periodo"})
 )
 tend["ADH"] = (tend["adh_s"] / tend["prog_s"]).where(tend["prog_s"] > 0, 0)
 tend = tend.drop(columns=["adh_s","prog_s"])
-tend["_ord"] = tend["_periodo"].map(_periodo_rank)
+tend["_ord"] = tend["_periodo"].map(_rank_tend)
 tend = tend.sort_values("_ord").drop(columns="_ord")
 
 # Las visualizaciones se leen a ancho completo; no quedan gráficos a media página.
@@ -1322,7 +1358,8 @@ with c1:
                        annotation_text="Meta 90%", annotation_position="top right",
                        annotation_font=dict(color=COLOR_SUCCESS, size=10, family="Inter"))
     _n_tend = len(tend)
-    _ini_tend = max(-0.5, _n_tend - 15 - 0.5)
+    _ventana_n_tend = _VENTANAS[_ventana_tend]
+    _ini_tend = max(-0.5, _n_tend - _ventana_n_tend - 0.5) if _ventana_n_tend else -0.5
     fig_tend.update_layout(
         height=370, margin=dict(l=0, r=10, t=24, b=40),
         paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
@@ -1390,12 +1427,23 @@ _ui.panel_title("🔍", "Detalle por Agente", "Adherencia, planificación y exce
 _matrix_adh = dff_validos[["Fecha", "Supervisor", "Nombre", "adh_s", "prog_s", "Validador Llegada"]].copy()
 _matrix_adh["Adherencia"] = (_matrix_adh["adh_s"] / _matrix_adh["prog_s"]).clip(0, 1)
 _matrix_adh["Llegada a tiempo"] = _matrix_adh["Validador Llegada"].eq("Llegada a tiempo").astype(float)
+_matrix_adh["Asistió a turno"] = _matrix_adh["Validador Llegada"].ne("Ausente").astype(float)
+_MATRIX_METRICS = {"Adherencia": "Adherencia", "Llegada a tiempo": "Llegada a tiempo", "Asistió a turno": "Asistió a turno"}
+_MATRIX_BINARIOS = {"Llegada a tiempo", "Asistió a turno"}
 _ui.panel_title("▦", "Matriz diaria por Supervisor", "Porcentaje diario con alerta <90 % y criticidad <70 %.", "HEATMAP")
-_ui.percentage_matrix(_matrix_adh, "Supervisor", "Fecha", {"Adherencia": "Adherencia", "Llegada a tiempo": "Llegada a tiempo"}, "adh_matrix_sup", "Supervisor")
+_ui.percentage_matrix(_matrix_adh, "Supervisor", "Fecha", _MATRIX_METRICS, "adh_matrix_sup", "Supervisor", binary_metrics=_MATRIX_BINARIOS)
 _ui.panel_title("👤", "Matriz diaria por Experto", "Selecciona un supervisor para analizar el riesgo individual.", "SEGUIMIENTO")
-_matrix_supervisor = st.selectbox("Supervisor para matriz de expertos", ["Todos"] + sorted(_matrix_adh["Supervisor"].dropna().unique()), key="adh_matrix_agent_supervisor")
-_matrix_agents = _matrix_adh if _matrix_supervisor == "Todos" else _matrix_adh[_matrix_adh["Supervisor"] == _matrix_supervisor]
-_ui.percentage_matrix(_matrix_agents, "Nombre", "Fecha", {"Adherencia": "Adherencia", "Llegada a tiempo": "Llegada a tiempo"}, "adh_matrix_agent", "Experto")
+_SIN_SUPERVISOR = "— Selecciona un supervisor —"
+_matrix_supervisor = st.selectbox(
+    "Supervisor para matriz de expertos",
+    [_SIN_SUPERVISOR] + sorted(_matrix_adh["Supervisor"].dropna().unique()),
+    key="adh_matrix_agent_supervisor",
+)
+if _matrix_supervisor == _SIN_SUPERVISOR:
+    st.info("Selecciona un supervisor para ver la matriz diaria de sus expertos.")
+else:
+    _matrix_agents = _matrix_adh[_matrix_adh["Supervisor"] == _matrix_supervisor]
+    _ui.percentage_matrix(_matrix_agents, "Nombre", "Fecha", _MATRIX_METRICS, "adh_matrix_agent", "Experto", binary_metrics=_MATRIX_BINARIOS)
 
 def seg_a_hhmmss(s):
     if pd.isna(s) or s <= 0:
@@ -1437,82 +1485,8 @@ def fmt_plan_vec(series):
         return fmt_td_vec(series)
     return series.apply(fmt_plan)
 
-# ── Resumen ejecutivo: Top/Bottom expertos + cumplimiento de meta ──
-_ui.section("E", "RESUMEN")
-_ui.panel_title("🏅", "Resumen Ejecutivo de Expertos", "Los mejores, los que necesitan atención y el cumplimiento de meta del equipo filtrado.", "OVERVIEW")
-
-top5    = exp_stats.sort_values("ADH", ascending=False).head(5)
-bottom5 = exp_stats.sort_values("ADH", ascending=True).head(5)
-
-def _lb_rows(df_sub, color):
-    rows = ""
-    for i, r in enumerate(df_sub.itertuples(), 1):
-        nombre_corto = " ".join(str(r.Nombre).split()[:2])
-        sup_corto = " ".join(str(r.Supervisor).split()[:2]) if r.Supervisor != "-" else "-"
-        rows += f"""<div class='lb-row'>
-            <div class='lb-rank' style='--lc:{color}'>{i}</div>
-            <div class='lb-info'>
-                <div class='lb-name'>{nombre_corto}</div>
-                <div class='lb-sup'>{sup_corto}</div>
-            </div>
-            <div class='lb-pct' style='color:{color}'>{r.ADH:.1%}</div>
-        </div>"""
-    return rows
-
-col_top, col_bottom, col_donut = st.container(), st.container(), st.container()
-with col_top:
-    st.markdown(f"""<div class='lb-card'>
-        <div class='lb-head'>
-            <span class='lb-head-icon'>🏆</span>
-            <span class='lb-head-title'>Top 5 Expertos</span>
-            <span class='lb-head-badge' style='color:{COLOR_SUCCESS}'>Mejores</span>
-        </div>
-        {_lb_rows(top5, COLOR_SUCCESS)}
-    </div>""", unsafe_allow_html=True)
-with col_bottom:
-    st.markdown(f"""<div class='lb-card'>
-        <div class='lb-head'>
-            <span class='lb-head-icon'>⚠️</span>
-            <span class='lb-head-title'>En Riesgo</span>
-            <span class='lb-head-badge' style='color:{COLOR_DANGER}'>Atención</span>
-        </div>
-        {_lb_rows(bottom5, COLOR_DANGER)}
-    </div>""", unsafe_allow_html=True)
-with col_donut:
-    n_cumple    = int((exp_stats["ADH"] >= 0.90).sum())
-    n_no_cumple = n_exp - n_cumple
-    pct_cumple  = (n_cumple / n_exp * 100) if n_exp > 0 else 0
-    with st.container(key="donut_card"):
-        st.markdown("""<div class='lb-head'>
-            <span class='lb-head-icon'>🎯</span>
-            <span class='lb-head-title'>Cumplimiento de Meta</span>
-            <span class='lb-head-badge' style='color:#22D3EE'>≥90%</span>
-        </div>""", unsafe_allow_html=True)
-        fig_meta = go.Figure(go.Pie(
-            labels=["Cumple meta", "No cumple"], values=[n_cumple, n_no_cumple], hole=0.66,
-            marker=dict(colors=["#22D3EE", COLOR_DANGER], line=dict(color="#0B0518", width=3)),
-            textinfo="value", textposition="inside",
-            textfont=dict(size=13, color="white", family="Inter"),
-            hovertemplate="<b>%{label}</b><br>%{value} expertos · %{percent}<extra></extra>",
-            sort=False, showlegend=False
-        ))
-        fig_meta.add_annotation(
-            text=f"<b style='font-size:24px'>{pct_cumple:.0f}%</b><br><span style='font-size:11px'>cumple meta</span>",
-            x=0.5, y=0.5, font=dict(color="#22D3EE", family="Inter"),
-            showarrow=False, align="center"
-        )
-        fig_meta.update_layout(
-            height=210, margin=dict(l=0, r=0, t=0, b=0),
-            paper_bgcolor="rgba(0,0,0,0)", showlegend=False,
-            font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)")
-        )
-        st.plotly_chart(fig_meta, use_container_width=True, config={"displayModeBar": False})
-        st.markdown(f"""<div class='donut-legend'>
-            <div class='dl-item'><span class='dl-dot' style='background:#22D3EE'></span>Cumple<b>{n_cumple}</b></div>
-            <div class='dl-item'><span class='dl-dot' style='background:{COLOR_DANGER}'></span>No cumple<b>{n_no_cumple}</b></div>
-        </div>""", unsafe_allow_html=True)
-
 # ── Tabla 1: Resumen General ──────────────────
+_ui.section("E", "RESUMEN")
 st.markdown("<div style='margin-top:24px'></div>", unsafe_allow_html=True)
 st.markdown(f"""<div class='tbl-hdr' style='background:linear-gradient(135deg,{COLOR_SUCCESS} 0%,#059669 100%)'>
     <span class='tbl-hdr-icon'>📋</span>
@@ -1566,10 +1540,12 @@ _ui.panel_title("📶", "Distribución y Patrones de Adherencia", "Cómo se repa
 
 c_hist, c_dia = st.container(), st.container()
 with c_hist:
+    _sup_filtro_hist = _ui.multiselect_all("Supervisor", sorted(exp_stats["Supervisor"].unique()), "wfm_v1_hist_sup")
     _bins = [-0.01, 0.70, 0.80, 0.90, 0.95, 10]
     _labels = ["<70%", "70-79%", "80-89%", "90-94%", "≥95%"]
     _bucket_colors = [COLOR_DANGER, COLOR_DANGER, COLOR_WARNING, COLOR_SUCCESS, COLOR_SUCCESS]
-    hist_counts = pd.cut(exp_stats["ADH"], bins=_bins, labels=_labels).value_counts().reindex(_labels).fillna(0).astype(int)
+    _exp_stats_hist = exp_stats[exp_stats["Supervisor"].isin(_sup_filtro_hist)]
+    hist_counts = pd.cut(_exp_stats_hist["ADH"], bins=_bins, labels=_labels).value_counts().reindex(_labels).fillna(0).astype(int)
     fig_hist = go.Figure(go.Bar(
         x=_labels, y=hist_counts.values,
         marker=dict(color=_bucket_colors, opacity=0.92, line=dict(width=0), cornerradius=6),
@@ -1588,41 +1564,63 @@ with c_hist:
     st.plotly_chart(fig_hist, use_container_width=True, config={"displayModeBar": False})
 
 with c_dia:
+    _comparar_dia = st.selectbox("Comparar", ["General", "Por Supervisor"], key="wfm_v1_dia_comparar")
     _dia_map = {"Monday": "Lunes", "Tuesday": "Martes", "Wednesday": "Miércoles",
                 "Thursday": "Jueves", "Friday": "Viernes", "Saturday": "Sábado", "Sunday": "Domingo"}
     _dia_order = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
-    _dia_sum = (
-        dff_validos.assign(DiaEs=dff_validos["DiaSemana"].map(_dia_map))
-        .groupby("DiaEs")[["adh_s","prog_s"]]
-        .sum()
-    )
-    dia_stats = (
-        (_dia_sum["adh_s"] / _dia_sum["prog_s"]).where(_dia_sum["prog_s"] > 0, 0)
-        .reindex(_dia_order)
-        .dropna()
-    )
-    dia_colors = [COLOR_SUCCESS if v >= 0.90 else (COLOR_WARNING if v >= 0.80 else COLOR_DANGER) for v in dia_stats.values]
-    fig_dia = go.Figure(go.Bar(
-        x=dia_stats.index, y=dia_stats.values,
-        marker=dict(color=dia_colors, opacity=0.92, line=dict(width=0), cornerradius=6),
-        width=0.55,
-        text=[f"{v:.1%}" for v in dia_stats.values], textposition="outside", cliponaxis=False,
-        textfont=dict(size=11, color="rgba(255,255,255,0.78)", family="Space Grotesk, sans-serif"),
-        hovertemplate="<b>%{x}</b><br>Adherencia: %{y:.1%}<extra></extra>"
-    ))
-    fig_dia.add_hline(y=0.90, line_dash="dot", line_color="rgba(125,211,252,0.75)", line_width=1.5,
-                      annotation_text="Meta 90%",
-                      annotation_font=dict(size=10, color="#7DD3FC"),
-                      annotation_position="top left")
-    fig_dia.update_layout(
-        height=330, margin=dict(l=0, r=0, t=26, b=0), bargap=0.42,
-        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-        xaxis=dict(gridcolor="rgba(0,0,0,0)", tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.55)"), fixedrange=True),
-        yaxis=dict(tickformat=".0%", range=[0, 1.10], gridcolor="rgba(255,255,255,0.045)",
-                   tickfont=dict(size=9, family="Inter", color="rgba(255,255,255,0.32)"), fixedrange=True),
-        showlegend=False, font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)")
-    )
-    st.plotly_chart(fig_dia, use_container_width=True, config={"displayModeBar": False})
+    _base_dia = dff_validos.assign(DiaEs=dff_validos["DiaSemana"].map(_dia_map))
+
+    if _comparar_dia == "General":
+        _dia_sum = _base_dia.groupby("DiaEs")[["adh_s","prog_s"]].sum()
+        dia_stats = (
+            (_dia_sum["adh_s"] / _dia_sum["prog_s"]).where(_dia_sum["prog_s"] > 0, 0)
+            .reindex(_dia_order)
+            .dropna()
+        )
+        dia_colors = [COLOR_SUCCESS if v >= 0.90 else (COLOR_WARNING if v >= 0.80 else COLOR_DANGER) for v in dia_stats.values]
+        fig_dia = go.Figure(go.Bar(
+            x=dia_stats.index, y=dia_stats.values,
+            marker=dict(color=dia_colors, opacity=0.92, line=dict(width=0), cornerradius=6),
+            width=0.55,
+            text=[f"{v:.1%}" for v in dia_stats.values], textposition="outside", cliponaxis=False,
+            textfont=dict(size=11, color="rgba(255,255,255,0.78)", family="Space Grotesk, sans-serif"),
+            hovertemplate="<b>%{x}</b><br>Adherencia: %{y:.1%}<extra></extra>"
+        ))
+        fig_dia.add_hline(y=0.90, line_dash="dot", line_color="rgba(125,211,252,0.75)", line_width=1.5,
+                          annotation_text="Meta 90%",
+                          annotation_font=dict(size=10, color="#7DD3FC"),
+                          annotation_position="top left")
+        fig_dia.update_layout(
+            height=330, margin=dict(l=0, r=0, t=26, b=0), bargap=0.42,
+            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+            xaxis=dict(gridcolor="rgba(0,0,0,0)", tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.55)"), fixedrange=True),
+            yaxis=dict(tickformat=".0%", range=[0, 1.10], gridcolor="rgba(255,255,255,0.045)",
+                       tickfont=dict(size=9, family="Inter", color="rgba(255,255,255,0.32)"), fixedrange=True),
+            showlegend=False, font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)")
+        )
+        st.plotly_chart(fig_dia, use_container_width=True, config={"displayModeBar": False})
+    else:
+        _dia_sup = _base_dia.groupby(["Supervisor", "DiaEs"])[["adh_s","prog_s"]].sum().reset_index()
+        _dia_sup["ADH"] = (_dia_sup["adh_s"] / _dia_sup["prog_s"]).where(_dia_sup["prog_s"] > 0, 0)
+        _piv_dia = _dia_sup.pivot(index="Supervisor", columns="DiaEs", values="ADH").reindex(columns=_dia_order)
+        _z_dia = _piv_dia.to_numpy(dtype=float)
+        fig_dia = go.Figure(go.Heatmap(
+            z=_z_dia, x=_piv_dia.columns, y=_piv_dia.index, zmin=0, zmax=1,
+            colorscale=[[0, "#F43F5E"], [.7999, "#F43F5E"], [.80, "#F59E0B"], [.8999, "#F59E0B"], [.90, "#10B981"], [1, "#10B981"]],
+            text=np.where(np.isnan(_z_dia), "—", np.vectorize(lambda v: f"{v:.0%}")(np.nan_to_num(_z_dia))),
+            texttemplate="%{text}", textfont=dict(size=9.5, family="Inter", color="rgba(255,255,255,.94)"),
+            xgap=3, ygap=3, showscale=False,
+            hovertemplate="<b>%{y}</b><br>%{x}: %{z:.1%}<extra></extra>",
+        ))
+        fig_dia.update_layout(
+            height=max(280, len(_piv_dia) * 30 + 90), margin=dict(l=150, r=10, t=20, b=10),
+            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", showlegend=False,
+            font=dict(family="Inter"),
+            xaxis=dict(showgrid=False, side="top", tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.55)")),
+            yaxis=dict(showgrid=False, tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.70)")),
+        )
+        st.caption("Verde ≥ 90 % · amarillo 80–89,9 % · rojo < 80 %")
+        st.plotly_chart(fig_dia, use_container_width=True, config={"displayModeBar": False})
 
 # ── Tabla 2: Planificación ────────────────────
 st.markdown(f"""<div class='tbl-hdr' style='background:linear-gradient(135deg,{COLOR_ACCENT} 0%,#0284C7 100%);margin-top:20px'>
@@ -1658,23 +1656,26 @@ _ui.panel_title("🗂️", "Campañas y Excesos", "Adherencia consolidada por ca
 
 c_camp, c_exc = st.container(), st.container()
 with c_camp:
+    _orden_camp = st.selectbox("Ordenar", ["Mejores arriba", "En riesgo arriba"], key="wfm_v1_camp_orden")
     camp_stats = (
         dff_validos.groupby("Campana")
         .agg(adh_s=("adh_s", "sum"), prog_s=("prog_s", "sum"), Agentes=("Nombre", "nunique"))
         .reset_index()
     )
     camp_stats["ADH"] = (camp_stats["adh_s"] / camp_stats["prog_s"]).where(camp_stats["prog_s"] > 0, 0)
-    camp_stats = camp_stats.drop(columns=["adh_s", "prog_s"]).sort_values("ADH", ascending=True)
+    camp_stats = camp_stats.drop(columns=["adh_s", "prog_s"]).sort_values("ADH", ascending=(_orden_camp == "Mejores arriba"))
     _camp_idx = camp_stats.set_index("Campana")
     _ranking_bar(_camp_idx["ADH"], "Adherencia", lambda v: f"{v:.1%}", zonas=_ADH_ZONAS, color_fn=_adh_color,
                  alto_fila=44, extra=_camp_idx["Agentes"], extra_label="Agentes")
 
 with c_exc:
+    _camp_filtro_exc = _ui.multiselect_all("Campaña", sorted(dff["Campana"].dropna().unique()), "wfm_v1_exc_camp")
     exc_tipo_cols = ["Exceso Almuerzo", "Exceso Descanso", "Exceso Seguimiento",
                      "Exceso Toilette", "Exceso Entrenamiento", "Exceso Feedback", "Exceso Calidad"]
     exc_tipo_min  = [c + "_min" for c in exc_tipo_cols]
     exc_tipo_disp = [c for c in exc_tipo_min if c in dff.columns]
-    exc_totales   = dff[exc_tipo_disp].sum().sort_values(ascending=True)
+    _dff_exc      = dff[dff["Campana"].isin(_camp_filtro_exc)]
+    exc_totales   = _dff_exc[exc_tipo_disp].sum().sort_values(ascending=True)
     exc_labels    = [c.replace("_min", "").replace("Exceso ", "") for c in exc_totales.index]
     _serie_exc    = pd.Series((exc_totales.values / 60), index=exc_labels)
     _ranking_bar(_serie_exc, "Horas", lambda v: seg_a_hhmmss(v * 3600), color_fija="#FB7185", alto_fila=44)

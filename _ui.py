@@ -187,10 +187,16 @@ def toggle_dataframe(frame: pd.DataFrame, label: str, key: str, **kwargs) -> boo
 
 def percentage_matrix(
     frame: pd.DataFrame, row_col: str, date_col: str, metrics: dict[str, str],
-    key: str, title: str, row_options=None,
+    key: str, title: str, row_options=None, binary_metrics: set[str] | None = None,
 ) -> None:
     """Heatmap diario de porcentajes con semáforo: verde >=90 %, alerta 70–89,9 %
-    y crítico <70 %. El selector de métrica y período es local a cada matriz."""
+    y crítico <70 %. El selector de métrica y período es local a cada matriz.
+
+    Los indicadores listados en `binary_metrics` se leen como Sí/No cuando la
+    celda corresponde a un único registro (promedio exactamente 0 o 1, como en
+    la matriz por experto); si la celda promedia varias personas (matriz por
+    supervisor) se sigue mostrando el % agregado."""
+    binary_metrics = binary_metrics or set()
     data = frame[[row_col, date_col] + list(metrics.values())].copy()
     data[date_col] = pd.to_datetime(data[date_col], errors="coerce")
     data = data.dropna(subset=[row_col, date_col])
@@ -207,6 +213,7 @@ def percentage_matrix(
     with c2:
         metric_label = st.selectbox("Indicador", list(metrics), key=f"{key}_metric")
     metric_col = metrics[metric_label]
+    is_binary = metric_label in binary_metrics
     selected = data[data["_month"] == month].copy()
     selected["_day"] = selected[date_col].dt.day
     rows = sorted(selected[row_col].astype(str).unique())
@@ -215,24 +222,50 @@ def percentage_matrix(
     pivot = selected.groupby([row_col, "_day"])[metric_col].mean().unstack().reindex(index=rows, columns=days)
     values = pivot.astype(float).to_numpy()
     values[np.isnan(values)] = -0.05
-    labels = np.where(values < 0, "—", np.vectorize(lambda v: f"{v:.0%}")(np.maximum(values, 0)))
+
+    def _estado(v: float) -> str:
+        return "sin registro" if v < 0 else ("cumple" if v >= .90 else "alerta" if v >= .70 else "crítico")
+
+    def _label(v: float) -> str:
+        if v < 0:
+            return "—"
+        if is_binary:
+            if v >= .999:
+                return "Sí"
+            if v <= .001:
+                return "No"
+        return f"{v:.0%}"
+
+    def _cell_text(v: float) -> str:
+        # Etiqueta selectiva: el color ya comunica el estado en cada celda; el
+        # número solo se imprime donde hace falta actuar (alerta o crítico),
+        # para que la matriz no se vuelva ilegible con ~30 columnas por fila.
+        # Sin el signo "%" (el eje y la leyenda ya dejan claro que es un
+        # porcentaje) para que quepa en columnas tan angostas.
+        if _estado(v) not in ("alerta", "crítico"):
+            return ""
+        return _label(v).rstrip("%")
+
+    labels = np.vectorize(_cell_text)(values)
     hover = np.empty(values.shape, dtype=object)
     for i, name in enumerate(rows):
         for j, day in enumerate(days):
             value = values[i, j]
-            state = "sin registro" if value < 0 else ("cumple" if value >= .90 else "alerta" if value >= .70 else "crítico")
-            hover[i, j] = f"<b>{html.escape(name)}</b><br>{day:02d}/{mon:02d}/{year}<br>{metric_label}: {'—' if value < 0 else f'{value:.1%}'}<br>Estado: {state}<extra></extra>"
-    colors = [[0, "#334155"], [.049, "#334155"], [.05, "#F43F5E"], [.70, "#F43F5E"], [.7001, "#F59E0B"], [.90, "#F59E0B"], [.9001, "#10B981"], [1, "#10B981"]]
+            hover[i, j] = f"<b>{html.escape(name)}</b><br>{day:02d}/{mon:02d}/{year}<br>{html.escape(metric_label)}: {_label(value)}<br>Estado: {_estado(value)}<extra></extra>"
+    colors = [[0, "#1E293B"], [.049, "#1E293B"], [.05, "#F43F5E"], [.70, "#F43F5E"], [.7001, "#F59E0B"], [.90, "#F59E0B"], [.9001, "#10B981"], [1, "#10B981"]]
     fig = go.Figure(go.Heatmap(
         z=values, x=[f"{d:02d}" for d in days], y=rows, zmin=-.05, zmax=1,
-        colorscale=colors, text=labels, texttemplate="%{text}", xgap=2, ygap=2,
+        colorscale=colors, text=labels, texttemplate="%{text}",
+        textfont=dict(size=10, family="Inter", color="rgba(255,255,255,.96)"),
+        xgap=2, ygap=2,
         hovertext=hover, hovertemplate="%{hovertext}", showscale=False,
     ))
     fig.update_layout(
-        height=max(320, len(rows) * 31 + 105), margin=dict(l=170, r=20, t=12, b=36),
+        height=max(320, len(rows) * 32 + 105), margin=dict(l=170, r=20, t=12, b=36),
         paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", showlegend=False,
-        xaxis=dict(side="top", showgrid=False, color="rgba(255,255,255,.65)"),
-        yaxis=dict(showgrid=False, color="rgba(255,255,255,.75)"),
+        font=dict(family="Inter"),
+        xaxis=dict(side="top", showgrid=False, color="rgba(255,255,255,.55)", tickfont=dict(size=9.5)),
+        yaxis=dict(showgrid=False, color="rgba(255,255,255,.70)", tickfont=dict(size=10.5)),
     )
     st.caption("Verde ≥ 90 % · amarillo 70–89,9 % · rojo < 70 % · gris: sin registro")
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False}, key=f"{key}_chart")
