@@ -8,6 +8,7 @@ import glob
 import os
 import base64
 import io
+import urllib.parse
 
 # ─────────────────────────────────────────────
 # CONFIGURACIÓN
@@ -59,8 +60,59 @@ def _mes_orden(path):
             return i
     return 99
 
+# ─────────────────────────────────────────────
+# NOVEDADES APROBADAS QUE EXCLUYEN DÍAS DEL CÁLCULO
+# (incapacidades, hospitalización, licencias, sanción disciplinaria)
+# ─────────────────────────────────────────────
+_SHEET_ID_NOVEDADES = "1-Ld6qxNvCl2g3u7_qmqnvljPoRYr_sgGyovGiOJ_Riw"
+_HOJA_NOVEDADES = "Novedades WFM"
+
+@st.cache_data(ttl=60, show_spinner=False)
+def _cargar_novedades_excluir():
+    """Lee 'Novedades WFM' en vivo desde Google Sheets y arma el conjunto de
+    (cédula, fecha) que deben quedar fuera del cálculo de adherencia: novedades
+    con Estado supervisor = Aprobado y Subtipo de incapacidad, hospitalización,
+    licencia o sanción disciplinaria, expandidas día a día entre Fecha inicio y
+    Fecha fin. Cacheado 60s para reflejar aprobaciones nuevas casi en tiempo real."""
+    url = (
+        f"https://docs.google.com/spreadsheets/d/{_SHEET_ID_NOVEDADES}"
+        f"/gviz/tq?tqx=out:csv&sheet={urllib.parse.quote(_HOJA_NOVEDADES)}"
+    )
+    try:
+        nov = pd.read_csv(url)
+    except Exception:
+        return frozenset()
+
+    nov.columns = nov.columns.str.strip()
+    requeridas = {"Documento", "Subtipo", "Estado supervisor", "Fecha inicio", "Fecha fin"}
+    if not requeridas.issubset(nov.columns):
+        return frozenset()
+
+    aprobado = nov["Estado supervisor"].astype(str).str.strip().str.casefold() == "aprobado"
+    subtipo = nov["Subtipo"].astype(str).str.casefold()
+    excluible = (
+        subtipo.str.contains("incapacidad", na=False) |
+        subtipo.str.contains("hospitaliza", na=False) |
+        subtipo.str.contains("licencia", na=False) |
+        (subtipo.str.contains("sanci", na=False) & subtipo.str.contains("disciplinar", na=False))
+    )
+    nov = nov[aprobado & excluible].copy()
+
+    nov["_cedula"] = pd.to_numeric(nov["Documento"], errors="coerce")
+    nov["_ini"] = pd.to_datetime(nov["Fecha inicio"], errors="coerce")
+    nov["_fin"] = pd.to_datetime(nov["Fecha fin"], errors="coerce")
+    nov = nov.dropna(subset=["_cedula", "_ini", "_fin"])
+
+    pares = set()
+    for cedula, ini, fin in zip(nov["_cedula"], nov["_ini"], nov["_fin"]):
+        if fin < ini:
+            ini, fin = fin, ini
+        for f in pd.date_range(ini.normalize(), fin.normalize(), freq="D"):
+            pares.add((int(cedula), f.date()))
+    return frozenset(pares)
+
 @st.cache_data
-def cargar_datos(firma):
+def cargar_datos(firma, novedades_excluir):
     # firma = (nombre, fecha_modificación) de cada archivo → el caché se invalida
     #         automáticamente cuando agregas/actualizas un Consolidado_*.xlsx.
     archivos = sorted(
@@ -101,7 +153,11 @@ def cargar_datos(firma):
     df["DiaSemana"] = df["Fecha"].dt.day_name()
     df["FechaStr"]  = df["Fecha"].dt.strftime("%d/%m")
 
-    mask = (df["prog_s"] > 0)
+    _cedula_num = pd.to_numeric(df["Cedula"], errors="coerce").fillna(-1).astype(int)
+    _pares = list(zip(_cedula_num, df["Fecha"].dt.date))
+    df["_excluir_novedad"] = pd.Series(_pares, index=df.index).isin(novedades_excluir)
+
+    mask = (df["prog_s"] > 0) & (~df["_excluir_novedad"])
     df["ADH_pct"] = None
     df.loc[mask, "ADH_pct"] = df.loc[mask, "adh_s"] / df.loc[mask, "prog_s"]
 
@@ -115,7 +171,8 @@ _firma_archivos = tuple(
         key=_mes_orden
     )
 )
-df, archivos_cargados = cargar_datos(_firma_archivos)
+_novedades_excluir = _cargar_novedades_excluir()
+df, archivos_cargados = cargar_datos(_firma_archivos, _novedades_excluir)
 
 # ─────────────────────────────────────────────
 # COLORES (fijos)
@@ -1103,7 +1160,7 @@ _periodo_rank = {p: i for i, p in enumerate(_periodo_sorted)}
 # ─────────────────────────────────────────────
 # MÉTRICAS GLOBALES
 # ─────────────────────────────────────────────
-dff_validos = dff[dff["prog_s"] > 0]
+dff_validos = dff[(dff["prog_s"] > 0) & (~dff["_excluir_novedad"])]
 total_agentes   = dff["Nombre"].nunique()
 total_registros = len(dff_validos)
 n_supervisores  = dff_validos["Supervisor"].nunique()
