@@ -48,95 +48,20 @@ def percent_es(value: float) -> str:
 # CSS — solo las clases de componente (.ebi-*), no el shell de la página
 # ─────────────────────────────────────────────
 def inject_css() -> None:
+    """Puerto literal del CSS .ebi-* de Inscripciones (Dashboard Operativo), línea por
+    línea — solo se sustituyen los acentos verdes por la familia morada/índigo de WFM
+    (el celeste #38BDF8 ya es compartido por ambos, se deja igual). Todo lo demás
+    (paddings, tamaños de fuente, radios, alineaciones) es el valor original exacto."""
     st.markdown(f"""<style>
-    .ebi-top{{position:relative;overflow:hidden;border-radius:20px;padding:22px 30px;
-        margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;
-        gap:20px;border:1px solid rgba(255,255,255,0.10);
-        background:linear-gradient(110deg,rgba(56,189,248,.075),rgba(129,140,248,.05) 55%,rgba(167,139,250,.05));
-        box-shadow:0 18px 46px -18px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08);}}
-    .ebi-top::before{{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
-        background:linear-gradient(180deg,{BLUE},{VIOLET});}}
-    .ebi-top::after{{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;
-        border-radius:50%;background:radial-gradient(circle,rgba(129,140,248,.14),transparent 70%);}}
-    .ebi-top-copy{{position:relative;z-index:1;}}
-    .ebi-top-context{{display:inline-flex;align-items:center;gap:7px;font-size:10px;font-weight:800;
-        letter-spacing:.14em;text-transform:uppercase;color:{BLUE};margin-bottom:8px;}}
-    .ebi-top-context i{{width:6px;height:6px;border-radius:50%;background:{TEAL};
-        box-shadow:0 0 8px {TEAL};display:inline-block;}}
-    .ebi-top h1{{font-family:'Space Grotesk',sans-serif;font-size:27px;font-weight:700;color:#fff;
-        margin:0 0 6px;letter-spacing:-0.6px;}}
-    .ebi-top p{{font-size:12.5px;color:rgba(255,255,255,0.60);margin:0;}}
-    .ebi-period{{position:relative;z-index:1;text-align:right;flex-shrink:0;padding-left:20px;
-        border-left:1px solid rgba(255,255,255,0.12);}}
-    .ebi-period span{{display:block;font-size:9px;font-weight:800;letter-spacing:.12em;
-        text-transform:uppercase;color:rgba(255,255,255,0.40);margin-bottom:4px;}}
-    .ebi-period b{{font-family:'Space Grotesk',sans-serif;font-size:15px;color:#fff;font-weight:700;}}
-
-    .ebi-overview{{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:6px;}}
-    .ebi-overview-card{{position:relative;overflow:hidden;border-radius:16px;padding:16px 16px 14px;
-        background:linear-gradient(160deg,rgba(255,255,255,0.055) 0%,rgba(255,255,255,0.015) 100%);
-        border:1px solid rgba(255,255,255,0.10);box-shadow:0 14px 30px -16px rgba(0,0,0,0.6);}}
-    .ebi-overview-card::before{{content:'';position:absolute;top:0;left:0;right:0;height:3px;
-        background:var(--accent,{BLUE});box-shadow:0 0 14px -2px var(--accent,{BLUE});}}
-    .ebi-overview-icon{{width:28px;height:28px;border-radius:9px;display:flex;align-items:center;
-        justify-content:center;font-size:13px;margin-bottom:10px;
-        background:{_rgba("#000000",0.22)};border:1px solid var(--accent,{BLUE});color:var(--accent,{BLUE});}}
-    .ebi-overview-card strong{{display:block;font-family:'Space Grotesk',sans-serif;font-size:22px;
-        font-weight:700;color:#fff;letter-spacing:-0.4px;line-height:1.1;}}
-    .ebi-overview-card small{{display:block;font-size:10px;font-weight:700;text-transform:uppercase;
-        letter-spacing:.07em;color:rgba(255,255,255,0.45);margin-top:5px;}}
-    .ebi-overview-detail{{display:block;font-size:10.5px;color:rgba(255,255,255,0.38);margin-top:3px;}}
-    .ebi-overview-track{{background:rgba(255,255,255,0.08);border-radius:99px;height:4px;
-        margin-top:9px;overflow:hidden;}}
-    .ebi-overview-track i{{display:block;height:4px;border-radius:99px;background:var(--accent,{BLUE});
-        box-shadow:0 0 8px -1px var(--accent,{BLUE});}}
-    @media (max-width:1100px){{.ebi-overview{{grid-template-columns:repeat(3,minmax(0,1fr));}}}}
-    @media (max-width:640px){{.ebi-overview{{grid-template-columns:repeat(2,minmax(0,1fr));}}}}
-
-    .ebi-section{{display:flex;align-items:center;gap:10px;margin:28px 0 10px;}}
-    .ebi-section span{{font-size:10px;font-weight:900;letter-spacing:.16em;color:{BLUE};
-        width:22px;height:22px;border-radius:7px;display:flex;align-items:center;justify-content:center;
-        background:{_rgba(BLUE,0.12)};border:1px solid {_rgba(BLUE,0.28)};flex-shrink:0;}}
-    .ebi-section b{{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;color:#fff;
-        letter-spacing:-0.2px;}}
-    .ebi-section i{{height:1px;flex:1;background:linear-gradient(90deg,rgba(255,255,255,.14),transparent);}}
-
-    .ebi-head{{display:flex;align-items:center;gap:11px;margin:10px 0 8px;padding:11px 14px;
-        border-left:2px solid {BLUE};background:linear-gradient(90deg,{_rgba(BLUE,0.07)},transparent);
-        border-radius:0 12px 12px 0;}}
-    .ebi-icon{{width:31px;height:31px;display:flex;align-items:center;justify-content:center;
-        border-radius:9px;background:rgba(255,255,255,.07);font-size:15px;flex-shrink:0;}}
-    .ebi-copy{{flex:1;min-width:0;}}
-    .ebi-title{{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#fff;}}
-    .ebi-sub{{font-size:10.5px;color:rgba(255,255,255,.45);margin-top:2px;}}
-    .ebi-tag{{font-size:8.5px;font-weight:800;letter-spacing:.10em;text-transform:uppercase;
-        color:#7DD3FC;border:1px solid {_rgba(BLUE,0.28)};border-radius:99px;padding:4px 9px;
-        flex-shrink:0;white-space:nowrap;}}
-
-    .ebi-selected{{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 10px;}}
-    .ebi-selected span{{font-size:10.5px;color:rgba(255,255,255,.55);
-        background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);
-        border-radius:99px;padding:3px 10px;}}
-    .ebi-selected span::first-letter{{color:var(--dot,{BLUE});}}
-
-    .ebi-inc-scroll{{display:flex;flex-direction:column;gap:8px;max-height:420px;overflow-y:auto;
-        padding-right:4px;}}
-    .ebi-incident{{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:12px;
-        background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
-        border-left:3px solid var(--incident,{AMBER});}}
-    .ebi-incident.warning{{--incident:{AMBER};}}
-    .ebi-incident.critical{{--incident:{RED};}}
-    .ebi-inc-dot{{color:var(--incident,{AMBER});font-size:10px;flex-shrink:0;}}
-    .ebi-inc-body{{flex:1;min-width:0;}}
-    .ebi-inc-name{{font-size:12.5px;font-weight:700;color:#fff;}}
-    .ebi-inc-sup{{font-size:10px;color:rgba(255,255,255,.40);margin-top:1px;}}
-    .ebi-inc-main{{font-size:11px;color:rgba(255,255,255,.70);margin-top:4px;}}
-    .ebi-inc-main strong{{color:#fff;}}
-    .ebi-inc-main span{{color:rgba(255,255,255,.45);margin-left:6px;}}
-    .ebi-inc-foot{{display:flex;gap:14px;margin-top:5px;font-size:10px;color:rgba(255,255,255,.40);}}
-    .ebi-inc-foot b{{color:rgba(255,255,255,.70);}}
-    .ebi-inc-badge{{font-size:9px;font-weight:800;letter-spacing:.06em;color:var(--incident,{AMBER});
-        border:1px solid var(--incident,{AMBER});border-radius:99px;padding:4px 9px;flex-shrink:0;}}
+    .ebi-top{{position:relative;overflow:hidden;margin:0 0 10px;padding:19px 22px;border:1px solid rgba(56,189,248,.16);border-radius:16px;background:linear-gradient(110deg,rgba(56,189,248,.075),rgba(167,139,250,.045) 55%,rgba(129,140,248,.045));display:flex;align-items:center;justify-content:space-between;gap:24px;box-shadow:inset 0 1px 0 rgba(255,255,255,.035)}}
+    .ebi-top::before{{content:'';position:absolute;inset:0 auto 0 0;width:3px;background:linear-gradient(180deg,{BLUE},{VIOLET})}}.ebi-top::after{{content:'';position:absolute;width:260px;height:160px;right:-90px;top:-105px;border-radius:50%;background:radial-gradient(circle,rgba(56,189,248,.11),transparent 70%);pointer-events:none}}.ebi-top-copy{{position:relative;z-index:1;min-width:0}}.ebi-top-context{{display:flex;align-items:center;gap:7px;margin-bottom:5px;font-size:8px;font-weight:850;letter-spacing:.18em;color:#7DD3FC}}.ebi-top-context i{{display:block;width:18px;height:1px;background:{BLUE}}}.ebi-top h1,.ebi-top-title{{font-family:'Space Grotesk',sans-serif!important;font-size:26px!important;line-height:1.08!important;color:white;margin:0!important}}.ebi-top p,.ebi-top-sub{{font-size:10px;color:rgba(255,255,255,.43);margin:6px 0 0}}.ebi-period{{position:relative;z-index:1;display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex:0 0 auto;padding-left:22px;border-left:1px solid rgba(255,255,255,.09)}}.ebi-period span{{font-size:7px;font-weight:800;letter-spacing:.15em;color:rgba(255,255,255,.35)}}.ebi-period b{{font-family:'Space Grotesk',sans-serif;font-size:11px;letter-spacing:.04em;color:#7DD3FC;white-space:nowrap}}
+    .ebi-overview{{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:11px;margin:14px 0 6px}}.ebi-overview-card{{position:relative;overflow:hidden;min-width:0;text-align:center;padding:18px 10px 15px;border-radius:16px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.08)}}.ebi-overview-icon{{width:36px;height:36px;margin:0 auto 11px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--accent);background:linear-gradient(150deg,color-mix(in srgb,var(--accent) 24%,transparent),color-mix(in srgb,var(--accent) 6%,transparent));border:1px solid color-mix(in srgb,var(--accent) 35%,transparent)}}.ebi-overview-card>strong{{display:block;font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;line-height:1;color:#fff}}.ebi-overview-card>small{{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(255,255,255,.42);font-size:8px;letter-spacing:.06em;text-transform:uppercase;margin-top:7px}}.ebi-overview-detail{{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(255,255,255,.28);font-size:7.5px;margin-top:3px}}.ebi-overview-track{{height:3px;margin-top:9px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}}.ebi-overview-track i{{display:block;height:100%;border-radius:inherit;background:var(--accent)}}
+    .ebi-section{{display:flex;align-items:center;gap:10px;margin:22px 0 9px}}.ebi-section span{{font-size:9px;font-weight:800;letter-spacing:.16em;color:{BLUE}}}.ebi-section b{{font-family:'Space Grotesk',sans-serif;font-size:15px;color:white}}.ebi-section i{{height:1px;flex:1;background:linear-gradient(90deg,rgba(255,255,255,.14),transparent)}}
+    .ebi-head{{display:flex;align-items:center;gap:11px;margin:10px 0 5px;padding:10px 12px;border-left:2px solid {BLUE};background:linear-gradient(90deg,rgba(56,189,248,.07),transparent);border-radius:0 12px 12px 0}}.ebi-icon{{width:31px;height:31px;display:flex;align-items:center;justify-content:center;border-radius:9px;background:rgba(255,255,255,.07)}}.ebi-copy{{flex:1}}.ebi-title{{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#fff}}.ebi-sub{{font-size:10px;color:rgba(255,255,255,.43);margin-top:2px}}.ebi-tag{{font-size:8px;font-weight:800;letter-spacing:.10em;color:#7DD3FC;border:1px solid rgba(56,189,248,.24);border-radius:99px;padding:4px 8px}}
+    .ebi-selected{{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 7px}}.ebi-selected span{{font-size:9px;color:rgba(255,255,255,.58);padding:3px 7px;border:1px solid rgba(255,255,255,.08);border-radius:99px;background:rgba(255,255,255,.025)}}.ebi-selected span::first-letter{{color:var(--dot)}}
+    .ebi-inc-scroll{{max-height:560px;overflow-y:auto;padding:2px 6px 2px 1px;scrollbar-width:thin;scrollbar-color:rgba(148,163,184,.35) transparent}}.ebi-incident{{position:relative;display:flex;gap:10px;margin:0 0 9px;padding:13px 12px;border-radius:12px;background:linear-gradient(120deg,rgba(255,255,255,.045),rgba(255,255,255,.018));border:1px solid rgba(255,255,255,.07);border-left:3px solid var(--incident);box-shadow:0 8px 22px -18px rgba(0,0,0,.9)}}.ebi-incident.warning{{--incident:{AMBER}}}.ebi-incident.critical{{--incident:{RED}}}.ebi-inc-dot{{color:var(--incident);font-size:10px;padding-top:3px}}.ebi-inc-body{{min-width:0;flex:1}}.ebi-inc-name{{font-size:12px;font-weight:750;color:rgba(255,255,255,.94);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}.ebi-inc-sup{{font-size:9px;color:rgba(255,255,255,.40);margin:2px 0 9px}}.ebi-inc-main{{display:flex;flex-direction:column;gap:2px}}.ebi-inc-main strong{{font-family:'Space Grotesk',sans-serif;font-size:13px;color:white}}.ebi-inc-main span{{font-size:9px;color:rgba(255,255,255,.52)}}.ebi-inc-foot{{display:flex;gap:12px;flex-wrap:wrap;margin-top:9px;padding-top:7px;border-top:1px solid rgba(255,255,255,.06);font-size:8px;color:rgba(255,255,255,.38)}}.ebi-inc-foot b{{color:rgba(255,255,255,.70)}}.ebi-inc-badge{{align-self:flex-start;font-size:7px;font-weight:850;letter-spacing:.08em;color:var(--incident);background:color-mix(in srgb,var(--incident) 10%,transparent);border:1px solid color-mix(in srgb,var(--incident) 28%,transparent);border-radius:99px;padding:3px 6px;white-space:nowrap}}
+    @media(max-width:1100px){{.ebi-overview{{grid-template-columns:repeat(3,minmax(0,1fr))}}.ebi-inc-scroll{{max-height:500px}}}}
+    @media(max-width:720px){{.ebi-top{{align-items:flex-start;flex-direction:column;gap:13px}}.ebi-period{{align-items:flex-start;padding:0;border-left:0}}.ebi-overview{{grid-template-columns:repeat(2,minmax(0,1fr))}}}}
     </style>""", unsafe_allow_html=True)
 
 
@@ -155,17 +80,17 @@ def top_banner(eyebrow: str, title: str, subtitle: str, period_label: str, perio
     )
 
 
-def banner_header(eyebrow: str, title_html: str, subtitle: str, period_label: str, period_value: str) -> None:
-    """Igual contenido que top_banner pero sin la tarjeta '.ebi-top' propia — para
-    insertar dentro de un st.container(key=...) que ya trae su propio fondo/borde
-    (como el banner '.st-key-hdrbanner' que ya tiene cada página de Dashboard WFM).
-    `title_html` puede traer su propia clase (ej. 'hb-title') para el tamaño de fuente."""
+def banner_header(eyebrow: str, title: str, subtitle: str, period_label: str, period_value: str) -> None:
+    """Igual contenido/tipografía que top_banner (mismas clases .ebi-top-title/.ebi-top-sub,
+    idénticas al h1/p reales de '.ebi-top') pero sin la tarjeta '.ebi-top' propia — para
+    insertar dentro de un st.container(key=...) que ya trae su propio fondo/borde (como el
+    banner '.st-key-hdrbanner' que ya tiene cada página de Dashboard WFM)."""
     st.markdown(
         f"<div style='display:flex;justify-content:space-between;align-items:flex-start;"
         f"gap:20px;flex-wrap:wrap;'><div>"
         f"<div class='ebi-top-context'><i></i>{_safe(eyebrow)}</div>"
-        f"{title_html}"
-        f"<p style='font-size:12.5px;color:rgba(255,255,255,0.62);margin:6px 0 0;'>{_safe(subtitle)}</p>"
+        f"<div class='ebi-top-title'>{_safe(title)}</div>"
+        f"<p class='ebi-top-sub'>{_safe(subtitle)}</p>"
         f"</div><div class='ebi-period'><span>{_safe(period_label)}</span><b>{_safe(period_value)}</b></div></div>",
         unsafe_allow_html=True,
     )

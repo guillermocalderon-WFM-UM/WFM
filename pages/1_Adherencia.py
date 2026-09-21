@@ -1135,7 +1135,7 @@ _nov_pg  = st.Page("pages/3_Novedades.py", title="Novedades", icon="📢")
 
 with st.container(key="hdrbanner"):
     _ui.banner_header(
-        "Adherencia", "<div class='hb-title'>Centro de Control</div>",
+        "Adherencia", "Centro de Control",
         "Cumplimiento de horario, novedades y riesgo por equipo.",
         "Período analizado", rango,
     )
