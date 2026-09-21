@@ -101,7 +101,7 @@ def cargar_datos(firma):
     df["DiaSemana"] = df["Fecha"].dt.day_name()
     df["FechaStr"]  = df["Fecha"].dt.strftime("%d/%m")
 
-    mask = (df["prog_s"] > 0) & (df["Validador Llegada"] != "Ausente")
+    mask = (df["prog_s"] > 0)
     df["ADH_pct"] = None
     df.loc[mask, "ADH_pct"] = df.loc[mask, "adh_s"] / df.loc[mask, "prog_s"]
 
@@ -1103,7 +1103,7 @@ _periodo_rank = {p: i for i, p in enumerate(_periodo_sorted)}
 # ─────────────────────────────────────────────
 # MÉTRICAS GLOBALES
 # ─────────────────────────────────────────────
-dff_validos = dff[(dff["prog_s"] > 0) & (dff["Validador Llegada"] != "Ausente")]
+dff_validos = dff[dff["prog_s"] > 0]
 total_agentes   = dff["Nombre"].nunique()
 total_registros = len(dff_validos)
 n_supervisores  = dff_validos["Supervisor"].nunique()
