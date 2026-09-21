@@ -1133,28 +1133,18 @@ _ocu_pg  = st.Page("pages/2_Ocupacion.py", title="Ocupación", icon="📊")
 _tip_pg  = st.Page("pages/4_Tipificacion.py", title="Tipificación", icon="🏷️")
 _nov_pg  = st.Page("pages/3_Novedades.py", title="Novedades", icon="📢")
 
-with st.container(key="hdrbanner"):
-    _ui.banner_header(
-        "Adherencia", "Centro de Control",
-        "Cumplimiento de horario, novedades y riesgo por equipo.",
-        "Período analizado", rango,
-    )
-    st.markdown("<div class='nav-lbl'>⚡ Navegación</div>", unsafe_allow_html=True)
-    nb1, nb2, nb3, nb4, nb5 = st.columns([1.0, 1.35, 1.3, 1.45, 1.35], vertical_alignment="center")
-    with nb1:
-        if st.button("🏠 Inicio", key="hdr_home", use_container_width=True):
-            st.switch_page(_home_pg)
-    with nb2:
-        st.button("🎯 Adherencia", key="hdr_adh", use_container_width=True, type="primary")
-    with nb3:
-        if st.button("📊 Ocupación", key="hdr_ocu", use_container_width=True):
-            st.switch_page(_ocu_pg)
-    with nb4:
-        if st.button("🏷️ Tipificación", key="hdr_tip", use_container_width=True):
-            st.switch_page(_tip_pg)
-    with nb5:
-        if st.button("📢 Novedades", key="hdr_nov", use_container_width=True):
-            st.switch_page(_nov_pg)
+_ui.top_banner(
+    "ADHERENCIA", "Centro de Control",
+    "Cumplimiento de horario, novedades y riesgo por equipo.",
+    "PERÍODO ANALIZADO", rango,
+)
+_ui.module_nav("adh", [
+    ("home", "⌂  Inicio", _home_pg),
+    ("adh", "▤  Adherencia", None),
+    ("ocu", "◆  Ocupación", _ocu_pg),
+    ("tip", "◇  Tipificación", _tip_pg),
+    ("nov", "●  Novedades", _nov_pg),
+])
 
 # ─────────────────────────────────────────────
 # KPIs GLOBALES

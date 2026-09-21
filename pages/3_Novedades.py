@@ -8,6 +8,7 @@ import plotly.graph_objects as go
 import plotly.io as pio
 import streamlit.components.v1 as components
 import holidays
+import _ui
 
 _CO_FESTIVOS = holidays.country_holidays("CO")
 
@@ -1403,35 +1404,18 @@ st.markdown(f"""
 # ─────────────────────────────────────────────
 # ENCABEZADO
 # ─────────────────────────────────────────────
+_ui.inject_css()
 _home_pg = st.Page("home.py",               title="Inicio",       icon="🏠", default=True)
 _adh_pg  = st.Page("pages/1_Adherencia.py", title="Adherencia",   icon="🎯")
 _ocu_pg  = st.Page("pages/2_Ocupacion.py",  title="Ocupación",    icon="📊")
 _tip_pg  = st.Page("pages/4_Tipificacion.py", title="Tipificación", icon="🏷️")
 
-with st.container(key="hdrbanner"):
-    st.markdown("""
-    <div class='hb-eyebrow'><span class='hb-dot'></span>Centro de Control · Uniminuto 2026</div>
-    <div class='hb-title'>Novedades Operativas</div>
-    <div class='hb-meta'>
-        <span class='hb-chip'>📢 <b>Google Sheets en vivo</b></span>
-    </div>
-    <div class='nav-lbl'>⚡ Navegación</div>
-    """, unsafe_allow_html=True)
-    nb1, nb2, nb3, nb4, nb5 = st.columns([1.0, 1.35, 1.3, 1.45, 1.35], vertical_alignment="center")
-    with nb1:
-        if st.button("🏠 Inicio",     key="hdr_home", use_container_width=True):
-            st.switch_page(_home_pg)
-    with nb2:
-        if st.button("🎯 Adherencia", key="hdr_adh",  use_container_width=True):
-            st.switch_page(_adh_pg)
-    with nb3:
-        if st.button("📊 Ocupación",  key="hdr_ocu",  use_container_width=True):
-            st.switch_page(_ocu_pg)
-    with nb4:
-        if st.button("🏷️ Tipificación", key="hdr_tip", use_container_width=True):
-            st.switch_page(_tip_pg)
-    with nb5:
-        st.button("📢 Novedades", key="hdr_nov", use_container_width=True, type="primary")
+_ui.top_banner("NOVEDADES", "Centro de Control", "Novedades operativas, planificación y seguimiento en vivo.", "FUENTE", "GOOGLE SHEETS · EN VIVO")
+_ui.module_nav("nov", [
+    ("home", "⌂  Inicio", _home_pg), ("adh", "▤  Adherencia", _adh_pg),
+    ("ocu", "◆  Ocupación", _ocu_pg), ("tip", "◇  Tipificación", _tip_pg),
+    ("nov", "●  Novedades", None),
+])
 
 # ─────────────────────────────────────────────
 # TABS

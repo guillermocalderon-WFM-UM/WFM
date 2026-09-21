@@ -6,6 +6,7 @@ import glob
 import os
 import base64
 import io
+import _ui
 
 # ─────────────────────────────────────────────
 # CONFIGURACIÓN
@@ -631,36 +632,18 @@ n_supervisores = dff["Supervisor"].nunique()
 # ENCABEZADO
 # ─────────────────────────────────────────────
 rango    = f"{fecha_ini.strftime('%d/%m/%Y')} – {fecha_fin.strftime('%d/%m/%Y')}"
+_ui.inject_css()
 _home_pg = st.Page("home.py",               title="Inicio",       icon="🏠", default=True)
 _adh_pg  = st.Page("pages/1_Adherencia.py", title="Adherencia",   icon="🎯")
 _tip_pg  = st.Page("pages/4_Tipificacion.py", title="Tipificación", icon="🏷️")
 _nov_pg  = st.Page("pages/3_Novedades.py",  title="Novedades",    icon="📢")
 
-with st.container(key="hdrbanner"):
-    st.markdown(f"""
-    <div class='hb-eyebrow'><span class='hb-dot'></span>Centro de Control · Uniminuto 2026</div>
-    <div class='hb-title'>Módulo de Ocupación</div>
-    <div class='hb-meta'>
-        <span class='hb-chip'>📅 <b>{rango}</b></span>
-        <span class='hb-chip'>👥 <b>{n_agentes}</b> expertos</span>
-    </div>
-    <div class='nav-lbl'>⚡ Navegación</div>
-    """, unsafe_allow_html=True)
-    nb1, nb2, nb3, nb4, nb5 = st.columns([1.0, 1.35, 1.3, 1.45, 1.35], vertical_alignment="center")
-    with nb1:
-        if st.button("🏠 Inicio",     key="hdr_home", use_container_width=True):
-            st.switch_page(_home_pg)
-    with nb2:
-        if st.button("🎯 Adherencia", key="hdr_adh",  use_container_width=True):
-            st.switch_page(_adh_pg)
-    with nb3:
-        st.button("📊 Ocupación", key="hdr_ocu", use_container_width=True, type="primary")
-    with nb4:
-        if st.button("🏷️ Tipificación", key="hdr_tip", use_container_width=True):
-            st.switch_page(_tip_pg)
-    with nb5:
-        if st.button("📢 Novedades",  key="hdr_nov",  use_container_width=True):
-            st.switch_page(_nov_pg)
+_ui.top_banner("OCUPACIÓN", "Centro de Control", "Capacidad, contacto y abandono por equipo.", "PERÍODO ANALIZADO", rango)
+_ui.module_nav("ocu", [
+    ("home", "⌂  Inicio", _home_pg), ("adh", "▤  Adherencia", _adh_pg),
+    ("ocu", "◆  Ocupación", None), ("tip", "◇  Tipificación", _tip_pg),
+    ("nov", "●  Novedades", _nov_pg),
+])
 
 # ─────────────────────────────────────────────
 # MÉTRICAS GLOBALES
@@ -679,66 +662,18 @@ def kpi_bar(pct, color, max_val=100):
     fill = min(pct / max_val * 100, 100) if max_val > 0 else 0
     return f"<div class='kpi-bar-wrap'><div class='kpi-bar-fill' style='width:{fill:.0f}%;background:{color};'></div></div>"
 
-k1, k2, k3, k4 = st.columns(4)
-with k1:
-    st.markdown(f"""<div class='kpi-card' style='--kc:{ocu_color}'>
-        <div class='kpi-bg-icon'>⏱️</div>
-        <div>
-            <div class='kpi-label'>Ocupación</div>
-            <div class='kpi-value' style='color:{ocu_color}'>{ocu_avg:.1%}</div>
-            <div class='kpi-sub'>Meta: 90%</div>
-        </div>
-        {kpi_bar(ocu_avg * 100, ocu_color)}
-    </div>""", unsafe_allow_html=True)
-with k2:
-    st.markdown(f"""<div class='kpi-card' style='--kc:{cont_color}'>
-        <div class='kpi-bg-icon'>📞</div>
-        <div>
-            <div class='kpi-label'>% Contacto</div>
-            <div class='kpi-value' style='color:{cont_color}'>{cont_avg:.1%}</div>
-            <div class='kpi-sub'>Meta: 95%</div>
-        </div>
-        {kpi_bar(cont_avg * 100, cont_color)}
-    </div>""", unsafe_allow_html=True)
-with k3:
-    st.markdown(f"""<div class='kpi-card' style='--kc:{COLOR_ACCENT}'>
-        <div class='kpi-bg-icon'>📲</div>
-        <div>
-            <div class='kpi-label'>Total Llamadas</div>
-            <div class='kpi-value' style='color:#7DD3FC'>{tot_llamadas:,}</div>
-            <div class='kpi-sub'>Llamadas ingresadas al sistema</div>
-        </div>
-        {kpi_bar(100, COLOR_ACCENT)}
-    </div>""", unsafe_allow_html=True)
-with k4:
-    st.markdown(f"""<div class='kpi-card' style='--kc:{aband_color}'>
-        <div class='kpi-bg-icon'>🚫</div>
-        <div>
-            <div class='kpi-label'>% Abandono</div>
-            <div class='kpi-value' style='color:{aband_color}'>{pct_abandon:.1%}</div>
-            <div class='kpi-sub'>{tot_abandon:,} llamadas abandonadas</div>
-        </div>
-        {kpi_bar(pct_abandon * 100, aband_color, 15)}
-    </div>""", unsafe_allow_html=True)
+_ui.overview_kpis([
+    ("⏱️", "Ocupación", f"{ocu_avg:.1%}", "Meta: 90%", ocu_color, kpi_bar(ocu_avg * 100, ocu_color)),
+    ("📞", "Contacto", f"{cont_avg:.1%}", "Meta: 95%", cont_color, kpi_bar(cont_avg * 100, cont_color)),
+    ("📲", "Total llamadas", f"{tot_llamadas:,}", "Llamadas ingresadas", COLOR_ACCENT, ""),
+    ("🚫", "Abandono", f"{pct_abandon:.1%}", f"{tot_abandon:,} llamadas", aband_color, kpi_bar(pct_abandon * 100, aband_color, 15)),
+])
 
 # ─────────────────────────────────────────────
 # SECCIÓN 1 · OCUPACIÓN
 # ─────────────────────────────────────────────
-st.markdown(f"""
-<div class='sec-header' style='--sc:#0EA5E9'>
-    <div class='sec-wash'></div>
-    <div class='sec-icon'>⏱️</div>
-    <div class='sec-text'>
-        <div class='sec-title'>Ocupación</div>
-        <div class='sec-desc'>Evolución del indicador de Ocupación por período, desglosado por supervisor y experto.</div>
-    </div>
-    <div class='sec-meta'>
-        <div class='sec-meta-val' style='color:#0EA5E9'>{ocu_avg:.1%}</div>
-        <div class='sec-meta-lab'>Promedio</div>
-    </div>
-    <span class='sec-tag' style='background:#0EA5E9'>Eficiencia</span>
-</div>
-""", unsafe_allow_html=True)
+_ui.section("A", "MONITOREO")
+_ui.panel_title("⏱️", "Ocupación", "Evolución del indicador por período, supervisor y experto.", "EFICIENCIA")
 
 # Preparar datos de tendencia por supervisor
 tend_ocu = (

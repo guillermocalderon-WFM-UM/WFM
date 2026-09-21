@@ -6,6 +6,7 @@ import glob
 import os
 import base64
 import io
+import _ui
 
 # ─────────────────────────────────────────────
 # CONFIGURACIÓN
@@ -637,36 +638,18 @@ n_supervisores = dff["Supervisor"].nunique()
 # ENCABEZADO
 # ─────────────────────────────────────────────
 rango    = f"{fecha_ini.strftime('%d/%m/%Y')} – {fecha_fin.strftime('%d/%m/%Y')}"
+_ui.inject_css()
 _home_pg = st.Page("home.py",               title="Inicio",      icon="🏠", default=True)
 _adh_pg  = st.Page("pages/1_Adherencia.py", title="Adherencia",  icon="🎯")
 _ocu_pg  = st.Page("pages/2_Ocupacion.py",  title="Ocupación",   icon="📊")
 _nov_pg  = st.Page("pages/3_Novedades.py",  title="Novedades",   icon="📢")
 
-with st.container(key="hdrbanner"):
-    st.markdown(f"""
-    <div class='hb-eyebrow'><span class='hb-dot'></span>Centro de Control · Uniminuto 2026</div>
-    <div class='hb-title'>Módulo de Tipificación</div>
-    <div class='hb-meta'>
-        <span class='hb-chip'>📅 <b>{rango}</b></span>
-        <span class='hb-chip'>👥 <b>{n_agentes}</b> expertos</span>
-    </div>
-    <div class='nav-lbl'>⚡ Navegación</div>
-    """, unsafe_allow_html=True)
-    nb1, nb2, nb3, nb4, nb5 = st.columns([1.0, 1.35, 1.3, 1.45, 1.35], vertical_alignment="center")
-    with nb1:
-        if st.button("🏠 Inicio",       key="hdr_home", use_container_width=True):
-            st.switch_page(_home_pg)
-    with nb2:
-        if st.button("🎯 Adherencia",   key="hdr_adh",  use_container_width=True):
-            st.switch_page(_adh_pg)
-    with nb3:
-        if st.button("📊 Ocupación",    key="hdr_ocu",  use_container_width=True):
-            st.switch_page(_ocu_pg)
-    with nb4:
-        st.button("🏷️ Tipificación", key="hdr_tip", use_container_width=True, type="primary")
-    with nb5:
-        if st.button("📢 Novedades",    key="hdr_nov",  use_container_width=True):
-            st.switch_page(_nov_pg)
+_ui.top_banner("TIPIFICACIÓN", "Centro de Control", "Calidad de tipificación, motivos y tiempos de gestión.", "PERÍODO ANALIZADO", rango)
+_ui.module_nav("tip", [
+    ("home", "⌂  Inicio", _home_pg), ("adh", "▤  Adherencia", _adh_pg),
+    ("ocu", "◆  Ocupación", _ocu_pg), ("tip", "◇  Tipificación", None),
+    ("nov", "●  Novedades", _nov_pg),
+])
 
 # ─────────────────────────────────────────────
 # MÉTRICAS GLOBALES
@@ -700,66 +683,18 @@ def kpi_bar(pct, color, max_val=100):
     fill = min(pct / max_val * 100, 100) if max_val > 0 else 0
     return f"<div class='kpi-bar-wrap'><div class='kpi-bar-fill' style='width:{fill:.0f}%;background:{color};'></div></div>"
 
-k1, k2, k3, k4 = st.columns(4)
-with k1:
-    st.markdown(f"""<div class='kpi-card' style='--kc:{tipif_color}'>
-        <div class='kpi-bg-icon'>🏷️</div>
-        <div>
-            <div class='kpi-label'>% Tipificación</div>
-            <div class='kpi-value' style='color:{tipif_color}'>{pct_tipif:.1%}</div>
-            <div class='kpi-sub'>{n_medibles:,} llamadas medibles (Aten.=Sí)</div>
-        </div>
-        {kpi_bar(pct_tipif * 100, tipif_color)}
-    </div>""", unsafe_allow_html=True)
-with k2:
-    st.markdown(f"""<div class='kpi-card' style='--kc:{COLOR_ACCENT}'>
-        <div class='kpi-bg-icon'>📞</div>
-        <div>
-            <div class='kpi-label'>Llamadas Atendidas</div>
-            <div class='kpi-value' style='color:#7DD3FC'>{n_medibles:,}</div>
-            <div class='kpi-sub'>Únicas que pueden tipificarse</div>
-        </div>
-        {kpi_bar(100, COLOR_ACCENT)}
-    </div>""", unsafe_allow_html=True)
-with k3:
-    st.markdown(f"""<div class='kpi-card' style='--kc:{COLOR_TIPI}'>
-        <div class='kpi-bg-icon'>⏱️</div>
-        <div>
-            <div class='kpi-label'>Tiempo Promedio</div>
-            <div class='kpi-value' style='color:{COLOR_TIPI}'>{seg_a_hhmmss(tiempo_conc_prom)}</div>
-            <div class='kpi-sub'>Por llamada medible</div>
-        </div>
-        {kpi_bar(100, COLOR_TIPI)}
-    </div>""", unsafe_allow_html=True)
-with k4:
-    st.markdown(f"""<div class='kpi-card' style='--kc:#8B5CF6'>
-        <div class='kpi-bg-icon'>🏆</div>
-        <div>
-            <div class='kpi-label'>Motivo Más Frecuente</div>
-            <div class='kpi-value' style='color:#C4B5FD;font-size:20px'>{_top_motivo}</div>
-            <div class='kpi-sub'>{_top_motivo_pct:.1%} de las tipificadas</div>
-        </div>
-        {kpi_bar(100, "#8B5CF6")}
-    </div>""", unsafe_allow_html=True)
+_ui.overview_kpis([
+    ("🏷️", "Tipificación", f"{pct_tipif:.1%}", f"{n_medibles:,} llamadas medibles", tipif_color, kpi_bar(pct_tipif * 100, tipif_color)),
+    ("📞", "Llamadas atendidas", f"{n_medibles:,}", "Únicas que pueden tipificarse", COLOR_ACCENT, ""),
+    ("⏱️", "Tiempo promedio", seg_a_hhmmss(tiempo_conc_prom), "Por llamada medible", COLOR_TIPI, ""),
+    ("🏆", "Motivo más frecuente", _top_motivo, f"{_top_motivo_pct:.1%} de las tipificadas", "#8B5CF6", ""),
+])
 
 # ─────────────────────────────────────────────
 # SECCIÓN 1 · % TIPIFICACIÓN EN EL TIEMPO
 # ─────────────────────────────────────────────
-st.markdown(f"""
-<div class='sec-header' style='--sc:{COLOR_TIPI}'>
-    <div class='sec-wash'></div>
-    <div class='sec-icon'>🏷️</div>
-    <div class='sec-text'>
-        <div class='sec-title'>Tipificación</div>
-        <div class='sec-desc'>Evolución del % de tipificación por período, desglosado por supervisor.</div>
-    </div>
-    <div class='sec-meta'>
-        <div class='sec-meta-val' style='color:{COLOR_TIPI}'>{pct_tipif:.1%}</div>
-        <div class='sec-meta-lab'>Promedio</div>
-    </div>
-    <span class='sec-tag' style='background:{COLOR_TIPI}'>Calidad de dato</span>
-</div>
-""", unsafe_allow_html=True)
+_ui.section("A", "MONITOREO")
+_ui.panel_title("🏷️", "Tipificación", "Evolución del porcentaje de tipificación por supervisor.", "CALIDAD DE DATO")
 
 _tend_base = medibles.groupby(["_periodo", "Supervisor"])["Llamadas"].sum()
 _tend_tip  = (
