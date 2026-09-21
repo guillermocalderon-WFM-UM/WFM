@@ -185,6 +185,71 @@ def toggle_dataframe(frame: pd.DataFrame, label: str, key: str, **kwargs) -> boo
     return False
 
 
+def comparison_bar(
+    values: pd.Series, eje_titulo: str, value_fmt, meta: float | None = None,
+    color_fn=None, color_fija=None, height: int | None = None,
+    extra=None, extra_label: str = "", tickformat: str | None = None,
+) -> None:
+    """Barra horizontal tipo "progreso": un carril de fondo tenue al 100 % del
+    eje y la barra de valor superpuesta, con la franja de meta sombreada en
+    verde y una línea vertical en el umbral. Es el lenguaje visual de
+    "Comparativo por Supervisor" en Ocupación, reutilizable para cualquier
+    ranking con una meta (o sin ella, si `meta` es None).
+
+    `values`: Series (index=categoría, values=métrica) ya ordenada ascendente."""
+    if values is None or values.empty:
+        return
+    cats = values.index.tolist()
+    vals = values.tolist()
+    if color_fn is not None:
+        colors = [color_fn(v) for v in vals]
+    elif isinstance(color_fija, list):
+        colors = color_fija
+    else:
+        colors = [color_fija or PALETTE[0]] * len(vals)
+    x_max = max(vals + ([meta] if meta is not None else [])) * 1.15 or 1
+    customdata = extra.reindex(values.index).tolist() if extra is not None else None
+    if extra is not None:
+        hover = f"<b>%{{y}}</b><br>{_safe(extra_label)}: %{{customdata}}<br>{_safe(eje_titulo)}: <b>%{{text}}</b><extra></extra>"
+    else:
+        hover = f"<b>%{{y}}</b><br>{_safe(eje_titulo)}: <b>%{{text}}</b><extra></extra>"
+
+    fig = go.Figure()
+    if meta is not None:
+        fig.add_vrect(x0=meta, x1=x_max, fillcolor="rgba(16,185,129,.06)", layer="below", line_width=0)
+    fig.add_trace(go.Bar(
+        x=[x_max] * len(vals), y=cats, orientation="h",
+        marker=dict(color="rgba(255,255,255,.07)", line=dict(width=0)),
+        showlegend=False, hoverinfo="skip", width=.55,
+    ))
+    fig.add_trace(go.Bar(
+        x=vals, y=cats, orientation="h",
+        marker=dict(color=colors, line=dict(width=0)),
+        text=[value_fmt(v) for v in vals], textposition="outside", constraintext="none",
+        textfont=dict(size=11, color="#CBD3F2", family="Inter"),
+        customdata=customdata, hovertemplate=hover, width=.55,
+    ))
+    if meta is not None:
+        fig.add_vline(x=meta, line_dash="dot", line_color="rgba(125,211,252,.75)", line_width=1.5)
+        fig.add_annotation(
+            x=meta, xref="x", y=1, yref="paper", yanchor="bottom", yshift=6,
+            text=f"Meta {value_fmt(meta)}", showarrow=False,
+            font=dict(size=10, color="#7DD3FC"),
+        )
+    fig.update_layout(
+        barmode="overlay", height=height or max(280, len(cats) * 36 + 60),
+        margin=dict(l=0, r=55, t=32, b=0),
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+        xaxis=dict(
+            range=[0, x_max], gridcolor="rgba(255,255,255,.08)", showgrid=True, tickformat=tickformat,
+            tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,.62)"),
+        ),
+        yaxis=dict(gridcolor="rgba(0,0,0,0)", tickfont=dict(size=11, family="Inter", color="rgba(255,255,255,.75)")),
+        showlegend=False, font=dict(family="Inter", size=11, color="rgba(255,255,255,.72)"),
+    )
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+
+
 def percentage_matrix(
     frame: pd.DataFrame, row_col: str, date_col: str, metrics: dict[str, str],
     key: str, title: str, row_options=None, binary_metrics: set[str] | None = None,

@@ -130,74 +130,6 @@ COLOR_WARNING = "#F59E0B"
 COLOR_DANGER  = "#EF4444"
 COLOR_BG      = "#F0F4F8"
 
-# ─────────────────────────────────────────────
-# RANKING HORIZONTAL (mismo lenguaje visual que el módulo Novedades:
-# barras delgadas y redondeadas + zonas de contexto, sin barra de fondo ni línea de meta)
-# ─────────────────────────────────────────────
-def _ranking_bar(valores, eje_titulo, value_fmt, zonas=None, color_fn=None, color_fija=None, alto_fila=42, extra=None, extra_label=None):
-    """valores: Series (index=categoría, values=métrica), ya ordenada ascendente.
-    zonas: lista opcional de (x0, x1, color, etiqueta) dibujada como washes de fondo.
-    color_fn: función valor→color por barra (si no hay zonas fijas de umbral).
-    extra: Series opcional (mismo índice que valores) con un dato adicional a mostrar en el hover."""
-    if valores is None or valores.empty:
-        return
-    cats = valores.index.tolist()
-    vals = valores.tolist()
-    if color_fn is not None:
-        colores = [color_fn(v) for v in vals]
-    else:
-        colores = color_fija or COLOR_ACCENT
-    tope = zonas[-1][1] if (zonas and zonas[-1][1] is not None) else max(vals)
-    x_max = max(vals + [tope]) * 1.22 if vals else 1
-
-    if extra is not None:
-        customdata = extra.reindex(valores.index).tolist()
-        hover = f"<b>%{{y}}</b><br>{extra_label or ''}: %{{customdata}}<br>{eje_titulo}: <b>%{{text}}</b><extra></extra>"
-    else:
-        customdata = None
-        hover = "<b>%{y}</b><br>" + eje_titulo + ": <b>%{text}</b><extra></extra>"
-
-    fig = go.Figure(go.Bar(
-        y=cats, x=vals, orientation="h",
-        marker=dict(color=colores, opacity=0.92, line=dict(width=0), cornerradius=6),
-        width=0.55,
-        text=[value_fmt(v) for v in vals],
-        textposition="outside",
-        textfont=dict(color="rgba(255,255,255,0.78)", size=11, family="Space Grotesk, sans-serif"),
-        cliponaxis=False,
-        customdata=customdata,
-        hovertemplate=hover,
-    ))
-    if zonas:
-        for x0, x1, zc, _ in zonas:
-            fig.add_vrect(x0=x0, x1=x1 if x1 is not None else x_max, fillcolor=zc, opacity=0.07, line_width=0, layer="below")
-        for x0, x1, zc, label in zonas:
-            centro = (x0 + (x1 if x1 is not None else x_max)) / 2
-            fig.add_annotation(x=centro, y=1.06, xref="x", yref="paper", showarrow=False,
-                                text=label.upper(), font=dict(size=8, color=zc, family="Inter, sans-serif"), opacity=0.55)
-        # línea exacta en el límite de la última zona (la meta), no solo el wash de fondo
-        _meta_x = zonas[-1][0]
-        if _meta_x > 0:
-            fig.add_vline(x=_meta_x, line_dash="dot", line_color="rgba(125,211,252,0.75)", line_width=1.5)
-
-    fig_h = max(260, len(cats) * alto_fila + 70)
-    fig.update_layout(
-        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-        height=fig_h,
-        margin=dict(l=190, r=60, t=34 if zonas else 16, b=10),
-        font=dict(family="Inter, sans-serif"),
-        showlegend=False, bargap=0.42,
-        xaxis=dict(
-            range=[0, x_max], showgrid=True, gridcolor="rgba(255,255,255,0.045)", gridwidth=1, zeroline=False,
-            tickfont=dict(color="rgba(255,255,255,0.32)", size=9), fixedrange=True,
-            title=dict(text=eje_titulo, font=dict(size=10, color="rgba(255,255,255,0.35)")),
-        ),
-        yaxis=dict(showgrid=False, tickfont=dict(color="rgba(255,255,255,0.72)", size=10.5), fixedrange=True),
-    )
-    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
-    return fig_h
-
-_ADH_ZONAS = [(0, 0.80, COLOR_DANGER, "Bajo"), (0.80, 0.90, COLOR_WARNING, "Alerta"), (0.90, None, COLOR_SUCCESS, "Meta")]
 def _adh_color(v):
     return COLOR_SUCCESS if v >= 0.90 else (COLOR_WARNING if v >= 0.80 else COLOR_DANGER)
 
@@ -1303,8 +1235,8 @@ with _c_exp2:
 _exp_idx = exp_stats.set_index("Nombre")
 _exp_idx = _exp_idx[_exp_idx["Supervisor"].isin(_sup_filtro_exp)].sort_values("ADH", ascending=(_orden_exp == "Mejores arriba"))
 with st.container(height=520, border=False):
-    _ranking_bar(_exp_idx["ADH"], "Adherencia", lambda v: f"{v:.1%}", zonas=_ADH_ZONAS, color_fn=_adh_color,
-                 alto_fila=38, extra=_exp_idx["Supervisor"], extra_label="Supervisor")
+    _ui.comparison_bar(_exp_idx["ADH"], "Adherencia", lambda v: f"{v:.1%}", meta=0.90, color_fn=_adh_color,
+                        extra=_exp_idx["Supervisor"], extra_label="Supervisor", tickformat=".0%")
 
 # ─────────────────────────────────────────────
 # TENDENCIA + DISTRIBUCIÓN LLEGADAS
@@ -1665,8 +1597,8 @@ with c_camp:
     camp_stats["ADH"] = (camp_stats["adh_s"] / camp_stats["prog_s"]).where(camp_stats["prog_s"] > 0, 0)
     camp_stats = camp_stats.drop(columns=["adh_s", "prog_s"]).sort_values("ADH", ascending=(_orden_camp == "Mejores arriba"))
     _camp_idx = camp_stats.set_index("Campana")
-    _ranking_bar(_camp_idx["ADH"], "Adherencia", lambda v: f"{v:.1%}", zonas=_ADH_ZONAS, color_fn=_adh_color,
-                 alto_fila=44, extra=_camp_idx["Agentes"], extra_label="Agentes")
+    _ui.comparison_bar(_camp_idx["ADH"], "Adherencia", lambda v: f"{v:.1%}", meta=0.90, color_fn=_adh_color,
+                        extra=_camp_idx["Agentes"], extra_label="Agentes", tickformat=".0%")
 
 with c_exc:
     _camp_filtro_exc = _ui.multiselect_all("Campaña", sorted(dff["Campana"].dropna().unique()), "wfm_v1_exc_camp")
@@ -1678,7 +1610,7 @@ with c_exc:
     exc_totales   = _dff_exc[exc_tipo_disp].sum().sort_values(ascending=True)
     exc_labels    = [c.replace("_min", "").replace("Exceso ", "") for c in exc_totales.index]
     _serie_exc    = pd.Series((exc_totales.values / 60), index=exc_labels)
-    _ranking_bar(_serie_exc, "Horas", lambda v: seg_a_hhmmss(v * 3600), color_fija="#FB7185", alto_fila=44)
+    _ui.comparison_bar(_serie_exc, "Horas", lambda v: seg_a_hhmmss(v * 3600), color_fija="#FB7185")
 
 # ── Tabla 3: Estados y Excesos ────────────────
 st.markdown(f"""<div class='tbl-hdr' style='background:linear-gradient(135deg,{COLOR_DANGER} 0%,#DC2626 100%);margin-top:20px'>
