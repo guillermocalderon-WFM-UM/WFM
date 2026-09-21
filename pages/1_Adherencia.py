@@ -26,7 +26,8 @@ def df_descarga(df, nombre_archivo, **kwargs):
     """Muestra la tabla y deja el Excel listo bajo demanda: generarlo con openpyxl es
     lento y antes se ejecutaba en cada cambio de filtro para las 3 tablas, aunque nadie
     descargara nada. Ahora solo se calcula cuando el usuario hace clic en 'Preparar'."""
-    st.dataframe(df, **kwargs)
+    if not _ui.toggle_dataframe(df, nombre_archivo.replace(".xlsx", ""), f"table_{nombre_archivo}", **kwargs):
+        return
     _sig = (len(df), len(df.columns))
     _bytes_key = f"_xlsx_bytes_{nombre_archivo}"
     _sig_key = f"_xlsx_sig_{nombre_archivo}"
@@ -1224,7 +1225,7 @@ fig_sup.update_layout(
         font=dict(size=10, family="Inter"),
         itemsizing="constant", bgcolor="rgba(0,0,0,0)"
     ),
-    font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)")
+    font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)"), showlegend=False
 )
 st.plotly_chart(fig_sup, use_container_width=True)
 
@@ -1251,30 +1252,7 @@ sup_stats = sup_stats.merge(aus_sup, on="Supervisor", how="left").merge(tarde_su
 sup_stats["Ausentes"] = sup_stats["Ausentes"].fillna(0).astype(int)
 sup_stats["Tardes"]   = sup_stats["Tardes"].fillna(0).astype(int)
 
-c_bar, c_gauge = st.columns([3, 2])
-
-with c_bar:
-    sup_short = sup_stats.copy()
-    sup_short["Supervisor"] = sup_short["Supervisor"].apply(lambda n: " ".join(n.split()[:2]))
-    _serie_sup = sup_short.set_index("Supervisor")["ADH"]
-    _h_sup = _ranking_bar(_serie_sup, "Adherencia", lambda v: f"{v:.1%}", zonas=_ADH_ZONAS, color_fn=_adh_color, alto_fila=20) or 400
-
-with c_gauge:
-    st.markdown("""<div class='tbl-hdr' style='background:linear-gradient(135deg,#28053F 0%,#0EA5E9 100%)'>
-        <span class='tbl-hdr-icon'>🏆</span>
-        <div class='tbl-hdr-body'>
-            <div class='tbl-hdr-title'>Ranking Supervisores</div>
-            <div class='tbl-hdr-desc'>Adherencia, agentes, ausencias y tardanzas</div>
-        </div>
-        <span class='tbl-hdr-badge'>Resumen</span>
-    </div>""", unsafe_allow_html=True)
-    tabla_sup = sup_stats.sort_values("ADH", ascending=False)[
-        ["Supervisor","ADH","Agentes","Ausentes","Tardes"]
-    ].copy()
-    tabla_sup["ADH"] = tabla_sup["ADH"].apply(lambda x: f"{x:.1%}")
-    tabla_sup["Supervisor"] = tabla_sup["Supervisor"].apply(lambda n: " ".join(n.split()[:2]))
-    tabla_sup.columns = ["Supervisor","ADH%","Agentes","Ausentes","Tardes"]
-    st.dataframe(tabla_sup, use_container_width=True, hide_index=True, height=_h_sup)
+st.caption("El ranking de supervisores se retiró para priorizar tendencias y matrices de riesgo.")
 
 # ─────────────────────────────────────────────
 # COMPARATIVO POR EXPERTO
@@ -1317,7 +1295,8 @@ tend = tend.drop(columns=["adh_s","prog_s"])
 tend["_ord"] = tend["_periodo"].map(_periodo_rank)
 tend = tend.sort_values("_ord").drop(columns="_ord")
 
-c1, c2 = st.columns([3, 2])
+# Las visualizaciones se leen a ancho completo; no quedan gráficos a media página.
+c1, c2 = st.container(), st.container()
 with c1:
     fig_tend = go.Figure()
     fig_tend.add_hrect(y0=0.60, y1=0.80, fillcolor="rgba(239,68,68,0.04)",   layer="below", line_width=0)
@@ -1394,7 +1373,7 @@ with c2:
     )
     fig_pie.update_layout(
         height=370, margin=dict(l=0, r=0, t=24, b=0),
-        paper_bgcolor="rgba(0,0,0,0)", showlegend=True,
+        paper_bgcolor="rgba(0,0,0,0)", showlegend=False,
         legend=dict(orientation="v", yanchor="middle", y=0.5, xanchor="left", x=1.0,
                     font=dict(size=10, family="Inter"), itemsizing="constant"),
         font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)")
@@ -1406,6 +1385,17 @@ with c2:
 # ─────────────────────────────────────────────
 _ui.section("D", "SEGUIMIENTO OPERATIVO")
 _ui.panel_title("🔍", "Detalle por Agente", "Adherencia, planificación y excesos por experto. Filtra por agente desde la barra lateral.", "TABLAS")
+
+# Matrices operativas: la primera capa es visual y el detalle queda bajo demanda.
+_matrix_adh = dff_validos[["Fecha", "Supervisor", "Nombre", "adh_s", "prog_s", "Validador Llegada"]].copy()
+_matrix_adh["Adherencia"] = (_matrix_adh["adh_s"] / _matrix_adh["prog_s"]).clip(0, 1)
+_matrix_adh["Llegada a tiempo"] = _matrix_adh["Validador Llegada"].eq("Llegada a tiempo").astype(float)
+_ui.panel_title("▦", "Matriz diaria por Supervisor", "Porcentaje diario con alerta <90 % y criticidad <70 %.", "HEATMAP")
+_ui.percentage_matrix(_matrix_adh, "Supervisor", "Fecha", {"Adherencia": "Adherencia", "Llegada a tiempo": "Llegada a tiempo"}, "adh_matrix_sup", "Supervisor")
+_ui.panel_title("👤", "Matriz diaria por Experto", "Selecciona un supervisor para analizar el riesgo individual.", "SEGUIMIENTO")
+_matrix_supervisor = st.selectbox("Supervisor para matriz de expertos", ["Todos"] + sorted(_matrix_adh["Supervisor"].dropna().unique()), key="adh_matrix_agent_supervisor")
+_matrix_agents = _matrix_adh if _matrix_supervisor == "Todos" else _matrix_adh[_matrix_adh["Supervisor"] == _matrix_supervisor]
+_ui.percentage_matrix(_matrix_agents, "Nombre", "Fecha", {"Adherencia": "Adherencia", "Llegada a tiempo": "Llegada a tiempo"}, "adh_matrix_agent", "Experto")
 
 def seg_a_hhmmss(s):
     if pd.isna(s) or s <= 0:
@@ -1469,7 +1459,7 @@ def _lb_rows(df_sub, color):
         </div>"""
     return rows
 
-col_top, col_bottom, col_donut = st.columns([1, 1, 1.1])
+col_top, col_bottom, col_donut = st.container(), st.container(), st.container()
 with col_top:
     st.markdown(f"""<div class='lb-card'>
         <div class='lb-head'>
@@ -1574,7 +1564,7 @@ df_descarga(
 _ui.section("F", "PATRONES")
 _ui.panel_title("📶", "Distribución y Patrones de Adherencia", "Cómo se reparten los expertos por rango de adherencia y qué días de la semana concentran el mayor riesgo.", f"{n_exp} expertos")
 
-c_hist, c_dia = st.columns(2)
+c_hist, c_dia = st.container(), st.container()
 with c_hist:
     _bins = [-0.01, 0.70, 0.80, 0.90, 0.95, 10]
     _labels = ["<70%", "70-79%", "80-89%", "90-94%", "≥95%"]
@@ -1666,7 +1656,7 @@ df_descarga(
 _ui.section("G", "CAMPAÑAS")
 _ui.panel_title("🗂️", "Campañas y Excesos", "Adherencia consolidada por campaña y dónde se concentra el tiempo fuera de programación.", f'{dff_validos["Campana"].nunique()} campañas')
 
-c_camp, c_exc = st.columns(2)
+c_camp, c_exc = st.container(), st.container()
 with c_camp:
     camp_stats = (
         dff_validos.groupby("Campana")

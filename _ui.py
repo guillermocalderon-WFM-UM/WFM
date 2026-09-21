@@ -9,7 +9,11 @@ KPIs, secciones, headers de gráfico, chips, tarjetas de alerta) que en Operativ
 reemplazaron a `.kpi-card` / `.sec-header` / `.chart-hdr`.
 """
 import html
+import calendar
 
+import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
 import streamlit as st
 
 # ─────────────────────────────────────────────
@@ -161,6 +165,77 @@ def selected_chips(selected, palette=None) -> None:
     else:
         chips = f"<span>{len(selected)} seleccionados</span>"
     st.markdown(f"<div class='ebi-selected'>{chips}</div>", unsafe_allow_html=True)
+
+
+def toggle_dataframe(frame: pd.DataFrame, label: str, key: str, **kwargs) -> bool:
+    """Tabla bajo demanda. Todas arrancan cerradas para que el análisis visual sea
+    la primera capa del dashboard."""
+    visible_key = f"{key}__visible"
+    visible = bool(st.session_state.get(visible_key, False))
+    icon = "🙈" if visible else "👁️"
+    action = "Ocultar" if visible else "Ver"
+    if st.button(f"{icon}  {action} tabla · {label}", key=f"{key}__toggle"):
+        st.session_state[visible_key] = not visible
+        st.rerun()
+    if st.session_state.get(visible_key, False):
+        kwargs.setdefault("hide_index", True)
+        kwargs.setdefault("use_container_width", True)
+        st.dataframe(frame, **kwargs)
+        return True
+    return False
+
+
+def percentage_matrix(
+    frame: pd.DataFrame, row_col: str, date_col: str, metrics: dict[str, str],
+    key: str, title: str, row_options=None,
+) -> None:
+    """Heatmap diario de porcentajes con semáforo: verde >=90 %, alerta 70–89,9 %
+    y crítico <70 %. El selector de métrica y período es local a cada matriz."""
+    data = frame[[row_col, date_col] + list(metrics.values())].copy()
+    data[date_col] = pd.to_datetime(data[date_col], errors="coerce")
+    data = data.dropna(subset=[row_col, date_col])
+    if row_options is not None:
+        data = data[data[row_col].isin(row_options)]
+    if data.empty:
+        st.info("Sin datos para construir esta matriz.")
+        return
+    data["_month"] = data[date_col].dt.to_period("M").astype(str)
+    months = sorted(data["_month"].unique())
+    c1, c2 = st.columns(2)
+    with c1:
+        month = st.selectbox("Mes", months, index=len(months) - 1, key=f"{key}_month")
+    with c2:
+        metric_label = st.selectbox("Indicador", list(metrics), key=f"{key}_metric")
+    metric_col = metrics[metric_label]
+    selected = data[data["_month"] == month].copy()
+    selected["_day"] = selected[date_col].dt.day
+    rows = sorted(selected[row_col].astype(str).unique())
+    year, mon = map(int, month.split("-"))
+    days = list(range(1, calendar.monthrange(year, mon)[1] + 1))
+    pivot = selected.groupby([row_col, "_day"])[metric_col].mean().unstack().reindex(index=rows, columns=days)
+    values = pivot.astype(float).to_numpy()
+    values[np.isnan(values)] = -0.05
+    labels = np.where(values < 0, "—", np.vectorize(lambda v: f"{v:.0%}")(np.maximum(values, 0)))
+    hover = np.empty(values.shape, dtype=object)
+    for i, name in enumerate(rows):
+        for j, day in enumerate(days):
+            value = values[i, j]
+            state = "sin registro" if value < 0 else ("cumple" if value >= .90 else "alerta" if value >= .70 else "crítico")
+            hover[i, j] = f"<b>{html.escape(name)}</b><br>{day:02d}/{mon:02d}/{year}<br>{metric_label}: {'—' if value < 0 else f'{value:.1%}'}<br>Estado: {state}<extra></extra>"
+    colors = [[0, "#334155"], [.049, "#334155"], [.05, "#F43F5E"], [.70, "#F43F5E"], [.7001, "#F59E0B"], [.90, "#F59E0B"], [.9001, "#10B981"], [1, "#10B981"]]
+    fig = go.Figure(go.Heatmap(
+        z=values, x=[f"{d:02d}" for d in days], y=rows, zmin=-.05, zmax=1,
+        colorscale=colors, text=labels, texttemplate="%{text}", xgap=2, ygap=2,
+        hovertext=hover, hovertemplate="%{hovertext}", showscale=False,
+    ))
+    fig.update_layout(
+        height=max(320, len(rows) * 31 + 105), margin=dict(l=170, r=20, t=12, b=36),
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", showlegend=False,
+        xaxis=dict(side="top", showgrid=False, color="rgba(255,255,255,.65)"),
+        yaxis=dict(showgrid=False, color="rgba(255,255,255,.75)"),
+    )
+    st.caption("Verde ≥ 90 % · amarillo 70–89,9 % · rojo < 70 % · gris: sin registro")
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False}, key=f"{key}_chart")
 
 
 # ─────────────────────────────────────────────

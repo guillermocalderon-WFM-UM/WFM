@@ -20,7 +20,9 @@ def _excel_bytes(df):
     return buf.getvalue()
 
 def df_descarga(df, nombre_archivo, **kwargs):
-    st.dataframe(df, **kwargs)
+    # El detalle tabular es consultable, pero no compite visualmente con los gráficos.
+    if not _ui.toggle_dataframe(df, nombre_archivo.replace(".xlsx", ""), f"table_{nombre_archivo}", **kwargs):
+        return
     b64 = base64.b64encode(_excel_bytes(df)).decode()
     st.markdown(
         f'<div style="text-align:right;margin-top:-6px;margin-bottom:8px">'
@@ -685,6 +687,8 @@ tend_ocu = tend_ocu.sort_values(["Supervisor","_ord"]).drop(columns="_ord")
 
 sup_lista  = sorted(tend_ocu["Supervisor"].unique())
 colores_sup = {s: SUPERVISOR_COLORS[i % len(SUPERVISOR_COLORS)] for i, s in enumerate(sup_lista)}
+_ocu_chart_sups = _ui.multiselect_all("Supervisores a visualizar", sup_lista, "ocu_trend_supervisors")
+_ui.selected_chips(_ocu_chart_sups)
 
 st.markdown("""<div class='chart-hdr' style='--cc:#0EA5E9'>
     <span class='ch-icon'>⏱️</span>
@@ -700,7 +704,7 @@ fig_ocu.add_hrect(y0=0.50, y1=0.80, fillcolor="rgba(239,68,68,0.03)",   layer="b
 fig_ocu.add_hrect(y0=0.80, y1=0.90, fillcolor="rgba(245,158,11,0.04)",  layer="below", line_width=0)
 fig_ocu.add_hrect(y0=0.90, y1=1.00, fillcolor="rgba(16,185,129,0.04)",  layer="below", line_width=0)
 
-for sup in sup_lista:
+for sup in _ocu_chart_sups:
     sub = tend_ocu[tend_ocu["Supervisor"] == sup]
     nc  = " ".join(sup.split()[:2])
     fig_ocu.add_trace(go.Scatter(
@@ -724,7 +728,7 @@ fig_ocu.update_layout(
                tickangle=-30, showgrid=False),
     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0,
                 font=dict(size=10, family="Inter"), itemsizing="constant", bgcolor="rgba(0,0,0,0)"),
-    font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)")
+    font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)"), showlegend=False
 )
 st.plotly_chart(fig_ocu, use_container_width=True)
 
@@ -762,7 +766,7 @@ sup_ocu["Color"] = sup_ocu["OcuAjuste"].apply(
     lambda x: COLOR_SUCCESS if x >= 0.90 else (COLOR_WARNING if x >= 0.80 else COLOR_DANGER)
 )
 
-c_bar_ocu, c_rank_ocu = st.columns([3, 2])
+c_bar_ocu, = st.columns(1)
 
 with c_bar_ocu:
     st.markdown(f"""<div class='chart-hdr' style='--cc:#0EA5E9'>
@@ -810,24 +814,6 @@ with c_bar_ocu:
     )
     st.plotly_chart(fig_bar_ocu, use_container_width=True)
 
-with c_rank_ocu:
-    st.markdown("""<div class='tbl-hdr' style='background:linear-gradient(135deg,#28053F 0%,#0EA5E9 100%)'>
-        <span class='tbl-hdr-icon'>🏆</span>
-        <div class='tbl-hdr-body'>
-            <div class='tbl-hdr-title'>Ranking Supervisores</div>
-            <div class='tbl-hdr-desc'>Ocupación, agentes y tiempo en llamadas</div>
-        </div>
-        <span class='tbl-hdr-badge'>Resumen</span>
-    </div>""", unsafe_allow_html=True)
-    tbl_sup_ocu = sup_ocu.sort_values("OcuAjuste", ascending=False)[
-        ["Supervisor", "OcuAjuste", "Agentes", "Llamadas", "Ajuste_s"]
-    ].copy()
-    tbl_sup_ocu["Supervisor"] = tbl_sup_ocu["Supervisor"].apply(lambda n: " ".join(n.split()[:2]))
-    tbl_sup_ocu["OcuAjuste"]  = tbl_sup_ocu["OcuAjuste"].apply(lambda x: f"{x:.1%}")
-    tbl_sup_ocu["Ajuste_s"]   = tbl_sup_ocu["Ajuste_s"].apply(seg_a_hhmmss)
-    tbl_sup_ocu.columns = ["Supervisor", "Ocupación%", "Agentes", "Llamadas", "T. en Llamadas"]
-    st.dataframe(tbl_sup_ocu, use_container_width=True, hide_index=True, height=400)
-
 # Tabla detalle por agente
 n_ocu = dff["Nombre"].nunique()
 st.markdown(f"""
@@ -863,6 +849,20 @@ if "TiempoEfectivo_s" in tbl_ocu.columns: tbl_ocu_disp["Tiempo Programado Efecti
 if "Ajuste_s"          in tbl_ocu.columns: tbl_ocu_disp["Tiempo en Llamadas"]         = tbl_ocu["Ajuste_s"].map(seg_a_hhmmss)
 df_descarga(pd.DataFrame(tbl_ocu_disp), "ocupacion_detalle.xlsx", use_container_width=True, hide_index=True)
 
+_ui.section("B", "MATRICES OPERATIVAS")
+_ui.panel_title("▦", "Matriz diaria por Supervisor", "Ocupación y contacto por día. Alerta <90 % y crítico <70 %.", "HEATMAP")
+_ui.percentage_matrix(
+    dff, "Supervisor", "Fecha", {"Ocupación": "Ocupación", "Contacto": "% Contacto"},
+    "ocu_matrix_sup", "Supervisor",
+)
+_ui.panel_title("👤", "Matriz diaria por Experto", "Selecciona un supervisor para enfocar el seguimiento individual.", "SEGUIMIENTO")
+_ocu_matrix_sup = st.selectbox("Supervisor para matriz de expertos", ["Todos"] + sorted(dff["Supervisor"].dropna().unique()), key="ocu_matrix_agent_supervisor")
+_ocu_matrix_agents = dff if _ocu_matrix_sup == "Todos" else dff[dff["Supervisor"] == _ocu_matrix_sup]
+_ui.percentage_matrix(
+    _ocu_matrix_agents, "Nombre", "Fecha", {"Ocupación": "Ocupación", "Contacto": "% Contacto"},
+    "ocu_matrix_agent", "Experto",
+)
+
 # ─────────────────────────────────────────────
 # SECCIÓN 2 · CONTACTO
 # ─────────────────────────────────────────────
@@ -888,6 +888,8 @@ tend_cont = (
 )
 tend_cont["_ord"] = tend_cont["_periodo"].map(_periodo_rank)
 tend_cont = tend_cont.sort_values(["Supervisor","_ord"]).drop(columns="_ord")
+_cont_chart_sups = _ui.multiselect_all("Supervisores a visualizar", sorted(tend_cont["Supervisor"].unique()), "cont_trend_supervisors")
+_ui.selected_chips(_cont_chart_sups)
 
 st.markdown("""<div class='chart-hdr' style='--cc:#10B981'>
     <span class='ch-icon'>📞</span>
@@ -902,7 +904,7 @@ fig_cont = go.Figure()
 fig_cont.add_hrect(y0=0.50, y1=0.85, fillcolor="rgba(239,68,68,0.03)",  layer="below", line_width=0)
 fig_cont.add_hrect(y0=0.85, y1=0.95, fillcolor="rgba(245,158,11,0.04)", layer="below", line_width=0)
 fig_cont.add_hrect(y0=0.95, y1=1.00, fillcolor="rgba(16,185,129,0.04)", layer="below", line_width=0)
-for sup in sup_lista:
+for sup in _cont_chart_sups:
     sub = tend_cont[tend_cont["Supervisor"] == sup]
     if sub.empty:
         continue
@@ -928,7 +930,7 @@ fig_cont.update_layout(
                tickangle=-30, showgrid=False),
     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0,
                 font=dict(size=10, family="Inter"), itemsizing="constant", bgcolor="rgba(0,0,0,0)"),
-    font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)")
+    font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)"), showlegend=False
 )
 st.plotly_chart(fig_cont, use_container_width=True)
 
@@ -1008,9 +1010,10 @@ _CALL_CFG = [
     ("Abandonadas", "#F87171", "Abandonadas"),
     ("Canceladas",  "#FBBF24", "Canceladas"),
 ]
+_call_metrics = st.multiselect("Series a visualizar", [label for _, _, label in _CALL_CFG], default=[label for _, _, label in _CALL_CFG], key="call_chart_metrics")
 fig_call = go.Figure()
 for col, color, label in _CALL_CFG:
-    if col in call_per.columns:
+    if col in call_per.columns and label in _call_metrics:
         fig_call.add_trace(go.Bar(
             name=label, x=call_per["_periodo"], y=call_per[col],
             marker_color=color, opacity=0.88,
@@ -1026,7 +1029,7 @@ fig_call.update_layout(
                tickangle=-30, showgrid=False),
     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0,
                 font=dict(size=10, family="Inter"), itemsizing="constant", bgcolor="rgba(0,0,0,0)"),
-    font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)"),
+    font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)"), showlegend=False,
     bargap=0.20, bargroupgap=0.08
 )
 st.plotly_chart(fig_call, use_container_width=True)
