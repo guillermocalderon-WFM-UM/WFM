@@ -9,6 +9,8 @@ import os
 import base64
 import io
 
+import _ui
+
 # ─────────────────────────────────────────────
 # CONFIGURACIÓN
 # ─────────────────────────────────────────────
@@ -1055,6 +1057,8 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
+_ui.inject_css()
+
 # ─────────────────────────────────────────────
 # APLICAR FILTROS
 # ─────────────────────────────────────────────
@@ -1130,15 +1134,12 @@ _tip_pg  = st.Page("pages/4_Tipificacion.py", title="Tipificación", icon="🏷�
 _nov_pg  = st.Page("pages/3_Novedades.py", title="Novedades", icon="📢")
 
 with st.container(key="hdrbanner"):
-    st.markdown(f"""
-    <div class='hb-eyebrow'><span class='hb-dot'></span>Centro de Control · Uniminuto 2026</div>
-    <div class='hb-title'>Módulo de Adherencia</div>
-    <div class='hb-meta'>
-        <span class='hb-chip'>📅 <b>{rango}</b></span>
-        <span class='hb-chip'>🎯 Meta <b>90%</b></span>
-    </div>
-    <div class='nav-lbl'>⚡ Navegación</div>
-    """, unsafe_allow_html=True)
+    _ui.banner_header(
+        "Adherencia", "<div class='hb-title'>Centro de Control</div>",
+        "Cumplimiento de horario, novedades y riesgo por equipo.",
+        "Período analizado", rango,
+    )
+    st.markdown("<div class='nav-lbl'>⚡ Navegación</div>", unsafe_allow_html=True)
     nb1, nb2, nb3, nb4, nb5 = st.columns([1.0, 1.35, 1.3, 1.45, 1.35], vertical_alignment="center")
     with nb1:
         if st.button("🏠 Inicio", key="hdr_home", use_container_width=True):
@@ -1158,80 +1159,19 @@ with st.container(key="hdrbanner"):
 # ─────────────────────────────────────────────
 # KPIs GLOBALES
 # ─────────────────────────────────────────────
-def kpi_bar(pct, color, max_val=100):
-    fill = min(pct / max_val * 100, 100)
-    return f"<div class='kpi-bar-wrap'><div class='kpi-bar-fill' style='width:{fill:.0f}%;background:{color};'></div></div>"
-
-k1, k2, k3, k4, k5 = st.columns(5)
-with k1:
-    st.markdown(f"""<div class='kpi-card' style='--kc:{adh_color}'>
-        <div class='kpi-bg-icon'>🎯</div>
-        <div>
-            <div class='kpi-label'>Adherencia</div>
-            <div class='kpi-value' style='color:{adh_color}'>{adh_global:.1%}</div>
-            <div class='kpi-sub'>Meta: 90%</div>
-        </div>
-        {kpi_bar(adh_global * 100, adh_color, 100)}
-    </div>""", unsafe_allow_html=True)
-with k2:
-    st.markdown(f"""<div class='kpi-card' style='--kc:{COLOR_ACCENT}'>
-        <div class='kpi-bg-icon'>👥</div>
-        <div>
-            <div class='kpi-label'>Expertos</div>
-            <div class='kpi-value' style='color:#7DD3FC'>{total_agentes}</div>
-            <div class='kpi-sub'>{total_registros} registros</div>
-        </div>
-        {kpi_bar(total_registros, COLOR_ACCENT, max(total_registros, 1))}
-    </div>""", unsafe_allow_html=True)
-with k3:
-    st.markdown(f"""<div class='kpi-card' style='--kc:{COLOR_SUCCESS}'>
-        <div class='kpi-bg-icon'>✅</div>
-        <div>
-            <div class='kpi-label'>Llegada a tiempo</div>
-            <div class='kpi-value' style='color:{COLOR_SUCCESS}'>{pct_tiempo:.1f}%</div>
-            <div class='kpi-sub'>{llegada_counts.get("Llegada a tiempo", 0)} registros</div>
-        </div>
-        {kpi_bar(pct_tiempo, COLOR_SUCCESS)}
-    </div>""", unsafe_allow_html=True)
-with k4:
-    st.markdown(f"""<div class='kpi-card' style='--kc:{COLOR_WARNING}'>
-        <div class='kpi-bg-icon'>⏰</div>
-        <div>
-            <div class='kpi-label'>Llegadas tarde</div>
-            <div class='kpi-value' style='color:{COLOR_WARNING}'>{pct_tarde:.1f}%</div>
-            <div class='kpi-sub'>{llegada_counts.get("Llegada tarde", 0)} registros</div>
-        </div>
-        {kpi_bar(pct_tarde, COLOR_WARNING)}
-    </div>""", unsafe_allow_html=True)
-with k5:
-    st.markdown(f"""<div class='kpi-card' style='--kc:{COLOR_DANGER}'>
-        <div class='kpi-bg-icon'>🚨</div>
-        <div>
-            <div class='kpi-label'>Ausentes</div>
-            <div class='kpi-value' style='color:{COLOR_DANGER}'>{pct_ausentes:.1f}%</div>
-            <div class='kpi-sub'>{llegada_counts.get("Ausente", 0)} registros</div>
-        </div>
-        {kpi_bar(pct_ausentes, COLOR_DANGER)}
-    </div>""", unsafe_allow_html=True)
+_progress_track = f"<div class='ebi-overview-track'><i style='width:{min(max(adh_global * 100, 0), 100):.1f}%'></i></div>"
+_ui.overview_kpis([
+    ("🎯", "Adherencia", f"{adh_global:.1%}", "Meta: 90%", adh_color, _progress_track),
+    ("👥", "Expertos", _ui.number_es(total_agentes), f"{_ui.number_es(total_registros)} registros", COLOR_ACCENT, ""),
+    ("✅", "Llegada a tiempo", f"{pct_tiempo:.1f}%".replace(".", ","), f'{_ui.number_es(llegada_counts.get("Llegada a tiempo", 0))} registros', COLOR_SUCCESS, ""),
+    ("⏰", "Llegadas tarde", f"{pct_tarde:.1f}%".replace(".", ","), f'{_ui.number_es(llegada_counts.get("Llegada tarde", 0))} registros', COLOR_WARNING, ""),
+    ("🚨", "Ausentes", f"{pct_ausentes:.1f}%".replace(".", ","), f'{_ui.number_es(llegada_counts.get("Ausente", 0))} registros', COLOR_DANGER, ""),
+])
 
 # ─────────────────────────────────────────────
 # GRÁFICAS POR SUPERVISOR (TENDENCIA)
 # ─────────────────────────────────────────────
-st.markdown(f"""
-<div class='sec-header' style='--sc:#8B5CF6'>
-    <div class='sec-wash'></div>
-    <div class='sec-icon' style='background:linear-gradient(135deg,rgba(139,92,246,0.20),rgba(139,92,246,0.06))'>📉</div>
-    <div class='sec-text'>
-        <div class='sec-title'>Tendencia por Supervisor</div>
-        <div class='sec-desc'>Comparación de la evolución de adherencia de cada supervisor a lo largo del período.</div>
-    </div>
-    <div class='sec-meta'>
-        <div class='sec-meta-val' style='color:#8B5CF6'>{n_supervisores}</div>
-        <div class='sec-meta-lab'>Equipos</div>
-    </div>
-    <span class='sec-tag' style='background:#8B5CF6'>Evolución</span>
-</div>
-""", unsafe_allow_html=True)
+_ui.section("A", "MONITOREO")
 
 tend_sup = (
     dff_validos
@@ -1247,21 +1187,16 @@ tend_sup = tend_sup.sort_values(["Supervisor","_ord"]).drop(columns="_ord")
 sup_lista = sorted(tend_sup["Supervisor"].unique())
 colores_sup = {s: SUPERVISOR_COLORS[i % len(SUPERVISOR_COLORS)] for i, s in enumerate(sup_lista)}
 
-st.markdown("""<div class='chart-hdr' style='--cc:#8B5CF6'>
-    <span class='ch-icon'>📉</span>
-    <div class='ch-texts'>
-        <div class='ch-title'>Adherencia por Supervisor en el Tiempo</div>
-        <div class='ch-sub'>Cada línea representa un supervisor · Meta 90%</div>
-    </div>
-    <span class='ch-tag' style='color:#8B5CF6'>Multi-línea</span>
-</div>""", unsafe_allow_html=True)
+_ui.panel_title("📉", "Tendencia por Supervisor", "Comparación de la evolución de adherencia de cada supervisor a lo largo del período.", "EVOLUCIÓN")
+_sup_filtro = _ui.multiselect_all("Supervisor", sup_lista, "wfm_v1_tend_sup")
+_ui.selected_chips(_sup_filtro)
 
 fig_sup = go.Figure()
 fig_sup.add_hrect(y0=0.60, y1=0.80, fillcolor="rgba(239,68,68,0.03)",  layer="below", line_width=0)
 fig_sup.add_hrect(y0=0.80, y1=0.90, fillcolor="rgba(245,158,11,0.04)", layer="below", line_width=0)
 fig_sup.add_hrect(y0=0.90, y1=1.05, fillcolor="rgba(16,185,129,0.04)", layer="below", line_width=0)
 
-for sup in sup_lista:
+for sup in _sup_filtro:
     sub = tend_sup[tend_sup["Supervisor"] == sup]
     nombre_corto = " ".join(sup.split()[:2])
     fig_sup.add_trace(go.Scatter(
@@ -1306,24 +1241,13 @@ st.plotly_chart(fig_sup, use_container_width=True)
 # ─────────────────────────────────────────────
 # COMPARATIVO POR SUPERVISOR
 # ─────────────────────────────────────────────
-st.markdown(f"""
-<div class='sec-header' style='--sc:{COLOR_PRIMARY}; background:radial-gradient(ellipse 95% 60% at 6% 0%, rgba(14,165,233,0.30) 0%, transparent 55%), radial-gradient(ellipse 90% 70% at 100% 120%, rgba(129,140,248,0.32) 0%, transparent 55%), radial-gradient(ellipse 80% 70% at 55% 130%, rgba(52,211,153,0.14) 0%, transparent 55%), linear-gradient(150deg, #0B0518 0%, #1a0b34 50%, #0A0414 100%)'>
-    <div class='sec-wash'></div>
-    <div class='sec-icon' style='background:linear-gradient(135deg,rgba(40,5,63,0.20),rgba(40,5,63,0.06))'>👥</div>
-    <div class='sec-text'>
-        <div class='sec-title'>Comparativo por Supervisor</div>
-        <div class='sec-desc'>Adherencia consolidada por equipo: verde ≥ 90%, amarillo ≥ 80%, rojo &lt; 80%.</div>
-    </div>
-    <div class='sec-meta'>
-        <div class='sec-meta-val' style='color:{COLOR_PRIMARY}'>{n_supervisores}</div>
-        <div class='sec-meta-lab'>Supervisores</div>
-    </div>
-    <span class='sec-tag'>Equipos</span>
-</div>
-""", unsafe_allow_html=True)
+_ui.section("B", "PRODUCCIÓN")
+_ui.panel_title("👥", "Cumplimiento por Supervisor", "Adherencia consolidada por equipo: verde ≥ 90%, amarillo ≥ 80%, rojo < 80%.", "REAL vs META")
+_sup_filtro_b = _ui.multiselect_all("Supervisor", sorted(dff_validos["Supervisor"].dropna().unique()), "wfm_v1_cmp_sup")
+_ui.selected_chips(_sup_filtro_b)
 
 sup_stats = (
-    dff_validos.groupby("Supervisor")
+    dff_validos[dff_validos["Supervisor"].isin(_sup_filtro_b)].groupby("Supervisor")
     .agg(adh_s=("adh_s", "sum"), prog_s=("prog_s", "sum"),
          Agentes=("Nombre", "nunique"), Registros=("Nombre", "size"))
     .reset_index()
@@ -1340,14 +1264,6 @@ sup_stats["Tardes"]   = sup_stats["Tardes"].fillna(0).astype(int)
 c_bar, c_gauge = st.columns([3, 2])
 
 with c_bar:
-    st.markdown(f"""<div class='chart-hdr' style='--cc:{COLOR_PRIMARY}'>
-        <span class='ch-icon'>📊</span>
-        <div class='ch-texts'>
-            <div class='ch-title'>Adherencia por Supervisor</div>
-            <div class='ch-sub'>Menor a mayor · Zona verde = meta cumplida</div>
-        </div>
-        <span class='ch-tag'>Barras</span>
-    </div>""", unsafe_allow_html=True)
     sup_short = sup_stats.copy()
     sup_short["Supervisor"] = sup_short["Supervisor"].apply(lambda n: " ".join(n.split()[:2]))
     _serie_sup = sup_short.set_index("Supervisor")["ADH"]
@@ -1387,30 +1303,7 @@ exp_stats = exp_stats.drop(columns=["adh_s", "prog_s"]).sort_values("ADH", ascen
 n_exp = len(exp_stats)
 _exp_tag = sup_sel if sup_sel != "Todos" else "Todos los equipos"
 
-st.markdown(f"""
-<div class='sec-header' style='--sc:#EC4899'>
-    <div class='sec-wash'></div>
-    <div class='sec-icon' style='background:linear-gradient(135deg,rgba(236,72,153,0.20),rgba(236,72,153,0.06))'>🧑‍💻</div>
-    <div class='sec-text'>
-        <div class='sec-title'>Comparativo por Experto</div>
-        <div class='sec-desc'>Adherencia individual de cada experto: verde ≥ 90%, amarillo ≥ 80%, rojo &lt; 80%. Se filtra junto con Supervisor/Experto en la barra lateral.</div>
-    </div>
-    <div class='sec-meta'>
-        <div class='sec-meta-val' style='color:#EC4899'>{n_exp}</div>
-        <div class='sec-meta-lab'>Expertos</div>
-    </div>
-    <span class='sec-tag' style='background:#EC4899'>{_exp_tag}</span>
-</div>
-""", unsafe_allow_html=True)
-
-st.markdown(f"""<div class='chart-hdr' style='--cc:#EC4899'>
-    <span class='ch-icon'>📊</span>
-    <div class='ch-texts'>
-        <div class='ch-title'>Adherencia por Experto</div>
-        <div class='ch-sub'>Menor a mayor · Zona verde = meta cumplida · {n_exp} expertos</div>
-    </div>
-    <span class='ch-tag' style='color:#EC4899'>Barras</span>
-</div>""", unsafe_allow_html=True)
+_ui.panel_title("🧑‍💻", "Comparativo por Experto", f"Adherencia individual de cada experto: verde ≥ 90%, amarillo ≥ 80%, rojo < 80% · {n_exp} expertos · {_exp_tag}", "BARRAS")
 
 _exp_idx = exp_stats.set_index("Nombre")
 with st.container(height=520, border=False):
@@ -1420,21 +1313,8 @@ with st.container(height=520, border=False):
 # ─────────────────────────────────────────────
 # TENDENCIA + DISTRIBUCIÓN LLEGADAS
 # ─────────────────────────────────────────────
-st.markdown(f"""
-<div class='sec-header' style='--sc:{COLOR_ACCENT}'>
-    <div class='sec-wash'></div>
-    <div class='sec-icon' style='background:linear-gradient(135deg,rgba(14,165,233,0.20),rgba(14,165,233,0.06))'>📈</div>
-    <div class='sec-text'>
-        <div class='sec-title'>Tendencia de Adherencia</div>
-        <div class='sec-desc'>Evolución de la adherencia del equipo y distribución de tipos de llegada en el período.</div>
-    </div>
-    <div class='sec-meta'>
-        <div class='sec-meta-val' style='color:{adh_color}'>{adh_global:.1%}</div>
-        <div class='sec-meta-lab'>Adherencia global</div>
-    </div>
-    <span class='sec-tag'>Análisis</span>
-</div>
-""", unsafe_allow_html=True)
+_ui.section("C", "ANÁLISIS")
+_ui.panel_title("📈", "Tendencia de Adherencia", "Evolución de la adherencia del equipo y distribución de tipos de llegada en el período.", f"{adh_global:.1%} global")
 
 tend = (
     dff_validos
@@ -1449,14 +1329,6 @@ tend = tend.sort_values("_ord").drop(columns="_ord")
 
 c1, c2 = st.columns([3, 2])
 with c1:
-    st.markdown(f"""<div class='chart-hdr' style='--cc:{COLOR_ACCENT}'>
-        <span class='ch-icon'>📈</span>
-        <div class='ch-texts'>
-            <div class='ch-title'>Evolución de Adherencia</div>
-            <div class='ch-sub'>Por período seleccionado · Meta 90%</div>
-        </div>
-        <span class='ch-tag'>Tendencia</span>
-    </div>""", unsafe_allow_html=True)
     fig_tend = go.Figure()
     fig_tend.add_hrect(y0=0.60, y1=0.80, fillcolor="rgba(239,68,68,0.04)",   layer="below", line_width=0)
     fig_tend.add_hrect(y0=0.80, y1=0.90, fillcolor="rgba(245,158,11,0.05)",  layer="below", line_width=0)
@@ -1502,14 +1374,6 @@ with c1:
     st.plotly_chart(fig_tend, use_container_width=True)
 
 with c2:
-    st.markdown(f"""<div class='chart-hdr' style='--cc:{COLOR_SUCCESS}'>
-        <span class='ch-icon'>🍩</span>
-        <div class='ch-texts'>
-            <div class='ch-title'>Distribución de Llegadas</div>
-            <div class='ch-sub'>Puntualidad en el período seleccionado</div>
-        </div>
-        <span class='ch-tag'>Donut</span>
-    </div>""", unsafe_allow_html=True)
     llegadas_plot = dff["Validador Llegada"].value_counts().reset_index()
     llegadas_plot.columns = ["Estado","Cantidad"]
     llegadas_plot = llegadas_plot[llegadas_plot["Estado"] != "No programado"]
@@ -1550,21 +1414,8 @@ with c2:
 # ─────────────────────────────────────────────
 # DETALLE POR AGENTE
 # ─────────────────────────────────────────────
-st.markdown(f"""
-<div class='sec-header' style='--sc:{COLOR_SUCCESS}'>
-    <div class='sec-wash'></div>
-    <div class='sec-icon' style='background:linear-gradient(135deg,rgba(16,185,129,0.20),rgba(16,185,129,0.06))'>🔍</div>
-    <div class='sec-text'>
-        <div class='sec-title'>Detalle por Agente</div>
-        <div class='sec-desc'>Adherencia, planificación y excesos por experto. Filtra por agente desde la barra lateral.</div>
-    </div>
-    <div class='sec-meta'>
-        <div class='sec-meta-val' style='color:{COLOR_SUCCESS}'>{total_agentes}</div>
-        <div class='sec-meta-lab'>Expertos</div>
-    </div>
-    <span class='sec-tag' style='background:{COLOR_SUCCESS}'>Tablas</span>
-</div>
-""", unsafe_allow_html=True)
+_ui.section("D", "SEGUIMIENTO OPERATIVO")
+_ui.panel_title("🔍", "Detalle por Agente", "Adherencia, planificación y excesos por experto. Filtra por agente desde la barra lateral.", "TABLAS")
 
 def seg_a_hhmmss(s):
     if pd.isna(s) or s <= 0:
@@ -1607,21 +1458,8 @@ def fmt_plan_vec(series):
     return series.apply(fmt_plan)
 
 # ── Resumen ejecutivo: Top/Bottom expertos + cumplimiento de meta ──
-st.markdown(f"""
-<div class='sec-header' style='--sc:#22D3EE'>
-    <div class='sec-wash'></div>
-    <div class='sec-icon' style='background:linear-gradient(135deg,rgba(34,211,238,0.20),rgba(34,211,238,0.06))'>🏅</div>
-    <div class='sec-text'>
-        <div class='sec-title'>Resumen Ejecutivo de Expertos</div>
-        <div class='sec-desc'>Los mejores, los que necesitan atención y el cumplimiento de meta del equipo filtrado.</div>
-    </div>
-    <div class='sec-meta'>
-        <div class='sec-meta-val' style='color:#22D3EE'>{n_exp}</div>
-        <div class='sec-meta-lab'>Expertos</div>
-    </div>
-    <span class='sec-tag' style='background:#22D3EE'>Overview</span>
-</div>
-""", unsafe_allow_html=True)
+_ui.section("E", "RESUMEN")
+_ui.panel_title("🏅", "Resumen Ejecutivo de Expertos", "Los mejores, los que necesitan atención y el cumplimiento de meta del equipo filtrado.", "OVERVIEW")
 
 top5    = exp_stats.sort_values("ADH", ascending=False).head(5)
 bottom5 = exp_stats.sort_values("ADH", ascending=True).head(5)
@@ -1743,32 +1581,11 @@ df_descarga(
 )
 
 # ── Distribución y patrones de adherencia ──
-st.markdown(f"""
-<div class='sec-header' style='--sc:#FB923C'>
-    <div class='sec-wash'></div>
-    <div class='sec-icon' style='background:linear-gradient(135deg,rgba(251,146,60,0.20),rgba(251,146,60,0.06))'>📶</div>
-    <div class='sec-text'>
-        <div class='sec-title'>Distribución y Patrones de Adherencia</div>
-        <div class='sec-desc'>Cómo se reparten los expertos por rango de adherencia y qué días de la semana concentran el mayor riesgo.</div>
-    </div>
-    <div class='sec-meta'>
-        <div class='sec-meta-val' style='color:#FB923C'>{n_exp}</div>
-        <div class='sec-meta-lab'>Expertos</div>
-    </div>
-    <span class='sec-tag' style='background:#FB923C'>Análisis</span>
-</div>
-""", unsafe_allow_html=True)
+_ui.section("F", "PATRONES")
+_ui.panel_title("📶", "Distribución y Patrones de Adherencia", "Cómo se reparten los expertos por rango de adherencia y qué días de la semana concentran el mayor riesgo.", f"{n_exp} expertos")
 
 c_hist, c_dia = st.columns(2)
 with c_hist:
-    st.markdown("""<div class='chart-hdr' style='--cc:#FB923C'>
-        <span class='ch-icon'>📊</span>
-        <div class='ch-texts'>
-            <div class='ch-title'>Distribución de Adherencia</div>
-            <div class='ch-sub'>Cantidad de expertos por rango de cumplimiento</div>
-        </div>
-        <span class='ch-tag' style='color:#FB923C'>Histograma</span>
-    </div>""", unsafe_allow_html=True)
     _bins = [-0.01, 0.70, 0.80, 0.90, 0.95, 10]
     _labels = ["<70%", "70-79%", "80-89%", "90-94%", "≥95%"]
     _bucket_colors = [COLOR_DANGER, COLOR_DANGER, COLOR_WARNING, COLOR_SUCCESS, COLOR_SUCCESS]
@@ -1791,14 +1608,6 @@ with c_hist:
     st.plotly_chart(fig_hist, use_container_width=True, config={"displayModeBar": False})
 
 with c_dia:
-    st.markdown("""<div class='chart-hdr' style='--cc:#60A5FA'>
-        <span class='ch-icon'>📆</span>
-        <div class='ch-texts'>
-            <div class='ch-title'>Adherencia por Día de la Semana</div>
-            <div class='ch-sub'>Promedio ponderado por día · Meta 90%</div>
-        </div>
-        <span class='ch-tag' style='color:#60A5FA'>Semanal</span>
-    </div>""", unsafe_allow_html=True)
     _dia_map = {"Monday": "Lunes", "Tuesday": "Martes", "Wednesday": "Miércoles",
                 "Thursday": "Jueves", "Friday": "Viernes", "Saturday": "Sábado", "Sunday": "Domingo"}
     _dia_order = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
@@ -1864,32 +1673,11 @@ df_descarga(
 )
 
 # ── Comparativo por campaña y excesos ──
-st.markdown(f"""
-<div class='sec-header' style='--sc:#A78BFA'>
-    <div class='sec-wash'></div>
-    <div class='sec-icon' style='background:linear-gradient(135deg,rgba(167,139,250,0.20),rgba(167,139,250,0.06))'>🗂️</div>
-    <div class='sec-text'>
-        <div class='sec-title'>Campañas y Excesos</div>
-        <div class='sec-desc'>Adherencia consolidada por campaña y dónde se concentra el tiempo fuera de programación.</div>
-    </div>
-    <div class='sec-meta'>
-        <div class='sec-meta-val' style='color:#A78BFA'>{dff_validos["Campana"].nunique()}</div>
-        <div class='sec-meta-lab'>Campañas</div>
-    </div>
-    <span class='sec-tag' style='background:#A78BFA'>Detalle</span>
-</div>
-""", unsafe_allow_html=True)
+_ui.section("G", "CAMPAÑAS")
+_ui.panel_title("🗂️", "Campañas y Excesos", "Adherencia consolidada por campaña y dónde se concentra el tiempo fuera de programación.", f'{dff_validos["Campana"].nunique()} campañas')
 
 c_camp, c_exc = st.columns(2)
 with c_camp:
-    st.markdown("""<div class='chart-hdr' style='--cc:#A78BFA'>
-        <span class='ch-icon'>🗂️</span>
-        <div class='ch-texts'>
-            <div class='ch-title'>Adherencia por Campaña</div>
-            <div class='ch-sub'>Menor a mayor · Zona verde = meta cumplida</div>
-        </div>
-        <span class='ch-tag' style='color:#A78BFA'>Barras</span>
-    </div>""", unsafe_allow_html=True)
     camp_stats = (
         dff_validos.groupby("Campana")
         .agg(adh_s=("adh_s", "sum"), prog_s=("prog_s", "sum"), Agentes=("Nombre", "nunique"))
@@ -1902,14 +1690,6 @@ with c_camp:
                  alto_fila=44, extra=_camp_idx["Agentes"], extra_label="Agentes")
 
 with c_exc:
-    st.markdown("""<div class='chart-hdr' style='--cc:#FB7185'>
-        <span class='ch-icon'>⏱️</span>
-        <div class='ch-texts'>
-            <div class='ch-title'>Excesos por Tipo</div>
-            <div class='ch-sub'>Horas totales fuera de lo programado por actividad</div>
-        </div>
-        <span class='ch-tag' style='color:#FB7185'>Barras</span>
-    </div>""", unsafe_allow_html=True)
     exc_tipo_cols = ["Exceso Almuerzo", "Exceso Descanso", "Exceso Seguimiento",
                      "Exceso Toilette", "Exceso Entrenamiento", "Exceso Feedback", "Exceso Calidad"]
     exc_tipo_min  = [c + "_min" for c in exc_tipo_cols]
