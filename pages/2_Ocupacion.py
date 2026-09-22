@@ -795,31 +795,40 @@ _ui.percentage_matrix(
     "ocu_matrix_sup", "Supervisor",
 )
 _ui.panel_title("👤", "Matriz diaria por Experto", "Selecciona un supervisor para enfocar el seguimiento individual.", "SEGUIMIENTO")
-_ocu_matrix_sup = st.selectbox("Supervisor para matriz de expertos", ["Todos"] + sorted(dff["Supervisor"].dropna().unique()), key="ocu_matrix_agent_supervisor")
-_ocu_matrix_agents = dff if _ocu_matrix_sup == "Todos" else dff[dff["Supervisor"] == _ocu_matrix_sup]
-_ui.percentage_matrix(
-    _ocu_matrix_agents, "Nombre", "Fecha", {"Ocupación": "Ocupación", "Contacto": "% Contacto"},
-    "ocu_matrix_agent", "Experto",
+_OCU_SIN_SUPERVISOR = "— Selecciona un supervisor —"
+_ocu_matrix_sup = st.selectbox(
+    "Supervisor para matriz de expertos",
+    [_OCU_SIN_SUPERVISOR] + sorted(dff["Supervisor"].dropna().unique()),
+    key="ocu_matrix_agent_supervisor",
 )
+if _ocu_matrix_sup == _OCU_SIN_SUPERVISOR:
+    st.info("Selecciona un supervisor para ver la matriz diaria de sus expertos.")
+else:
+    _ocu_matrix_agents = dff[dff["Supervisor"] == _ocu_matrix_sup]
+    _ui.percentage_matrix(
+        _ocu_matrix_agents, "Nombre", "Fecha", {"Ocupación": "Ocupación", "Contacto": "% Contacto"},
+        "ocu_matrix_agent", "Experto",
+    )
+
+# ── Panel de incidencias: casos puntuales, no promedios ──
+_ocu_inc = dff.dropna(subset=["Ocupación"]).sort_values("Ocupación", ascending=True).head(8)
+_ocu_inc_items = [
+    {
+        "name": r["Nombre"], "sup": r["Supervisor"], "date": r["Fecha"].strftime("%d/%m/%Y"),
+        "value": f"{float(r['Ocupación']):.0%}", "label": "Ocupación",
+        "severity": "critical" if float(r["Ocupación"]) < 0.70 else "warning",
+        "foot": [("% Contacto", f"{float(r['% Contacto']):.0%}" if pd.notna(r.get("% Contacto")) else "—")],
+    }
+    for _, r in _ocu_inc.iterrows()
+]
+_ui.panel_title("🚨", "Panel de Incidencias", "Los casos puntuales de menor ocupación en el período filtrado — el detalle exacto que revisar, no solo el promedio.", f"{len(_ocu_inc_items)} casos")
+_ui.incident_list(_ocu_inc_items, scroll_height=420)
 
 # ─────────────────────────────────────────────
 # SECCIÓN 2 · CONTACTO
 # ─────────────────────────────────────────────
-st.markdown(f"""
-<div class='sec-header' style='--sc:#10B981'>
-    <div class='sec-wash'></div>
-    <div class='sec-icon'>📞</div>
-    <div class='sec-text'>
-        <div class='sec-title'>Contacto</div>
-        <div class='sec-desc'>Porcentaje de contacto efectivo por período. Incluye tiempo disponible y duración de llamadas por experto.</div>
-    </div>
-    <div class='sec-meta'>
-        <div class='sec-meta-val' style='color:#10B981'>{cont_avg:.1%}</div>
-        <div class='sec-meta-lab'>Promedio</div>
-    </div>
-    <span class='sec-tag' style='background:#10B981'>Contacto</span>
-</div>
-""", unsafe_allow_html=True)
+_ui.section("C", "CONTACTO")
+_ui.panel_title("📞", "Contacto", "Porcentaje de contacto efectivo por período. Incluye tiempo disponible y duración de llamadas por experto.", f"{cont_avg:.1%} promedio")
 
 tend_cont = (
     dff.groupby(["_periodo","Supervisor"])["% Contacto"]
@@ -911,21 +920,8 @@ df_descarga(pd.DataFrame(tbl_cont_disp), "contacto_detalle.xlsx", use_container_
 tot_atend  = int(dff["Atendidas"].sum())  if "Atendidas"  in dff.columns else 0
 tot_cancel = int(dff["Canceladas"].sum()) if "Canceladas" in dff.columns else 0
 
-st.markdown(f"""
-<div class='sec-header' style='--sc:#8B5CF6'>
-    <div class='sec-wash'></div>
-    <div class='sec-icon'>📲</div>
-    <div class='sec-text'>
-        <div class='sec-title'>Llamadas</div>
-        <div class='sec-desc'>Volumen de llamadas ingresadas, atendidas, abandonadas y canceladas por período.</div>
-    </div>
-    <div class='sec-meta'>
-        <div class='sec-meta-val' style='color:#8B5CF6'>{tot_llamadas:,}</div>
-        <div class='sec-meta-lab'>Ingresadas</div>
-    </div>
-    <span class='sec-tag' style='background:#8B5CF6'>Volumen</span>
-</div>
-""", unsafe_allow_html=True)
+_ui.section("D", "LLAMADAS")
+_ui.panel_title("📲", "Llamadas", "Volumen de llamadas ingresadas, atendidas, abandonadas y canceladas por período.", f"{tot_llamadas:,} ingresadas")
 
 call_cols = [c for c in ["Llamadas","Atendidas","Abandonadas","Canceladas"] if c in dff.columns]
 call_per  = (
@@ -955,7 +951,7 @@ for col, color, label in _CALL_CFG:
     if col in call_per.columns and label in _call_metrics:
         fig_call.add_trace(go.Bar(
             name=label, x=call_per["_periodo"], y=call_per[col],
-            marker_color=color, opacity=0.88,
+            marker=dict(color=color, opacity=0.88, cornerradius=4),
             hovertemplate=f"<b>{label}</b><br>%{{x}}: %{{y:,}}<extra></extra>"
         ))
 fig_call.update_layout(
@@ -968,7 +964,7 @@ fig_call.update_layout(
                tickangle=-30, showgrid=False),
     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0,
                 font=dict(size=10, family="Inter"), itemsizing="constant", bgcolor="rgba(0,0,0,0)"),
-    font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)"), showlegend=False,
+    font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)"), showlegend=True,
     bargap=0.20, bargroupgap=0.08
 )
 st.plotly_chart(fig_call, use_container_width=True)
@@ -1278,3 +1274,103 @@ if len(_pie_src):
     st.plotly_chart(fig_pie, use_container_width=True)
 else:
     st.info("Sin llamadas abandonadas en el período seleccionado.")
+
+# ─────────────────────────────────────────────
+# CRUCE ADHERENCIA VS. OCUPACIÓN
+# ─────────────────────────────────────────────
+@st.cache_data(show_spinner=False)
+def _cargar_adherencia_cruce(firma):
+    """Carga liviana de los Consolidado_*.xlsx (Detalle) de Adherencia para
+    cruzar por experto — Ocupación y Adherencia se guardan en libros
+    distintos, así que este módulo lee ambos en vez de depender de un join
+    que hoy no existe en los datos de origen."""
+    archivos = sorted(
+        [f for f in glob.glob("Consolidado_*.xlsx") if "_O_" not in os.path.basename(f) and "_T_" not in os.path.basename(f)],
+        key=_mes_orden,
+    )
+    if not archivos:
+        return pd.DataFrame(columns=["Nombre", "Adherencia"])
+    partes = [
+        pd.read_excel(a, sheet_name="Detalle", engine="openpyxl",
+                       usecols=["Nombre", "ADH aplicada", "Tiempo programado"])
+        for a in archivos
+    ]
+    d = pd.concat(partes, ignore_index=True)
+    d["adh_s"]  = pd.to_timedelta(d["ADH aplicada"], errors="coerce").dt.total_seconds()
+    d["prog_s"] = pd.to_timedelta(d["Tiempo programado"], errors="coerce").dt.total_seconds()
+    d = d[d["prog_s"] > 0]
+    out = d.groupby("Nombre").agg(adh_s=("adh_s", "sum"), prog_s=("prog_s", "sum")).reset_index()
+    out["Adherencia"] = (out["adh_s"] / out["prog_s"]).clip(0, 1)
+    return out[["Nombre", "Adherencia"]]
+
+_firma_adh_cruce = tuple(
+    (os.path.basename(a), os.path.getmtime(a))
+    for a in sorted(
+        [f for f in glob.glob("Consolidado_*.xlsx") if "_O_" not in os.path.basename(f) and "_T_" not in os.path.basename(f)],
+        key=_mes_orden,
+    )
+)
+_adh_cruce = _cargar_adherencia_cruce(_firma_adh_cruce)
+
+_ui.section("E", "CRUCE")
+_ui.panel_title("🧭", "Adherencia vs. Ocupación", "Un punto por experto: ¿son los mismos que fallan en ambos indicadores o son poblaciones distintas?", "DIAGNÓSTICO")
+
+_ocu_por_agente = (
+    dff.groupby("Nombre")
+    .agg(Ocupacion=("Ocupación", "mean"), Supervisor=("Supervisor", lambda s: s.mode().iat[0] if len(s) else "-"))
+    .reset_index()
+)
+_cruce = _ocu_por_agente.merge(_adh_cruce, on="Nombre", how="inner").dropna(subset=["Ocupacion", "Adherencia"])
+
+if _cruce.empty:
+    st.info("No hay suficientes datos cruzados entre Adherencia y Ocupación para esta selección.")
+else:
+    def _cuadrante(row):
+        if row["Adherencia"] >= 0.90 and row["Ocupacion"] >= 0.90:
+            return "Cumple ambas"
+        if row["Adherencia"] >= 0.90:
+            return "Solo Adherencia"
+        if row["Ocupacion"] >= 0.90:
+            return "Solo Ocupación"
+        return "Riesgo en ambas"
+
+    _cruce = _cruce.copy()
+    _cruce["Cuadrante"] = _cruce.apply(_cuadrante, axis=1)
+    _cuad_colores = {
+        "Cumple ambas": COLOR_SUCCESS, "Solo Adherencia": "#38BDF8",
+        "Solo Ocupación": "#A78BFA", "Riesgo en ambas": COLOR_DANGER,
+    }
+
+    fig_cruce = go.Figure()
+    fig_cruce.add_vrect(x0=0.90, x1=1.05, fillcolor="rgba(16,185,129,0.035)", layer="below", line_width=0)
+    fig_cruce.add_hrect(y0=0.90, y1=1.05, fillcolor="rgba(16,185,129,0.035)", layer="below", line_width=0)
+    for cuad, color in _cuad_colores.items():
+        sub = _cruce[_cruce["Cuadrante"] == cuad]
+        if sub.empty:
+            continue
+        fig_cruce.add_trace(go.Scatter(
+            x=sub["Adherencia"], y=sub["Ocupacion"], mode="markers", name=f"{cuad} ({len(sub)})",
+            marker=dict(size=8, color=color, opacity=0.75, line=dict(color="white", width=0.6)),
+            customdata=sub[["Nombre", "Supervisor"]],
+            hovertemplate="<b>%{customdata[0]}</b><br>%{customdata[1]}<br>Adherencia: %{x:.1%}<br>Ocupación: %{y:.1%}<extra></extra>",
+        ))
+    fig_cruce.add_vline(x=0.90, line_dash="dot", line_color="rgba(255,255,255,0.25)", line_width=1)
+    fig_cruce.add_hline(y=0.90, line_dash="dot", line_color="rgba(255,255,255,0.25)", line_width=1)
+    fig_cruce.update_layout(
+        height=440, margin=dict(l=0, r=0, t=10, b=0),
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+        xaxis=dict(title=dict(text="Adherencia", font=dict(size=10, color="rgba(255,255,255,0.45)")),
+                   tickformat=".0%", range=[0, 1.05], gridcolor="rgba(255,255,255,0.06)",
+                   tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.62)")),
+        yaxis=dict(title=dict(text="Ocupación", font=dict(size=10, color="rgba(255,255,255,0.45)")),
+                   tickformat=".0%", range=[0, 1.05], gridcolor="rgba(255,255,255,0.06)",
+                   tickfont=dict(size=10, family="Inter", color="rgba(255,255,255,0.62)")),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0,
+                    font=dict(size=10, family="Inter"), bgcolor="rgba(0,0,0,0)"),
+        showlegend=True, font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)"),
+    )
+    st.caption(
+        f"{len(_cruce)} expertos con datos en ambos módulos · Ocupación según los filtros de esta página; "
+        "Adherencia promedia todo el período cargado en ese módulo."
+    )
+    st.plotly_chart(fig_cruce, use_container_width=True, config={"displayModeBar": False})

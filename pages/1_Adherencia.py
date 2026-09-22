@@ -1184,6 +1184,48 @@ fig_sup.update_layout(
 st.plotly_chart(fig_sup, use_container_width=True)
 
 # ─────────────────────────────────────────────
+# SEMANA VS. SEMANA
+# ─────────────────────────────────────────────
+_semanas_orden = dff_validos.groupby("Semana")["Fecha"].min().sort_values().index.tolist()
+if len(_semanas_orden) >= 2:
+    _sem_actual, _sem_previa = _semanas_orden[-1], _semanas_orden[-2]
+    _wow = (
+        dff_validos[dff_validos["Semana"].isin([_sem_actual, _sem_previa])]
+        .groupby(["Semana", "Supervisor"])[["adh_s", "prog_s"]].sum().reset_index()
+    )
+    _wow["ADH"] = (_wow["adh_s"] / _wow["prog_s"]).where(_wow["prog_s"] > 0, 0)
+    _piv_wow = _wow.pivot(index="Supervisor", columns="Semana", values="ADH").dropna(subset=[_sem_actual, _sem_previa])
+
+    if not _piv_wow.empty:
+        _piv_wow["Delta"] = _piv_wow[_sem_actual] - _piv_wow[_sem_previa]
+        _piv_wow = _piv_wow.sort_values("Delta", ascending=True)
+
+        _ui.panel_title("📆", "Semana vs. Semana", f"Variación de adherencia por supervisor: {_sem_previa} → {_sem_actual}.", "TENDENCIA")
+        _wow_colors = [COLOR_SUCCESS if v >= 0 else COLOR_DANGER for v in _piv_wow["Delta"]]
+        _wow_names = [" ".join(s.split()[:2]) for s in _piv_wow.index]
+        fig_wow = go.Figure(go.Bar(
+            x=_piv_wow["Delta"], y=_wow_names, orientation="h",
+            marker=dict(color=_wow_colors, opacity=0.92, line=dict(width=0), cornerradius=6),
+            width=0.55,
+            text=[f"{v:+.1%}" for v in _piv_wow["Delta"]], textposition="outside", cliponaxis=False,
+            textfont=dict(size=11, color="rgba(255,255,255,0.78)", family="Space Grotesk, sans-serif"),
+            customdata=np.column_stack([_piv_wow[_sem_previa], _piv_wow[_sem_actual]]),
+            hovertemplate=(f"<b>%{{y}}</b><br>{_sem_previa}: %{{customdata[0]:.1%}}<br>"
+                           f"{_sem_actual}: %{{customdata[1]:.1%}}<br>Variación: %{{x:+.1%}}<extra></extra>"),
+        ))
+        fig_wow.add_vline(x=0, line_color="rgba(255,255,255,0.25)", line_width=1)
+        _wow_max = max(float(_piv_wow["Delta"].abs().max()), 0.02) * 1.35
+        fig_wow.update_layout(
+            height=max(260, len(_piv_wow) * 34 + 60), margin=dict(l=0, r=60, t=10, b=10),
+            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+            xaxis=dict(range=[-_wow_max, _wow_max], tickformat="+.0%", gridcolor="rgba(255,255,255,0.045)",
+                       tickfont=dict(size=9, family="Inter", color="rgba(255,255,255,0.32)"), zeroline=False),
+            yaxis=dict(showgrid=False, tickfont=dict(size=10.5, family="Inter", color="rgba(255,255,255,0.72)")),
+            showlegend=False, font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)"),
+        )
+        st.plotly_chart(fig_wow, use_container_width=True, config={"displayModeBar": False})
+
+# ─────────────────────────────────────────────
 # COMPARATIVO POR SUPERVISOR
 # ─────────────────────────────────────────────
 _ui.section("B", "PRODUCCIÓN")
@@ -1312,42 +1354,23 @@ with c1:
     st.plotly_chart(fig_tend, use_container_width=True)
 
 with c2:
-    llegadas_plot = dff["Validador Llegada"].value_counts().reset_index()
-    llegadas_plot.columns = ["Estado","Cantidad"]
-    llegadas_plot = llegadas_plot[llegadas_plot["Estado"] != "No programado"]
     color_map = {
         "Llegada a tiempo": COLOR_SUCCESS,
         "Llegada antes":    COLOR_ACCENT,
         "Llegada tarde":    COLOR_WARNING,
         "Ausente":          COLOR_DANGER
     }
+    llegadas_plot = dff["Validador Llegada"].value_counts().reset_index()
+    llegadas_plot.columns = ["Estado","Cantidad"]
+    # Solo los 4 tipos de llegada del título; otros valores de esta columna
+    # (novedades como incapacidad o licencia) no son "tipos de llegada" y con
+    # etiqueta afuera del donut se veían como texto amontonado sin aportar nada.
+    llegadas_plot = llegadas_plot[llegadas_plot["Estado"].isin(color_map)]
     lp_labels = llegadas_plot["Estado"].tolist()
     lp_values = llegadas_plot["Cantidad"].tolist()
-    lp_colors = [color_map.get(l, "#94A3B8") for l in lp_labels]
-    max_idx = lp_values.index(max(lp_values)) if lp_values else 0
-    pull = [0.06 if i == max_idx else 0 for i in range(len(lp_values))]
+    lp_colors = [color_map[l] for l in lp_labels]
 
-    fig_pie = go.Figure(go.Pie(
-        labels=lp_labels, values=lp_values, hole=0.62,
-        marker=dict(colors=lp_colors, line=dict(color="white", width=3)),
-        pull=pull, textinfo="percent", textposition="inside",
-        textfont=dict(size=12, color="white", family="Inter"),
-        hovertemplate="<b>%{label}</b><br>%{value} registros · %{percent}<extra></extra>",
-        sort=False
-    ))
-    fig_pie.add_annotation(
-        text=f"<b>{pct_tiempo:.1f}%</b><br>a tiempo", x=0.5, y=0.5,
-        font=dict(size=15, color=COLOR_SUCCESS, family="Inter"),
-        showarrow=False, align="center"
-    )
-    fig_pie.update_layout(
-        height=370, margin=dict(l=0, r=0, t=24, b=0),
-        paper_bgcolor="rgba(0,0,0,0)", showlegend=False,
-        legend=dict(orientation="v", yanchor="middle", y=0.5, xanchor="left", x=1.0,
-                    font=dict(size=10, family="Inter"), itemsizing="constant"),
-        font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)")
-    )
-    st.plotly_chart(fig_pie, use_container_width=True)
+    _ui.donut(lp_labels, lp_values, lp_colors, f"{pct_tiempo:.1f}%", "a tiempo", height=370)
 
 # ─────────────────────────────────────────────
 # DETALLE POR AGENTE
@@ -1417,8 +1440,22 @@ def fmt_plan_vec(series):
         return fmt_td_vec(series)
     return series.apply(fmt_plan)
 
-# ── Tabla 1: Resumen General ──────────────────
+# ── Panel de incidencias: casos puntuales, no promedios ──
 _ui.section("E", "RESUMEN")
+_inc_worst = dff_validos.dropna(subset=["ADH_pct"]).sort_values("ADH_pct", ascending=True).head(8)
+_inc_items = [
+    {
+        "name": r["Nombre"], "sup": r["Supervisor"], "date": r["Fecha"].strftime("%d/%m/%Y"),
+        "value": f"{float(r['ADH_pct']):.0%}", "label": "Adherencia",
+        "severity": "critical" if float(r["ADH_pct"]) < 0.70 else "warning",
+        "foot": [("Llegada", r["Validador Llegada"]), ("Campaña", r["Campana"])],
+    }
+    for _, r in _inc_worst.iterrows()
+]
+_ui.panel_title("🚨", "Panel de Incidencias", "Los casos puntuales de menor adherencia en el período filtrado — el detalle exacto que revisar, no solo el promedio.", f"{len(_inc_items)} casos")
+_ui.incident_list(_inc_items, scroll_height=420)
+
+# ── Tabla 1: Resumen General ──────────────────
 st.markdown("<div style='margin-top:24px'></div>", unsafe_allow_html=True)
 st.markdown(f"""<div class='tbl-hdr' style='background:linear-gradient(135deg,{COLOR_SUCCESS} 0%,#059669 100%)'>
     <span class='tbl-hdr-icon'>📋</span>
@@ -1612,6 +1649,57 @@ with c_exc:
     _serie_exc    = pd.Series((exc_totales.values / 60), index=exc_labels)
     _ui.comparison_bar(_serie_exc, "Horas", lambda v: seg_a_hhmmss(v * 3600), color_fija="#FB7185")
 
+# ── Pareto de excesos por experto (80/20) ──
+_ui.panel_title("📐", "Pareto de Excesos por Experto", "Qué expertos concentran la mayor parte del tiempo fuera de programación.", "80/20")
+_exc_por_agente = _dff_exc.groupby("Nombre")[exc_tipo_disp].sum().sum(axis=1).sort_values(ascending=False)
+_exc_por_agente = _exc_por_agente[_exc_por_agente > 0]
+if _exc_por_agente.empty:
+    st.info("Sin tiempo de exceso registrado para la selección actual.")
+else:
+    _PARETO_TOP_N = 20
+    _top = _exc_por_agente.head(_PARETO_TOP_N)
+    _resto = float(_exc_por_agente.iloc[_PARETO_TOP_N:].sum())
+    if _resto > 0:
+        _top = pd.concat([_top, pd.Series({"Otros expertos": _resto})])
+    _horas    = _top / 60
+    _cum_pct  = _top.cumsum() / _exc_por_agente.sum() * 100
+    _nombres_cortos = [" ".join(str(n).split()[:2]) if n != "Otros expertos" else n for n in _top.index]
+
+    fig_pareto = go.Figure()
+    fig_pareto.add_trace(go.Bar(
+        x=_nombres_cortos, y=_horas.values, name="Horas de exceso",
+        marker=dict(color="#FB7185", opacity=0.88, cornerradius=4),
+        text=[seg_a_hhmmss(v * 3600) for v in _horas.values], textposition="outside", cliponaxis=False,
+        textfont=dict(size=9, color="rgba(255,255,255,0.7)", family="Inter"),
+        hovertemplate="<b>%{x}</b><br>Exceso: %{text}<extra></extra>",
+    ))
+    fig_pareto.add_trace(go.Scatter(
+        x=_nombres_cortos, y=_cum_pct.values, mode="lines+markers", name="% acumulado", yaxis="y2",
+        line=dict(color="#38BDF8", width=2.5, shape="spline"),
+        marker=dict(size=5, color="white", line=dict(color="#38BDF8", width=2)),
+        hovertemplate="<b>%{x}</b><br>Acumulado: %{y:.1f}%<extra></extra>",
+    ))
+    fig_pareto.add_hline(y=80, yref="y2", line_dash="dot", line_color="rgba(56,189,248,0.55)", line_width=1.5,
+                          annotation_text="80%", annotation_font=dict(size=10, color="#7DD3FC"), annotation_position="right")
+    fig_pareto.update_layout(
+        height=380, margin=dict(l=0, r=45, t=20, b=90),
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+        xaxis=dict(tickfont=dict(size=9, family="Inter", color="rgba(255,255,255,0.55)"), tickangle=-45, showgrid=False),
+        yaxis=dict(title=dict(text="Horas", font=dict(size=10, color="rgba(255,255,255,0.4)")),
+                   gridcolor="rgba(255,255,255,0.045)", tickfont=dict(size=9, family="Inter", color="rgba(255,255,255,0.32)")),
+        yaxis2=dict(title=dict(text="% acumulado", font=dict(size=10, color="rgba(56,189,248,0.6)")),
+                    overlaying="y", side="right", range=[0, 105], showgrid=False,
+                    tickfont=dict(size=9, family="Inter", color="rgba(56,189,248,0.55)")),
+        legend=dict(orientation="h", yanchor="bottom", y=1.10, xanchor="left", x=0,
+                    font=dict(size=10, family="Inter"), bgcolor="rgba(0,0,0,0)"),
+        showlegend=True, font=dict(family="Inter", size=11, color="rgba(255,255,255,0.72)"),
+    )
+    st.caption(
+        f"{len(_exc_por_agente)} expertos con exceso registrado · se muestran los "
+        f"{min(_PARETO_TOP_N, len(_exc_por_agente))} con más horas" + (" + Otros expertos" if _resto > 0 else "") + "."
+    )
+    st.plotly_chart(fig_pareto, use_container_width=True, config={"displayModeBar": False})
+
 # ── Tabla 3: Estados y Excesos ────────────────
 st.markdown(f"""<div class='tbl-hdr' style='background:linear-gradient(135deg,{COLOR_DANGER} 0%,#DC2626 100%);margin-top:20px'>
     <span class='tbl-hdr-icon'>⚠️</span>
@@ -1680,5 +1768,66 @@ cols_t3 = (
 )
 t3_show = t3[cols_t3].sort_values(["Fecha", "Agente"]).reset_index(drop=True)
 df_descarga(t3_show, "estados_excesos.xlsx", use_container_width=True, hide_index=True, height=350)
+
+# ── Semana vs. semana: quién se movió más ──
+_ui.section("H", "EVOLUCIÓN SEMANAL")
+_ui.panel_title("🔁", "Semana vs. Semana", "Adherencia promedio por experto frente a la semana anterior — solo expertos con datos en ambas semanas.", "COMPARATIVO")
+
+def _wow_bar(delta_pp, height=None):
+    """delta_pp: Series índice=categoría, valores=delta en puntos porcentuales,
+    ya ordenada de forma que el último elemento es el que debe quedar arriba."""
+    cats = delta_pp.index.tolist()
+    vals = delta_pp.tolist()
+    colors = [COLOR_SUCCESS if v >= 0 else COLOR_DANGER for v in vals]
+    fig = go.Figure(go.Bar(
+        x=vals, y=cats, orientation="h",
+        marker=dict(color=colors, line=dict(width=0), cornerradius=4), width=0.6,
+        text=[f"{v:+.1f} pp" for v in vals], textposition="outside", cliponaxis=False,
+        textfont=dict(size=10, color="rgba(255,255,255,0.78)", family="Inter"),
+        hovertemplate="<b>%{y}</b><br>%{x:+.1f} pp<extra></extra>",
+    ))
+    fig.add_vline(x=0, line_color="rgba(255,255,255,0.25)", line_width=1)
+    _lo = min(vals + [0]) * 1.25
+    _hi = max(vals + [0]) * 1.25
+    if _lo == _hi:
+        _lo, _hi = -1, 1
+    fig.update_layout(
+        height=height or max(240, len(cats) * 36 + 40), margin=dict(l=0, r=45, t=10, b=10),
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+        xaxis=dict(range=[_lo, _hi], showgrid=True, gridcolor="rgba(255,255,255,.06)", zeroline=False,
+                   tickfont=dict(size=9.5, family="Inter", color="rgba(255,255,255,.5)")),
+        yaxis=dict(showgrid=False, tickfont=dict(size=10.5, family="Inter", color="rgba(255,255,255,.75)")),
+        showlegend=False, font=dict(family="Inter"),
+    )
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+
+_sem_orden = dff_validos.groupby("Semana")["Fecha"].min().sort_values().index.tolist()
+if len(_sem_orden) < 2:
+    st.info("Se necesitan al menos dos semanas en el período filtrado para comparar.")
+else:
+    _sem_actual, _sem_previa = _sem_orden[-1], _sem_orden[-2]
+    _wow = (
+        dff_validos[dff_validos["Semana"].isin([_sem_actual, _sem_previa])]
+        .groupby(["Nombre", "Semana"])
+        .agg(adh_s=("adh_s", "sum"), prog_s=("prog_s", "sum"))
+        .reset_index()
+    )
+    _wow["ADH"] = (_wow["adh_s"] / _wow["prog_s"]).where(_wow["prog_s"] > 0, np.nan)
+    _piv_wow = _wow.pivot(index="Nombre", columns="Semana", values="ADH").dropna(subset=[_sem_actual, _sem_previa])
+    _piv_wow["Delta"] = (_piv_wow[_sem_actual] - _piv_wow[_sem_previa]) * 100
+    _piv_wow.index = [" ".join(str(n).split()[:2]) for n in _piv_wow.index]
+
+    if _piv_wow.empty:
+        st.info("Ningún experto tiene registros en ambas semanas para comparar.")
+    else:
+        _c_mej, _c_emp = st.columns(2)
+        with _c_mej:
+            st.caption(f"📈 Mejoraron más · {_sem_previa} → {_sem_actual}")
+            _top_mej = _piv_wow.nlargest(8, "Delta")["Delta"].sort_values(ascending=True)
+            _wow_bar(_top_mej)
+        with _c_emp:
+            st.caption(f"📉 Empeoraron más · {_sem_previa} → {_sem_actual}")
+            _top_emp = _piv_wow.nsmallest(8, "Delta")["Delta"].sort_values(ascending=False)
+            _wow_bar(_top_emp)
 
 st.caption(f"📋 {dff['Nombre'].nunique()} agentes · {len(dff)} registros en el período seleccionado")

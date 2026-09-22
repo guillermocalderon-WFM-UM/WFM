@@ -185,6 +185,108 @@ def toggle_dataframe(frame: pd.DataFrame, label: str, key: str, **kwargs) -> boo
     return False
 
 
+def glow_line(
+    fig: go.Figure, x, y, color: str, name: str = "", width: float = 2.5,
+    dash: str = "solid", marker: bool = True, hovertemplate: str | None = None,
+    showlegend: bool = False,
+) -> None:
+    """Agrega una línea con halo (glow) debajo de la línea nítida: una traza
+    ancha y translúcida detrás + la línea con marcadores encima. Mismo truco
+    visual que ya usaba "Tendencia de Adherencia", generalizado para que
+    cualquier gráfico de línea/tendencia se vea con el mismo relieve."""
+    fig.add_trace(go.Scatter(
+        x=x, y=y, mode="lines",
+        line=dict(color=_rgba(color, .18), width=width * 4, shape="spline", dash=dash),
+        showlegend=False, hoverinfo="skip",
+    ))
+    fig.add_trace(go.Scatter(
+        x=x, y=y, mode="lines+markers" if marker else "lines", name=name,
+        line=dict(color=color, width=width, shape="spline", dash=dash),
+        marker=dict(size=6, color="white", line=dict(color=color, width=2)) if marker else None,
+        showlegend=showlegend,
+        hovertemplate=hovertemplate or (
+            f"<b>{_safe(name)}</b><br>%{{x}}: %{{y}}<extra></extra>" if name else "%{x}: %{y}<extra></extra>"
+        ),
+    ))
+
+
+def donut(
+    labels, values, colors, center_value: str, center_label: str,
+    height: int = 370, hole: float = 0.6, pull_first: bool = True, min_share: float = 0.02,
+) -> None:
+    """Dona con etiquetas afuera y total al centro — mismo lenguaje visual
+    que "Cierre de Abandonos" en Ocupación, reutilizable para cualquier
+    distribución (Llegadas, motivos, etc.).
+
+    Las categorías por debajo de `min_share` del total se agrupan en "Otros"
+    (poner min_share=0 para desactivarlo) — con etiqueta afuera, una categoría
+    minúscula igual imprime su texto completo y amontona el gráfico."""
+    labels, values, colors = list(labels), [float(v) for v in values], list(colors)
+    total = sum(values) or 1
+    if min_share > 0 and labels:
+        grandes = [(l, v, c) for l, v, c in zip(labels, values, colors) if v / total >= min_share]
+        resto = sum(v for l, v, c in zip(labels, values, colors) if v / total < min_share)
+        if resto > 0:
+            grandes.append(("Otros", resto, MUTED))
+        if grandes:
+            labels, values, colors = (list(x) for x in zip(*grandes))
+    pull = ([0.05] + [0] * (len(labels) - 1)) if (pull_first and labels) else None
+    fig = go.Figure(go.Pie(
+        labels=labels, values=list(values), hole=hole, sort=False,
+        marker=dict(colors=list(colors), line=dict(color="#0A0813", width=2)),
+        texttemplate="%{label}<br><b>%{percent}</b>", textposition="outside",
+        textfont=dict(size=11, family="Inter", color="rgba(255,255,255,.85)"),
+        pull=pull,
+        hovertemplate="<b>%{label}</b><br>%{value:,} · %{percent}<extra></extra>",
+    ))
+    fig.update_layout(
+        height=height, margin=dict(l=70, r=70, t=20, b=20), paper_bgcolor="rgba(0,0,0,0)",
+        showlegend=False, font=dict(family="Inter", color="rgba(255,255,255,.72)"),
+        annotations=[dict(
+            text=f"{_safe(center_value)}<br><span style='font-size:11px;color:rgba(255,255,255,.45)'>{_safe(center_label)}</span>",
+            x=0.5, y=0.5, showarrow=False,
+            font=dict(size=26, family="Space Grotesk", color="rgba(255,255,255,.92)"),
+        )],
+    )
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+
+
+def incident_list(items, scroll_height: int | None = 560) -> None:
+    """Lista de incidencias puntuales (agente + fecha + qué falló) con las
+    tarjetas `.ebi-incident` del sistema de diseño (definidas en el CSS pero
+    sin usar hasta ahora). Más accionable que un ranking agregado: en vez de
+    "quién va peor en promedio" muestra el caso concreto que hay que revisar.
+
+    `items`: lista de dicts con:
+      name (str), sup (str), date (str), value (str), label (str),
+      severity ("critical" | "warning"), badge (str opcional),
+      foot (lista opcional de tuplas (etiqueta, valor))."""
+    if not items:
+        st.info("Sin incidencias en el período filtrado.")
+        return
+    _badges_es = {"critical": "CRÍTICO", "warning": "ALERTA"}
+    cards = []
+    for it in items:
+        sev = it.get("severity", "warning")
+        foot_html = "".join(
+            f"<span>{_safe(label)}: <b>{_safe(value)}</b></span>" for label, value in it.get("foot", [])
+        )
+        cards.append(
+            f"<div class='ebi-incident {sev}'>"
+            f"<div class='ebi-inc-dot'>●</div>"
+            f"<div class='ebi-inc-body'>"
+            f"<div class='ebi-inc-name'>{_safe(it['name'])}</div>"
+            f"<div class='ebi-inc-sup'>{_safe(it.get('sup', ''))} · {_safe(it.get('date', ''))}</div>"
+            f"<div class='ebi-inc-main'><strong>{_safe(it['value'])}</strong><span>{_safe(it['label'])}</span></div>"
+            f"{f'<div class=\"ebi-inc-foot\">{foot_html}</div>' if foot_html else ''}"
+            f"</div>"
+            f"<span class='ebi-inc-badge'>{_safe(it.get('badge', _badges_es.get(sev, sev.upper())))}</span>"
+            f"</div>"
+        )
+    style = f" style='max-height:{scroll_height}px'" if scroll_height else ""
+    st.markdown(f"<div class='ebi-inc-scroll'{style}>{''.join(cards)}</div>", unsafe_allow_html=True)
+
+
 def comparison_bar(
     values: pd.Series, eje_titulo: str, value_fmt, meta: float | None = None,
     color_fn=None, color_fija=None, height: int | None = None,
