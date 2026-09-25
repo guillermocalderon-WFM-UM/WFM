@@ -1187,11 +1187,9 @@ st.plotly_chart(fig_sup, use_container_width=True)
 # COMPARATIVO POR SUPERVISOR
 # ─────────────────────────────────────────────
 _ui.panel_title("👥", "Comparativo por Supervisor", "Adherencia consolidada por equipo: verde ≥ 90%, amarillo ≥ 80%, rojo < 80%.", "REAL vs META")
-_sup_filtro_b = _ui.multiselect_all("Supervisor", sup_lista, "wfm_v1_cmp_sup")
-_ui.selected_chips(_sup_filtro_b)
 
 sup_stats = (
-    dff_validos[dff_validos["Supervisor"].isin(_sup_filtro_b)].groupby("Supervisor")
+    dff_validos.groupby("Supervisor")
     .agg(adh_s=("adh_s", "sum"), prog_s=("prog_s", "sum"), Agentes=("Nombre", "nunique"))
     .reset_index()
 )
@@ -1200,8 +1198,7 @@ sup_stats = sup_stats.drop(columns=["adh_s", "prog_s"]).sort_values("ADH", ascen
 sup_stats["Supervisor"] = sup_stats["Supervisor"].apply(lambda n: " ".join(n.split()[:2]))
 _sup_stats_idx = sup_stats.set_index("Supervisor")
 _ui.comparison_bar(_sup_stats_idx["ADH"], "Adherencia", lambda v: f"{v:.1%}", meta=0.90, color_fn=_adh_color,
-                   extra=_sup_stats_idx["Agentes"], extra_label="Agentes", tickformat=".0%",
-                   height=max(280, len(sup_stats) * 36 + 60))
+                   extra=_sup_stats_idx["Agentes"], extra_label="Agentes", tickformat=".0%", height=400)
 
 # ─────────────────────────────────────────────
 # SEMANA VS. SEMANA
